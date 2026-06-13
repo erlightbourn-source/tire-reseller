@@ -42,6 +42,7 @@ export default function NavUser({ user }) {
   const active = user.canSell;
   const links = [
     { href: "/browse", label: "Browse" },
+    { href: "/favorites", label: "Saved" },
     { href: "/messages", label: "Messages" },
     { href: "/dashboard", label: "Dashboard" },
   ];

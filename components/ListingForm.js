@@ -31,6 +31,7 @@ export default function ListingForm({ initial }) {
     const form = new FormData(e.currentTarget);
     const body = Object.fromEntries(form.entries());
     body.photos = photos;
+    body.runFlat = form.get("runFlat") === "on"; // checkbox → explicit boolean
 
     const url = editing ? `/api/listings/${initial.id}` : "/api/listings";
     const res = await fetch(url, {
@@ -101,6 +102,38 @@ export default function ListingForm({ initial }) {
         <div className="sm:col-span-2">
           <label className="label">Description <span className="text-slate-400">(optional)</span></label>
           <textarea name="description" rows={3} defaultValue={initial?.description || ""} className="input" placeholder="Set of 4, mounted one season, no patches…" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+        <p className="mb-3 text-sm font-bold text-slate-200">Tire details <span className="font-normal text-slate-400">— help buyers find the right fit</span></p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="label">Season</label>
+            <select name="season" defaultValue={initial?.season || ""} className="input">
+              <option value="">—</option>
+              <option value="all-season">All-season</option>
+              <option value="summer">Summer</option>
+              <option value="winter">Winter</option>
+              <option value="all-weather">All-weather</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">Load index</label>
+            <input name="loadIndex" defaultValue={initial?.loadIndex || ""} className="input" placeholder="91" />
+          </div>
+          <div>
+            <label className="label">Speed rating</label>
+            <input name="speedRating" defaultValue={initial?.speedRating || ""} className="input" placeholder="V" maxLength={3} />
+          </div>
+          <div>
+            <label className="label">DOT year <span className="text-slate-400">(mfg.)</span></label>
+            <input name="dotYear" type="number" min="2000" max="2030" defaultValue={initial?.dotYear || ""} className="input" placeholder="2022" />
+          </div>
+          <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-slate-200 sm:col-span-2">
+            <input type="checkbox" name="runFlat" defaultChecked={initial?.runFlat} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-brand-500" />
+            Run-flat tires
+          </label>
         </div>
       </div>
 

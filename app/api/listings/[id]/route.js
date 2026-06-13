@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
+import { geocodeCity } from "@/lib/geo";
+
+const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
 async function requireOwner(id) {
   const user = await getCurrentUser();
@@ -28,9 +31,18 @@ export async function PATCH(req, { params }) {
   if (b.location !== undefined) {
     data.location = b.location;
     data.state = stateFromLocation(b.location);
+    const coords = geocodeCity(b.location) || {};
+    data.lat = coords.lat ?? null;
+    data.lng = coords.lng ?? null;
   }
   if (b.description !== undefined) data.description = b.description || null;
   if (b.status !== undefined && ["active", "sold"].includes(b.status)) data.status = b.status;
+  if (b.featured !== undefined) data.featured = !!b.featured;
+  if (b.season !== undefined) data.season = SEASONS.includes(b.season) ? b.season : null;
+  if (b.loadIndex !== undefined) data.loadIndex = b.loadIndex ? String(b.loadIndex).trim() : null;
+  if (b.speedRating !== undefined) data.speedRating = b.speedRating ? String(b.speedRating).trim().toUpperCase() : null;
+  if (b.runFlat !== undefined) data.runFlat = !!b.runFlat;
+  if (b.dotYear !== undefined) data.dotYear = b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null;
 
   // Replace photos if provided
   if (Array.isArray(b.photos)) {

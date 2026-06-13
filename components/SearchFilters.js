@@ -7,6 +7,8 @@ export default function SearchFilters({ brands }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
+  const [more, setMore] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     setQ(params.get("q") || "");
@@ -27,7 +29,28 @@ export default function SearchFilters({ brands }) {
   }
 
   const sel = (k) => params.get(k) || "";
-  const anyFilter = ["q", "brand", "condition", "size", "maxPrice", "sort"].some((k) => params.get(k));
+  const filterKeys = ["q", "brand", "condition", "size", "maxPrice", "sort", "season", "runFlat", "lat"];
+  const anyFilter = filterKeys.some((k) => params.get(k));
+  const nearActive = params.get("lat") && params.get("radius");
+
+  function useMyLocation() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        apply({
+          lat: pos.coords.latitude.toFixed(4),
+          lng: pos.coords.longitude.toFixed(4),
+          radius: params.get("radius") || "50",
+          near: "me",
+          state: "", // radius supersedes state scope
+        });
+      },
+      () => setLocating(false),
+      { timeout: 8000 }
+    );
+  }
 
   return (
     <div className="card p-3 sm:p-4">
@@ -84,6 +107,49 @@ export default function SearchFilters({ brands }) {
           <option value="price_desc">Price: High → Low</option>
         </select>
       </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={useMyLocation}
+          className={`btn ${nearActive ? "bg-brand-600 text-white" : "bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10"} px-3 py-1.5`}
+        >
+          <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>
+          {locating ? "Locating…" : nearActive ? "Near me ✓" : "Near me"}
+        </button>
+        {nearActive && (
+          <select className="input w-auto py-1.5" value={sel("radius")} onChange={(e) => apply({ radius: e.target.value })}>
+            <option value="25">25 mi</option>
+            <option value="50">50 mi</option>
+            <option value="100">100 mi</option>
+            <option value="250">250 mi</option>
+          </select>
+        )}
+        <button type="button" onClick={() => setMore((m) => !m)} className="btn-ghost px-3 py-1.5">
+          {more ? "Fewer filters" : "More filters"}
+        </button>
+      </div>
+
+      {more && (
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <select className="input" value={sel("season")} onChange={(e) => apply({ season: e.target.value })}>
+            <option value="">Any season</option>
+            <option value="all-season">All-season</option>
+            <option value="summer">Summer</option>
+            <option value="winter">Winter</option>
+            <option value="all-weather">All-weather</option>
+          </select>
+          <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              checked={params.get("runFlat") === "1"}
+              onChange={(e) => apply({ runFlat: e.target.checked ? "1" : "" })}
+              className="h-4 w-4 accent-brand-500"
+            />
+            Run-flat only
+          </label>
+        </div>
+      )}
 
       {anyFilter && (
         <button

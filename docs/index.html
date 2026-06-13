@@ -80,7 +80,34 @@
 const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
 
 /* ───────────────────────── Data layer (localStorage) ───────────────────────── */
-const LS_KEY = 'tiretrader_demo_v4';
+const LS_KEY = 'tiretrader_demo_v5';
+// Vehicle → factory tire size (popular models)
+const FITMENT = {
+  Toyota:{Camry:[[2018,2025,"215/55R17"],[2012,2017,"205/65R16"]],Corolla:[[2020,2025,"205/55R16"],[2014,2019,"195/65R15"]],RAV4:[[2013,2025,"225/65R17"]],Tacoma:[[2016,2025,"265/70R16"]],Highlander:[[2020,2025,"235/65R18"]]},
+  Honda:{Civic:[[2016,2025,"215/55R16"],[2012,2015,"195/65R15"]],Accord:[[2018,2025,"225/50R17"],[2013,2017,"215/55R17"]],"CR-V":[[2017,2025,"235/65R17"],[2012,2016,"225/65R17"]],Pilot:[[2016,2025,"245/60R18"]]},
+  Ford:{"F-150":[[2015,2025,"265/70R17"]],Escape:[[2020,2025,"225/65R17"],[2013,2019,"235/55R17"]],Explorer:[[2020,2025,"255/65R18"],[2011,2019,"245/60R18"]],Mustang:[[2015,2025,"235/55R17"]]},
+  Chevrolet:{Silverado:[[2014,2025,"265/70R17"]],Equinox:[[2018,2025,"225/65R17"]],Malibu:[[2016,2025,"225/55R17"]],Tahoe:[[2015,2025,"265/65R18"]]},
+  Nissan:{Altima:[[2019,2025,"215/55R17"],[2013,2018,"215/60R16"]],Rogue:[[2014,2025,"225/65R17"]],Sentra:[[2020,2025,"205/55R16"]]},
+  Jeep:{"Grand Cherokee":[[2011,2025,"265/60R18"]],Wrangler:[[2018,2025,"245/75R17"]],Cherokee:[[2014,2023,"225/60R17"]]},
+  Subaru:{Outback:[[2015,2025,"225/65R17"]],Forester:[[2019,2025,"225/60R17"]],Impreza:[[2017,2025,"205/50R17"]]},
+  BMW:{"3 Series":[[2019,2025,"225/45R18"],[2012,2018,"225/45R17"]],"5 Series":[[2017,2025,"245/45R18"]],X5:[[2019,2025,"265/50R19"]]},
+  Tesla:{"Model 3":[[2017,2025,"235/45R18"]],"Model Y":[[2020,2025,"255/45R19"]]},
+  Hyundai:{Elantra:[[2017,2025,"205/55R16"]],Tucson:[[2022,2025,"235/60R18"]]},
+  Ram:{"1500":[[2019,2025,"275/65R18"],[2012,2018,"265/70R17"]]},
+  GMC:{Sierra:[[2014,2025,"265/70R17"]],Acadia:[[2017,2025,"235/65R18"]]},
+};
+const FIT_MAKES = Object.keys(FITMENT);
+const fitModels = (mk) => FITMENT[mk] ? Object.keys(FITMENT[mk]) : [];
+const fitYears = (mk,md) => { const g=FITMENT[mk]?.[md]; if(!g) return []; const lo=Math.min(...g.map(x=>x[0])),hi=Math.max(...g.map(x=>x[1])); const o=[]; for(let y=hi;y>=lo;y--) o.push(y); return o; };
+const fitSize = (mk,md,yr) => { const g=FITMENT[mk]?.[md]; if(!g) return null; const y=Number(yr); const m=g.find(x=>y>=x[0]&&y<=x[1])||g[0]; return m?m[2]:null; };
+const CITY_COORDS = {
+  "Dallas, TX":[32.7767,-96.797],"Los Angeles, CA":[34.0522,-118.2437],"Chicago, IL":[41.8781,-87.6298],
+  "Phoenix, AZ":[33.4484,-112.074],"Atlanta, GA":[33.749,-84.388],"Houston, TX":[29.7604,-95.3698],
+  "Denver, CO":[39.7392,-104.9903],"Miami, FL":[25.7617,-80.1918],"Seattle, WA":[47.6062,-122.3321],
+  "New York, NY":[40.7128,-74.006],"Charlotte, NC":[35.2271,-80.8431],"Nashville, TN":[36.1627,-86.7816],
+};
+function milesBetween(a,b,c,d){ if([a,b,c,d].some(v=>typeof v!=='number')) return Infinity; const R=3958.8,rad=x=>x*Math.PI/180; const dLa=rad(c-a),dLo=rad(d-b); const h=Math.sin(dLa/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const SEASON_LABEL = { summer:'Summer', winter:'Winter', 'all-season':'All-season', 'all-weather':'All-weather' };
 const GRID_ROWS = 8, GRID_COLS = 11;
 const STATES = [
   ['ME','Maine',0,10],['VT','Vermont',1,9],['NH','New Hampshire',1,10],
@@ -162,12 +189,17 @@ function seedDB() {
     { brand:'Michelin', model:'Defender T+H', size:'215/55R17', cond:'used', tread:'8/32in', qty:4, price:300, loc:'Dallas, TX', desc:'Long-life touring tires, low miles.' },
     { brand:'Goodyear', model:'Wrangler DuraTrac', size:'275/55R20', cond:'new', tread:'17/32in', qty:4, price:1240, loc:'Nashville, TN', desc:'Heavy duty, brand new set for full-size trucks.' },
   ];
+  const SEASONS_SEED = ['all-season','summer','winter','all-weather'], SPEEDS = ['H','V','W','Y','T'];
   const listings = catalog.map((c, i) => {
     const seller = sellers[i % sellers.length];
+    const co = CITY_COORDS[c.loc] || [null, null];
     return {
       id: cuid(), sellerId: seller.id, brand: c.brand, size: c.size, quantity: c.qty,
       condition: c.cond, treadDepth: c.tread, priceCents: c.price * 100, location: c.loc,
-      state: stateFromLocation(c.loc),
+      state: stateFromLocation(c.loc), lat: co[0], lng: co[1],
+      season: SEASONS_SEED[i % SEASONS_SEED.length], loadIndex: String(89 + (i % 10)),
+      speedRating: SPEEDS[i % SPEEDS.length], runFlat: i % 4 === 0, dotYear: 2020 + (i % 5),
+      featured: i === 0 || i === 3 || i === 9,
       description: `${c.model}. ${c.desc}`, status: i === 5 ? 'sold' : 'active',
       views: (i * 13 + 4) % 90, createdAt: now - ((i * 37) % 60) * 864e5, photoIdx: i,
     };
@@ -180,7 +212,9 @@ function seedDB() {
   let t = now - 6 * 36e5;
   const messages = convo.map(([senderId, body]) => { t += 22 * 60e3; return { id: cuid(), threadId: thread.id, senderId, body, createdAt: t }; });
 
-  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages };
+  const favorites = listings.filter(l => l.sellerId !== buyer.id).slice(1, 4).map(l => ({ userId: buyer.id, listingId: l.id }));
+
+  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages, favorites };
 }
 
 function loadDB() {
@@ -254,6 +288,7 @@ function Header() {
         <nav className="flex items-center gap-1 sm:gap-2">
           {me ? <>
             <a href="#/browse" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Browse</a>
+            <a href="#/favorites" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Saved</a>
             <a href="#/messages" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Messages</a>
             <a href="#/dashboard" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Dashboard</a>
             {active ? <a href="#/sell" className="btn-primary"><span className="text-base leading-none">+</span><span className="hidden sm:inline">Sell tires</span></a>
@@ -282,27 +317,45 @@ function Header() {
 function LogoutBtn() { const { logout } = useApp(); return <button onMouseDown={logout} className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10">Log out</button>; }
 
 /* ───────────────────────── Listing card ───────────────────────── */
+function Heart({ lid, className }) {
+  const { isFavorited, toggleFavorite } = useApp();
+  const fav = isFavorited(lid);
+  return (
+    <button onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); toggleFavorite(lid); }} aria-label="Save" className={`grid h-8 w-8 place-items-center rounded-full bg-ink-950/60 backdrop-blur ring-1 ring-white/15 transition hover:bg-ink-950/80 ${className||''}`}>
+      <svg viewBox="0 0 20 20" className={`h-4 w-4 ${fav?'fill-red-500':'fill-none stroke-white'}`} strokeWidth="1.6"><path d="M10 17s-6-4.35-8-8.5C.8 5.9 2.5 3.5 5 3.5c1.7 0 2.8 1 3.5 2 .7-1 1.8-2 3.5-2 2.5 0 4.2 2.4 3 5-2 4.15-8 8.5-8 8.5Z"/></svg>
+    </button>
+  );
+}
+function PromoteBtn({ l }) {
+  const { togglePromote } = useApp();
+  return <button onClick={()=>togglePromote(l.id)} className={`btn px-3 py-1.5 ${l.featured?'bg-accent-500 text-ink-950 hover:bg-accent-400':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'}`} title="Promote to the top of search (demo: free)">★ {l.featured?'Featured':'Promote'}</button>;
+}
 function Card({ l }) {
   const isNew = l.condition === 'new';
   return (
-    <a href={`#/listings/${l.id}`} className="card card-hover group block overflow-hidden">
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
-        <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
-          <span className={isNew ? 'badge-new' : 'badge-used'}>{isNew ? 'New' : 'Used'}</span>
-          {l.status === 'sold' && <span className="badge bg-ink-900/90 text-white">Sold</span>}
+    <div className="card card-hover group relative block overflow-hidden">
+      <Heart lid={l.id} className="absolute right-2.5 top-2.5 z-10" />
+      <a href={`#/listings/${l.id}`} className="block">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
+          <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
+          <div className="absolute inset-x-0 top-0 flex items-start gap-1.5 p-2.5">
+            {l.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}
+            <span className={isNew ? 'badge-new' : 'badge-used'}>{isNew ? 'New' : 'Used'}</span>
+            {l.status === 'sold' && <span className="badge bg-ink-900/90 text-white">Sold</span>}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent p-2.5"><span className="font-mono text-sm font-semibold text-white drop-shadow">{l.size}</span></div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent p-2.5"><span className="font-mono text-sm font-semibold text-white drop-shadow">{l.size}</span></div>
-      </div>
-      <div className="p-3.5">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display font-bold leading-tight text-white">{l.brand}</h3>
-          <span className="whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>
+        <div className="p-3.5">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-display font-bold leading-tight text-white">{l.brand}</h3>
+            <span className="whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400"><span>Qty {l.quantity}</span>{l.treadDepth && <span className="text-slate-600">·</span>}{l.treadDepth && <span>{l.treadDepth} tread</span>}</div>
+          {(l.season || l.runFlat) && <div className="mt-2 flex flex-wrap gap-1">{l.season && <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-inset ring-white/10">{SEASON_LABEL[l.season]||l.season}</span>}{l.runFlat && <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">Run-flat</span>}</div>}
+          <p className="mt-2 truncate text-xs text-slate-500">📍 {l.location}</p>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400"><span>Qty {l.quantity}</span>{l.treadDepth && <span className="text-slate-600">·</span>}{l.treadDepth && <span>{l.treadDepth} tread</span>}</div>
-        <p className="mt-2 truncate text-xs text-slate-500">📍 {l.location}</p>
-      </div>
-    </a>
+      </a>
+    </div>
   );
 }
 
@@ -339,6 +392,66 @@ function StateMap({ counts, selected, loggedIn }) {
   );
 }
 
+function VehicleFinder({ stateParam }) {
+  const [mk, setMk] = useState(''); const [md, setMd] = useState(''); const [yr, setYr] = useState('');
+  const models = mk ? fitModels(mk) : []; const years = mk&&md ? fitYears(mk,md) : []; const size = mk&&md&&yr ? fitSize(mk,md,yr) : null;
+  const go = () => { if(!size) return; const sp=new URLSearchParams(); sp.set('size',size); if(stateParam) sp.set('state',stateParam); sp.set('fits',`${yr} ${mk} ${md}`); navigate('/browse?'+sp.toString()); };
+  return (
+    <div className="card overflow-hidden">
+      <div className="border-b border-white/10 bg-white/[0.02] px-5 py-3"><p className="eyebrow">Not sure of your size?</p><h3 className="font-display text-lg font-bold text-white">Find tires for your vehicle</h3></div>
+      <div className="grid gap-2 p-4 sm:grid-cols-4">
+        <select className="input" value={mk} onChange={e=>{setMk(e.target.value);setMd('');setYr('');}}><option value="">Make</option>{FIT_MAKES.map(m=><option key={m} value={m}>{m}</option>)}</select>
+        <select className="input" value={md} disabled={!mk} onChange={e=>{setMd(e.target.value);setYr('');}}><option value="">Model</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select>
+        <select className="input" value={yr} disabled={!md} onChange={e=>setYr(e.target.value)}><option value="">Year</option>{years.map(y=><option key={y} value={y}>{y}</option>)}</select>
+        <button onClick={go} disabled={!size} className="btn-primary">{size?`Find ${size}`:'Find tires'}</button>
+      </div>
+      {size && <div className="px-4 pb-4 text-sm text-slate-400">Your {yr} {mk} {md} uses <span className="font-mono font-semibold text-brand-300">{size}</span>.</div>}
+    </div>
+  );
+}
+
+function Favorites() {
+  const { db, me } = useApp();
+  useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
+  if(!me) return null;
+  const ids = (db.favorites||[]).filter(f=>f.userId===me.id).map(f=>f.listingId);
+  const list = ids.map(id=>db.listings.find(l=>l.id===id)).filter(Boolean);
+  return (
+    <div className="space-y-5">
+      <div><p className="eyebrow">Watchlist</p><h1 className="font-display text-2xl font-extrabold text-white">Saved tires</h1><p className="text-sm text-slate-400">{list.length} saved listing{list.length!==1?'s':''}</p></div>
+      {list.length===0 ? <div className="card grid place-items-center px-6 py-16 text-center"><span className="text-4xl">🤍</span><p className="mt-3 font-display text-lg font-bold text-slate-200">No saved tires yet</p><p className="mt-1 text-sm text-slate-400">Tap the heart on any listing to save it here.</p><a href="#/browse" className="btn-secondary mt-4">Browse tires</a></div>
+        : <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{list.map(l=><Card key={l.id} l={l} />)}</div>}
+    </div>
+  );
+}
+
+function AppPage() {
+  const [done, setDone] = useState(false); const [email, setEmail] = useState('');
+  const feats = [['📸','Snap & list in seconds','Photograph a tire and post it before the buyer leaves the lot.'],['🔔','Instant message alerts','Push notifications the moment a buyer reaches out.'],['📍','Tires near you','Browse local inventory on the go with one tap.']];
+  const Badge = ({store,sub}) => <span className="inline-flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 opacity-80"><span className="text-2xl">{store==='apple'?'':'▶'}</span><span className="text-left leading-tight"><span className="block text-[10px] uppercase tracking-wide text-slate-400">{sub}</span><span className="block font-semibold text-white">{store==='apple'?'App Store':'Google Play'}</span></span></span>;
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <section className="relative overflow-hidden rounded-3xl bg-ink-900 px-6 py-10 text-center text-white sm:px-10 sm:py-14">
+        <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" />
+        <div className="relative">
+          <div className="mx-auto mb-4 w-fit"><Logo cls="h-16 w-16" spin bare /></div>
+          <span className="badge bg-white/10 text-brand-100 ring-1 ring-inset ring-white/15">Coming soon</span>
+          <h1 className="mt-3 font-display text-3xl font-extrabold sm:text-4xl">TireTrader in your pocket</h1>
+          <p className="mx-auto mt-3 max-w-xl text-slate-300">We're building native iOS &amp; Android apps so you can buy and sell tires anywhere. Want first dibs? Drop your email and we'll ping you at launch.</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3"><Badge store="apple" sub="Download on the" /><Badge store="google" sub="Get it on" /></div>
+          <p className="mt-2 text-xs text-slate-500">Badges are placeholders — the apps aren't published yet.</p>
+          <div className="mx-auto mt-6 max-w-md text-left">
+            {done ? <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">🎉 You're on the list — we'll email you at launch.</div>
+              : <form onSubmit={e=>{e.preventDefault(); if(email.includes('@')) setDone(true);}} className="flex flex-col gap-2 sm:flex-row"><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="input" /><button className="btn-primary whitespace-nowrap px-5">Notify me</button></form>}
+          </div>
+        </div>
+      </section>
+      <div className="grid gap-3 sm:grid-cols-3">{feats.map(([i,t,s])=><div key={t} className="card p-4"><p className="text-2xl">{i}</p><p className="mt-2 font-display font-bold text-white">{t}</p><p className="mt-1 text-sm text-slate-400">{s}</p></div>)}</div>
+      <p className="text-center text-sm text-slate-500">In the meantime, <a href="#/browse" className="font-semibold text-brand-300 hover:underline">browse on the web</a> — it works great on mobile.</p>
+    </div>
+  );
+}
+
 function Landing({ force }) {
   const { db, me } = useApp();
   const selected = userStateOf(me);
@@ -363,39 +476,52 @@ function Landing({ force }) {
         </div>
       </section>
       <StateMap counts={counts} selected={selected} loggedIn={!!me} />
+      <VehicleFinder stateParam={selected} />
     </div>
   );
 }
 
 /* ───────────────────────── Browse (marketplace) ───────────────────────── */
-function Marketplace({ stateParam }) {
+function Marketplace({ params }) {
   const { db } = useApp();
+  const stateParam = params.get('state'), fits = params.get('fits');
   const st = stateParam && isStateAbbr(stateParam) ? stateParam.toUpperCase() : null;
   const [q, setQ] = useState(''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
-  const [size, setSize] = useState(''); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('');
-  useEffect(()=>{ setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort(''); }, [st]);
-  const filtered = q || brand || cond || size || maxPrice || sort;
+  const [size, setSize] = useState(params.get('size')||''); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('');
+  const [season, setSeason] = useState(''); const [runFlat, setRunFlat] = useState(false); const [more, setMore] = useState(false);
+  const [near, setNear] = useState(null); const [radius, setRadius] = useState('50'); const [locating, setLocating] = useState(false);
+  useEffect(()=>{ setQ('');setBrand('');setCond('');setSize(params.get('size')||'');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setNear(null); }, [st, params.get('size')]);
+  const filtered = q || brand || cond || size || maxPrice || sort || season || runFlat || near;
+
+  function useMyLocation(){ if(!navigator.geolocation) return; setLocating(true); navigator.geolocation.getCurrentPosition(p=>{ setLocating(false); setNear({lat:p.coords.latitude,lng:p.coords.longitude}); }, ()=>setLocating(false), {timeout:8000}); }
   const brands = useMemo(() => [...new Set(db.listings.filter(l => l.status==='active').map(l => l.brand))].sort(), [db]);
 
   let list = db.listings.filter(l => l.status === 'active');
-  if (st) list = list.filter(l => l.state === st);
+  if (st && !near) list = list.filter(l => l.state === st);
   if (brand) list = list.filter(l => l.brand === brand);
   if (cond) list = list.filter(l => l.condition === cond);
   if (size) list = list.filter(l => l.size.toLowerCase().includes(size.toLowerCase()));
+  if (season) list = list.filter(l => l.season === season);
+  if (runFlat) list = list.filter(l => l.runFlat);
   if (maxPrice) list = list.filter(l => l.priceCents <= Math.round(Number(maxPrice) * 100));
   if (q) { const Q = q.toLowerCase(); list = list.filter(l => [l.brand,l.size,l.location,l.description].join(' ').toLowerCase().includes(Q)); }
-  list = [...list].sort((a,b) => sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt);
+  if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(a.d-b.d)).map(x=>x.l); }
+  else list = [...list].sort((a,b) => (b.featured-a.featured) || (sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt));
+
+  const scope = near ? `Within ${radius} mi of you` : st ? `Tires in ${stateName(st)}` : 'All listings';
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/states" className="hover:text-brand-300">Map</a><span>/</span><span className="font-medium text-slate-200">{st ? stateName(st) : 'All states'}</span></nav>
-          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{st ? `Tires in ${stateName(st)}` : 'All listings'}</h1>
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/states" className="hover:text-brand-300">Map</a><span>/</span><span className="font-medium text-slate-200">{near ? 'Near me' : st ? stateName(st) : 'All states'}</span></nav>
+          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{scope}</h1>
           <p className="text-sm text-slate-400">{list.length} tire set{list.length!==1?'s':''}{filtered ? ' match your filters' : ' available'}</p>
         </div>
         <a href="#/states" className="btn-secondary"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>{st ? 'Change state' : 'Open map'}</a>
       </div>
+
+      {fits && size && <div className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30"><span>🚗</span>Showing <span className="font-mono font-semibold">{size}</span> — fits your <span className="font-semibold">{fits}</span>.</div>}
 
       <div id="listings" className="card p-3 sm:p-4">
         <form onSubmit={e=>e.preventDefault()} className="flex gap-2">
@@ -411,11 +537,20 @@ function Marketplace({ stateParam }) {
           <input className="input" placeholder="Max $" type="number" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} />
           <select className="input" value={sort} onChange={e=>setSort(e.target.value)}><option value="">Sort: Newest</option><option value="price_asc">Price: Low → High</option><option value="price_desc">Price: High → Low</option></select>
         </div>
-        {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={near?()=>setNear(null):useMyLocation} className={`btn ${near?'bg-brand-600 text-white':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'} px-3 py-1.5`}><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>{locating?'Locating…':near?'Near me ✓':'Near me'}</button>
+          {near && <select className="input w-auto py-1.5" value={radius} onChange={e=>setRadius(e.target.value)}><option value="25">25 mi</option><option value="50">50 mi</option><option value="100">100 mi</option><option value="250">250 mi</option></select>}
+          <button type="button" onClick={()=>setMore(m=>!m)} className="btn-ghost px-3 py-1.5">{more?'Fewer filters':'More filters'}</button>
+        </div>
+        {more && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <select className="input" value={season} onChange={e=>setSeason(e.target.value)}><option value="">Any season</option><option value="all-season">All-season</option><option value="summer">Summer</option><option value="winter">Winter</option><option value="all-weather">All-weather</option></select>
+          <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-slate-200"><input type="checkbox" checked={runFlat} onChange={e=>setRunFlat(e.target.checked)} className="h-4 w-4 accent-brand-500" />Run-flat only</label>
+        </div>}
+        {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setNear(null);}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
       </div>
 
       {list.length === 0 ? (
-        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state or broaden your search.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
+        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{list.map(l => <Card key={l.id} l={l} />)}</div>
       )}
@@ -443,12 +578,19 @@ function Detail({ id }) {
         <div className="lg:col-span-3"><div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-900"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div></div>
         <div className="space-y-4 lg:col-span-2">
           <div className="card p-5">
-            <div className="flex items-center gap-2"><span className={isNew?'badge-new':'badge-used'}>{isNew?'New':'Used'}</span>{l.status==='sold' && <span className="badge bg-ink-900 text-white">Sold</span>}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">{l.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}<span className={isNew?'badge-new':'badge-used'}>{isNew?'New':'Used'}</span>{l.status==='sold' && <span className="badge bg-ink-900 text-white">Sold</span>}</div>
+              {!isOwner && <Heart lid={l.id} />}
+            </div>
             <h1 className="mt-3 font-display text-2xl font-extrabold text-white">{l.brand}</h1>
             <p className="font-mono text-lg text-slate-400">{l.size}</p>
             <p className="mt-3 font-display text-4xl font-extrabold text-white">{fmt(l.priceCents)}<span className="ml-2 align-middle text-sm font-medium text-slate-500">for {l.quantity}</span></p>
             <dl className="mt-4 grid grid-cols-2 gap-2.5">
               <Spec k="Quantity" v={l.quantity} /><Spec k="Condition" v={isNew?'New':'Used'} /><Spec k="Tread depth" v={l.treadDepth||'—'} /><Spec k="Per tire" v={fmt(Math.round(l.priceCents/l.quantity))} />
+              {l.season && <Spec k="Season" v={SEASON_LABEL[l.season]||l.season} />}
+              {(l.loadIndex||l.speedRating) && <Spec k="Load / Speed" v={`${l.loadIndex||'—'}${l.speedRating||''}`} />}
+              {l.runFlat && <Spec k="Run-flat" v="Yes" />}
+              {l.dotYear && <Spec k="Mfg. year" v={`${l.dotYear} · ${new Date().getFullYear()-l.dotYear}y old`} />}
             </dl>
             <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">📍 {l.location}</p>
           </div>
@@ -606,6 +748,16 @@ function Sell({ id }) {
             <div className="sm:col-span-2"><label className="label">Description <span className="font-normal text-slate-400">(optional)</span></label><textarea name="description" rows={3} defaultValue={editing?.description||''} className="input" placeholder="Set of 4, mounted one season, no patches…" /></div>
             {editing && <div className="sm:col-span-2"><label className="label">Status</label><select name="status" defaultValue={editing.status} className="input max-w-xs"><option value="active">Active</option><option value="sold">Sold</option></select></div>}
           </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <p className="mb-3 text-sm font-bold text-slate-200">Tire details <span className="font-normal text-slate-400">— help buyers find the right fit</span></p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div><label className="label">Season</label><select name="season" defaultValue={editing?.season||''} className="input"><option value="">—</option><option value="all-season">All-season</option><option value="summer">Summer</option><option value="winter">Winter</option><option value="all-weather">All-weather</option></select></div>
+              <div><label className="label">Load index</label><input name="loadIndex" defaultValue={editing?.loadIndex||''} className="input" placeholder="91" /></div>
+              <div><label className="label">Speed rating</label><input name="speedRating" defaultValue={editing?.speedRating||''} className="input" placeholder="V" maxLength={3} /></div>
+              <div><label className="label">DOT year <span className="text-slate-400">(mfg.)</span></label><input name="dotYear" type="number" min="2000" max="2030" defaultValue={editing?.dotYear||''} className="input" placeholder="2022" /></div>
+              <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-slate-200 sm:col-span-2"><input type="checkbox" name="runFlat" defaultChecked={editing?.runFlat} className="h-4 w-4 accent-brand-500" />Run-flat tires</label>
+            </div>
+          </div>
           <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-slate-400 ring-1 ring-inset ring-white/10">📷 A studio tire photo is auto-generated for this demo.</div>
           <div className="flex gap-2"><button className="btn-primary">{editing ? 'Save changes' : 'Publish listing'}</button><a href="#/dashboard" className="btn-secondary">Cancel</a></div>
         </form>
@@ -658,7 +810,7 @@ function Dashboard() {
             <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
               <a href={`#/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></a>
               <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><a href={`#/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">{l.brand} · {l.size}</a><span className={`badge ${l.status==='active'?'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30':'bg-white/10 text-slate-300'}`}>{l.status==='active'?'Active':'Sold'}</span></div><p className="mt-0.5 text-sm text-slate-400"><span className="font-semibold text-slate-200">{fmt(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}</p><p className="mt-0.5 text-xs text-slate-500">👁 {l.views} views · 💬 {db.threads.filter(t=>t.listingId===l.id).length} chats</p></div>
-              <a href={`#/sell/${l.id}`} className="btn-secondary shrink-0">Edit</a>
+              <div className="flex shrink-0 gap-2">{l.status==='active' && <PromoteBtn l={l} />}<a href={`#/sell/${l.id}`} className="btn-secondary">Edit</a></div>
             </div>
           ))}</div>
         )}
@@ -732,7 +884,7 @@ function Footer() {
     <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div>
-        <p className="text-sm text-slate-500">Live front-end demo · data saved in your browser · <a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">source on GitHub</a></p>
+        <p className="text-sm text-slate-500"><a href="#/app" className="font-medium text-slate-300 hover:text-white">📱 Get the app</a> · Live front-end demo · <a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">source on GitHub</a></p>
         <button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-sm font-medium text-slate-400 hover:text-brand-300">↺ Reset demo</button>
       </div>
     </footer>
@@ -770,11 +922,16 @@ function App() {
     },
     sendMessage: (tid, body) => { const th = db.threads.find(t=>t.id===tid); update(d => { d.messages.push({ id: cuid(), threadId: tid, senderId: d.session, body, createdAt: Date.now() }); }); if (th) { const otherId = th.buyerId === db.session ? th.sellerId : th.buyerId; scheduleReply(tid, otherId); } },
     saveListing: (id, f) => {
-      const data = { brand:f.brand, size:f.size, quantity:Math.max(1,parseInt(f.quantity)||1), condition:f.condition==='new'?'new':'used', treadDepth:f.treadDepth||null, priceCents:Math.round(Number(f.price)*100), location:f.location, state:stateFromLocation(f.location), description:f.description||null, status:f.status==='sold'?'sold':'active', photoIdx:f.photoIdx };
+      const co = CITY_COORDS[f.location] || [null, null];
+      const SEASONS = ['summer','winter','all-season','all-weather'];
+      const data = { brand:f.brand, size:f.size, quantity:Math.max(1,parseInt(f.quantity)||1), condition:f.condition==='new'?'new':'used', treadDepth:f.treadDepth||null, priceCents:Math.round(Number(f.price)*100), location:f.location, state:stateFromLocation(f.location), lat:co[0], lng:co[1], season:SEASONS.includes(f.season)?f.season:null, loadIndex:f.loadIndex?String(f.loadIndex).trim():null, speedRating:f.speedRating?String(f.speedRating).trim().toUpperCase():null, runFlat:!!f.runFlat, dotYear:f.dotYear&&Number(f.dotYear)?Math.round(Number(f.dotYear)):null, description:f.description||null, status:f.status==='sold'?'sold':'active', photoIdx:f.photoIdx };
       let nid = id;
-      update(d => { if (id) { const l = d.listings.find(x=>x.id===id); Object.assign(l, data); } else { nid = cuid(); d.listings.unshift({ id:nid, sellerId:d.session, views:0, createdAt:Date.now(), ...data }); } });
+      update(d => { if (id) { const l = d.listings.find(x=>x.id===id); Object.assign(l, data); } else { nid = cuid(); d.listings.unshift({ id:nid, sellerId:d.session, views:0, featured:false, createdAt:Date.now(), ...data }); } });
       return nid;
     },
+    isFavorited: (lid) => !!(db.favorites||[]).find(x=>x.userId===db.session && x.listingId===lid),
+    toggleFavorite: (lid) => { if(!db.session){ navigate('/login'); return; } update(d => { d.favorites = d.favorites||[]; const i = d.favorites.findIndex(x=>x.userId===d.session && x.listingId===lid); if(i>=0) d.favorites.splice(i,1); else d.favorites.push({ userId:d.session, listingId:lid }); }); },
+    togglePromote: (lid) => update(d => { const l = d.listings.find(x=>x.id===lid); if(l) l.featured = !l.featured; }),
     reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
   };
 
@@ -795,7 +952,9 @@ function App() {
   const seg = routePath.split('/').filter(Boolean);
   if (routePath === '/' || seg.length === 0) view = <Landing />;
   else if (seg[0] === 'states') view = <Landing force />;
-  else if (seg[0] === 'browse') view = <Marketplace stateParam={qp.get('state')} />;
+  else if (seg[0] === 'browse') view = <Marketplace params={qp} />;
+  else if (seg[0] === 'favorites') view = <Favorites />;
+  else if (seg[0] === 'app') view = <AppPage />;
   else if (seg[0] === 'listings' && seg[1]) view = <Detail id={seg[1]} />;
   else if (seg[0] === 'login') view = <Auth mode="login" />;
   else if (seg[0] === 'signup') view = <Auth mode="signup" />;

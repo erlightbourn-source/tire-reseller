@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, sellerStatus } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
+import PromoteButton from "@/components/PromoteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +149,10 @@ export default async function DashboardPage() {
                     <span>💬 {l._count.threads} chats</span>
                   </p>
                 </div>
-                <Link href={`/sell/${l.id}/edit`} className="btn-secondary shrink-0">Edit</Link>
+                <div className="flex shrink-0 gap-2">
+                  {l.status === "active" && <PromoteButton id={l.id} initial={l.featured} />}
+                  <Link href={`/sell/${l.id}/edit`} className="btn-secondary">Edit</Link>
+                </div>
               </div>
             ))}
           </div>

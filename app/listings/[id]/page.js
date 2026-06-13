@@ -6,8 +6,11 @@ import { formatPrice, timeAgo } from "@/lib/format";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
+import FavoriteButton from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
+
+const SEASON_LABEL = { summer: "Summer", winter: "Winter", "all-season": "All-season", "all-weather": "All-weather" };
 
 export default async function ListingDetail({ params }) {
   const user = await getCurrentUser();
@@ -26,12 +29,20 @@ export default async function ListingDetail({ params }) {
     await prisma.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
   }
 
+  let favorited = false;
+  if (user) {
+    favorited = !!(await prisma.favorite.findUnique({
+      where: { userId_listingId: { userId: user.id, listingId: listing.id } },
+    }));
+  }
+
   const isNew = listing.condition === "new";
+  const ageYears = listing.dotYear ? new Date().getFullYear() - listing.dotYear : null;
 
   return (
     <div className="space-y-4">
       <nav className="flex items-center gap-1.5 text-sm text-slate-400">
-        <Link href="/" className="hover:text-brand-300">Marketplace</Link>
+        <Link href="/browse" className="hover:text-brand-300">Marketplace</Link>
         <span>/</span>
         <span className="truncate font-medium text-slate-200">{listing.brand} {listing.size}</span>
       </nav>
@@ -43,9 +54,13 @@ export default async function ListingDetail({ params }) {
 
         <div className="space-y-4 lg:col-span-2">
           <div className="card p-5">
-            <div className="flex items-center gap-2">
-              <span className={isNew ? "badge-new" : "badge-used"}>{isNew ? "New" : "Used"}</span>
-              {listing.status === "sold" && <span className="badge bg-ink-900 text-white">Sold</span>}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {listing.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}
+                <span className={isNew ? "badge-new" : "badge-used"}>{isNew ? "New" : "Used"}</span>
+                {listing.status === "sold" && <span className="badge bg-ink-900 text-white">Sold</span>}
+              </div>
+              {!isOwner && <FavoriteButton listingId={listing.id} initial={favorited} />}
             </div>
             <h1 className="mt-3 font-display text-2xl font-extrabold text-white">{listing.brand}</h1>
             <p className="font-mono text-lg text-slate-400">{listing.size}</p>
@@ -59,6 +74,12 @@ export default async function ListingDetail({ params }) {
               <Spec label="Condition" value={isNew ? "New" : "Used"} />
               <Spec label="Tread depth" value={listing.treadDepth || "—"} />
               <Spec label="Per tire" value={formatPrice(Math.round(listing.priceCents / listing.quantity))} />
+              {listing.season && <Spec label="Season" value={SEASON_LABEL[listing.season] || listing.season} />}
+              {(listing.loadIndex || listing.speedRating) && (
+                <Spec label="Load / Speed" value={`${listing.loadIndex || "—"}${listing.speedRating || ""}`} />
+              )}
+              {listing.runFlat && <Spec label="Run-flat" value="Yes" />}
+              {listing.dotYear && <Spec label="Mfg. year" value={`${listing.dotYear}${ageYears != null ? ` · ${ageYears}y old` : ""}`} />}
             </dl>
 
             <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">

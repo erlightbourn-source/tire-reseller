@@ -173,12 +173,24 @@ async function main() {
     { brand: "Goodyear", model: "Wrangler DuraTrac", size: "275/55R20", cond: "new", tread: "17/32in", qty: 4, price: 1240, loc: "Nashville, TN", desc: "Heavy duty, brand new set for full-size trucks." },
   ];
   const stateOf = (loc) => (loc.split(",").pop() || "").trim().toUpperCase();
+  // Coordinates for the seed cities (for "near me" radius search).
+  const COORDS = {
+    "Dallas, TX": [32.7767, -96.797], "Los Angeles, CA": [34.0522, -118.2437],
+    "Chicago, IL": [41.8781, -87.6298], "Phoenix, AZ": [33.4484, -112.074],
+    "Atlanta, GA": [33.749, -84.388], "Houston, TX": [29.7604, -95.3698],
+    "Denver, CO": [39.7392, -104.9903], "Miami, FL": [25.7617, -80.1918],
+    "Seattle, WA": [47.6062, -122.3321], "New York, NY": [40.7128, -74.006],
+    "Charlotte, NC": [35.2271, -80.8431], "Nashville, TN": [36.1627, -86.7816],
+  };
+  const SEASONS = ["all-season", "summer", "winter", "all-weather"];
+  const SPEEDS = ["H", "V", "W", "Y", "T"];
 
   const listings = [];
   for (let i = 0; i < catalog.length; i++) {
     const c = catalog[i];
     const seller = sellers[i % sellers.length];
     const ageDays = Math.floor((i * 37) % 60);
+    const [lat, lng] = COORDS[c.loc] || [null, null];
     const listing = await prisma.listing.create({
       data: {
         sellerId: seller.id,
@@ -190,6 +202,14 @@ async function main() {
         priceCents: c.price * 100,
         location: c.loc,
         state: stateOf(c.loc),
+        lat,
+        lng,
+        season: SEASONS[i % SEASONS.length],
+        loadIndex: String(89 + (i % 10)),
+        speedRating: SPEEDS[i % SPEEDS.length],
+        runFlat: i % 4 === 0,
+        dotYear: 2020 + (i % 5),
+        featured: i === 0 || i === 3 || i === 9, // a few promoted listings
         description: `${c.model}. ${c.desc}`,
         status: i === 5 ? "sold" : "active",
         views: (i * 13 + 4) % 90,
@@ -200,6 +220,11 @@ async function main() {
       },
     });
     listings.push(listing);
+  }
+
+  console.log("Saving a few favorites for the demo buyer…");
+  for (const l of listings.filter((x) => x.sellerId !== buyer.id).slice(1, 4)) {
+    await prisma.favorite.create({ data: { userId: buyer.id, listingId: l.id } });
   }
 
   console.log("Creating a sample conversation…");

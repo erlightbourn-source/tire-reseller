@@ -50,9 +50,10 @@ export default async function RootLayout({ children }) {
               <Logo className="h-7 w-7" />
               <span className="font-display font-bold text-slate-200">TireTrader</span>
             </div>
-            <p className="text-sm text-slate-500">
-              The marketplace for tire resellers · Buyers browse free · Sellers $10/mo
-            </p>
+            <div className="flex items-center gap-4 text-sm text-slate-500">
+              <Link href="/app" className="font-medium text-slate-300 hover:text-white">📱 Get the app</Link>
+              <span className="hidden sm:inline">Buyers browse free · Sellers $10/mo</span>
+            </div>
           </div>
         </footer>
       </body>

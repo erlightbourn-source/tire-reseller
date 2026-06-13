@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
 import StateMap from "@/components/StateMap";
+import VehicleFinder from "@/components/VehicleFinder";
 import Logo from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
@@ -67,6 +68,7 @@ export default async function StatesPage() {
       </section>
 
       <StateMap counts={counts} selected={selected} loggedIn={!!user} />
+      <VehicleFinder stateParam={selected} />
     </div>
   );
 }

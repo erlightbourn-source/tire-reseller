@@ -2,6 +2,21 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
+import { geocodeCity } from "@/lib/geo";
+
+const SEASONS = ["summer", "winter", "all-season", "all-weather"];
+function tireAttrs(b) {
+  const coords = geocodeCity(b.location) || {};
+  return {
+    season: SEASONS.includes(b.season) ? b.season : null,
+    loadIndex: b.loadIndex ? String(b.loadIndex).trim() : null,
+    speedRating: b.speedRating ? String(b.speedRating).trim().toUpperCase() : null,
+    runFlat: !!b.runFlat,
+    dotYear: b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null,
+    lat: coords.lat ?? null,
+    lng: coords.lng ?? null,
+  };
+}
 
 export async function POST(req) {
   const user = await getCurrentUser();
@@ -46,6 +61,7 @@ export async function POST(req) {
       location: b.location,
       state: stateFromLocation(b.location),
       description: b.description || null,
+      ...tireAttrs(b),
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),
       },
