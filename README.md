@@ -1,7 +1,22 @@
-# 🛞 TireTrader
+<p align="center">
+  <img src="docs/banner.svg" alt="TireTrader — the marketplace built for tire resellers" width="100%" />
+</p>
 
-A marketplace web app for **tire resellers** — like a focused, purpose-built
-alternative to selling tires on Facebook Marketplace.
+<h1 align="center">🛞 TireTrader</h1>
+
+<p align="center">
+  A marketplace web app for <b>tire resellers</b> — a focused, purpose-built
+  alternative to selling tires on Facebook Marketplace.
+</p>
+
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white">
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma&logoColor=white">
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss&logoColor=white">
+  <img alt="Stripe" src="https://img.shields.io/badge/Stripe-test%20mode-635BFF?logo=stripe&logoColor=white">
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-22c55e">
+</p>
 
 - **Buyers** browse & search listings and message sellers — **free**.
 - **Sellers** pay **$10/month** to list tires, with built-in messaging and an
@@ -9,6 +24,22 @@ alternative to selling tires on Facebook Marketplace.
 
 This is a runnable MVP foundation (web first; mobile app and production deploy
 come later).
+
+---
+
+## 🚀 Try it in 3 commands
+
+```bash
+git clone https://github.com/erlightbourn-source/tire-reseller.git
+cd tire-reseller
+npm install && npm run setup && npm run dev
+```
+
+Then open **http://localhost:3000** and log in with the demo seller
+**`demo@tiretrader.test` / `demo1234`** (or just browse — that's free).
+
+> Requires **Node.js 18+**. Stripe is optional — the app runs a simulated
+> checkout until you add your own test keys (see [below](#where-to-add-your-stripe-keys)).
 
 ---
 

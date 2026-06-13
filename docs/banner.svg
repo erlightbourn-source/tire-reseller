@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" fill="none" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0d13"/>
+      <stop offset="1" stop-color="#06070a"/>
+    </linearGradient>
+    <radialGradient id="glowB" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#2563eb" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowA" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b63f1"/>
+      <stop offset="1" stop-color="#1d33d3"/>
+    </linearGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#9db4ff"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <radialGradient id="alloy" cx="42%" cy="36%" r="70%">
+      <stop offset="0" stop-color="#e8edf5"/>
+      <stop offset="0.55" stop-color="#aab4c4"/>
+      <stop offset="1" stop-color="#5b6675"/>
+    </radialGradient>
+    <radialGradient id="rubber" cx="50%" cy="42%" r="60%">
+      <stop offset="0" stop-color="#23262d"/>
+      <stop offset="1" stop-color="#0a0c10"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="420" rx="20" fill="url(#bg)"/>
+  <ellipse cx="1120" cy="40" rx="520" ry="380" fill="url(#glowB)"/>
+  <ellipse cx="60" cy="400" rx="420" ry="300" fill="url(#glowA)"/>
+
+  <!-- carbon weave -->
+  <g opacity="0.5">
+    <pattern id="weave" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="1" height="8" fill="#ffffff" opacity="0.02"/>
+    </pattern>
+    <rect width="1280" height="420" rx="20" fill="url(#weave)"/>
+  </g>
+
+  <!-- Logo mark -->
+  <g transform="translate(80 70)">
+    <rect width="56" height="56" rx="15" fill="url(#rim)"/>
+    <g transform="translate(28 28)">
+      <circle r="18" fill="#0d0f13"/>
+      <g stroke="#1f2430" stroke-width="2.8">
+        <line x1="11" y1="0" x2="17.5" y2="0"/><line x1="-11" y1="0" x2="-17.5" y2="0"/>
+        <line x1="0" y1="11" x2="0" y2="17.5"/><line x1="0" y1="-11" x2="0" y2="-17.5"/>
+        <line x1="7.8" y1="7.8" x2="12.4" y2="12.4"/><line x1="-7.8" y1="-7.8" x2="-12.4" y2="-12.4"/>
+        <line x1="7.8" y1="-7.8" x2="12.4" y2="-12.4"/><line x1="-7.8" y1="7.8" x2="-12.4" y2="12.4"/>
+      </g>
+      <circle r="9.5" fill="#2a2f3c"/>
+      <circle r="3.6" fill="#0d0f13"/>
+      <circle cx="0" cy="-6.2" r="1.4" fill="#5c86f8"/>
+      <circle cx="5.9" cy="1.9" r="1.4" fill="#5c86f8"/>
+      <circle cx="3.6" cy="5" r="1.4" fill="#5c86f8"/>
+      <circle cx="-3.6" cy="5" r="1.4" fill="#5c86f8"/>
+      <circle cx="-5.9" cy="1.9" r="1.4" fill="#5c86f8"/>
+    </g>
+  </g>
+  <text x="152" y="108" fill="#ffffff" font-size="34" font-weight="800" letter-spacing="-0.5">Tire<tspan fill="#5c86f8">Trader</tspan></text>
+
+  <!-- Headline -->
+  <text x="80" y="208" fill="#ffffff" font-size="58" font-weight="800" letter-spacing="-1.5">The marketplace built for</text>
+  <text x="80" y="276" fill="url(#head)" font-size="58" font-weight="800" letter-spacing="-1.5">tire resellers.</text>
+
+  <!-- Sub -->
+  <text x="82" y="322" fill="#9aa3b2" font-size="22">Buyers browse free · Sellers list unlimited tires for $10/month.</text>
+
+  <!-- pills -->
+  <g transform="translate(82 350)">
+    <rect width="296" height="40" rx="20" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-opacity="0.12"/>
+    <circle cx="22" cy="20" r="4" fill="#34d399"/>
+    <text x="38" y="26" fill="#cbd5e1" font-size="15" font-weight="600">Built-in messaging + dashboard</text>
+  </g>
+  <g transform="translate(392 350)">
+    <rect width="210" height="40" rx="20" fill="#2545e6" fill-opacity="0.18" stroke="#5c86f8" stroke-opacity="0.4"/>
+    <text x="20" y="26" fill="#bcd0ff" font-size="15" font-weight="600">Next.js · Prisma · Stripe</text>
+  </g>
+
+  <!-- Tire showcase -->
+  <g transform="translate(1010 210)">
+    <ellipse cx="0" cy="165" rx="150" ry="24" fill="#000" opacity="0.5"/>
+    <circle r="165" fill="url(#rubber)"/>
+    <g fill="#05070b">
+      <!-- tread blocks -->
+      <g id="tb"></g>
+    </g>
+    <circle r="146" fill="#0c0e12"/>
+    <text font-size="15" font-weight="700" fill="#e5e7eb" letter-spacing="2.5" opacity="0.85">
+      <textPath href="#arc" startOffset="50%" text-anchor="middle">MICHELIN · 245/40R18</textPath>
+    </text>
+    <path id="arc" d="M -125 0 A 125 125 0 0 1 125 0" fill="none"/>
+    <circle r="106" fill="#11141a"/>
+    <circle r="98" fill="url(#alloy)"/>
+    <g fill="url(#alloy)" stroke="#0b0e14" stroke-width="2">
+      <g><path d="M -12 -38 Q 0 -84 12 -38 L 16 -86 Q 0 -94 -16 -86 Z"/></g>
+      <g transform="rotate(72)"><path d="M -12 -38 Q 0 -84 12 -38 L 16 -86 Q 0 -94 -16 -86 Z"/></g>
+      <g transform="rotate(144)"><path d="M -12 -38 Q 0 -84 12 -38 L 16 -86 Q 0 -94 -16 -86 Z"/></g>
+      <g transform="rotate(216)"><path d="M -12 -38 Q 0 -84 12 -38 L 16 -86 Q 0 -94 -16 -86 Z"/></g>
+      <g transform="rotate(288)"><path d="M -12 -38 Q 0 -84 12 -38 L 16 -86 Q 0 -94 -16 -86 Z"/></g>
+    </g>
+    <circle r="32" fill="#1a1e26"/>
+    <circle r="10" fill="#0b0e14"/>
+    <ellipse cx="-42" cy="-50" rx="86" ry="42" fill="#fff" opacity="0.06"/>
+  </g>
+</svg>
