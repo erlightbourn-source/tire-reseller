@@ -44,6 +44,7 @@ model Listing {
   treadDepth  String?  // e.g. "9/32in" or "new"
   priceCents  Int
   location    String
+  state       String?  // 2-letter US state code derived from location
   description String?
   status      String   @default("active") // active | sold
   views       Int      @default(0)
@@ -59,6 +60,7 @@ model Listing {
   @@index([size])
   @@index([condition])
   @@index([status])
+  @@index([state])
 }
 
 model Photo {

@@ -30,7 +30,7 @@ export default function NavUser({ user }) {
   if (!user) {
     return (
       <nav className="flex items-center gap-2">
-        <Link href="/" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">
+        <Link href="/browse" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">
           Browse
         </Link>
         <Link href="/login" className="btn-secondary">Log in</Link>
@@ -41,7 +41,7 @@ export default function NavUser({ user }) {
 
   const active = user.canSell;
   const links = [
-    { href: "/", label: "Browse" },
+    { href: "/browse", label: "Browse" },
     { href: "/messages", label: "Messages" },
     { href: "/dashboard", label: "Dashboard" },
   ];

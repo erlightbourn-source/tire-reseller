@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
+import { stateFromLocation } from "@/lib/states";
 
 export async function POST(req) {
   const user = await getCurrentUser();
@@ -43,6 +44,7 @@ export async function POST(req) {
       treadDepth: b.treadDepth || null,
       priceCents: Math.round(Number(b.price) * 100),
       location: b.location,
+      state: stateFromLocation(b.location),
       description: b.description || null,
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),

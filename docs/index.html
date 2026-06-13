@@ -80,7 +80,21 @@
 const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
 
 /* ───────────────────────── Data layer (localStorage) ───────────────────────── */
-const LS_KEY = 'tiretrader_demo_v2';
+const LS_KEY = 'tiretrader_demo_v3';
+const GRID_ROWS = 8, GRID_COLS = 11;
+const STATES = [
+  ['ME','Maine',0,10],['VT','Vermont',1,9],['NH','New Hampshire',1,10],
+  ['WA','Washington',2,0],['ID','Idaho',2,1],['MT','Montana',2,2],['ND','North Dakota',2,3],['MN','Minnesota',2,4],['WI','Wisconsin',2,5],['MI','Michigan',2,6],['NY','New York',2,8],['MA','Massachusetts',2,9],
+  ['OR','Oregon',3,0],['NV','Nevada',3,1],['WY','Wyoming',3,2],['SD','South Dakota',3,3],['IA','Iowa',3,4],['IL','Illinois',3,5],['IN','Indiana',3,6],['OH','Ohio',3,7],['PA','Pennsylvania',3,8],['NJ','New Jersey',3,9],['CT','Connecticut',3,10],
+  ['CA','California',4,0],['UT','Utah',4,1],['CO','Colorado',4,2],['NE','Nebraska',4,3],['MO','Missouri',4,4],['KY','Kentucky',4,5],['WV','West Virginia',4,6],['VA','Virginia',4,7],['MD','Maryland',4,8],['DE','Delaware',4,9],['RI','Rhode Island',4,10],
+  ['AZ','Arizona',5,1],['NM','New Mexico',5,2],['KS','Kansas',5,3],['AR','Arkansas',5,4],['TN','Tennessee',5,5],['NC','North Carolina',5,6],['SC','South Carolina',5,7],['DC','Washington, D.C.',5,8],
+  ['TX','Texas',6,2],['OK','Oklahoma',6,3],['LA','Louisiana',6,4],['MS','Mississippi',6,5],['AL','Alabama',6,6],['GA','Georgia',6,7],
+  ['HI','Hawaii',7,0],['AK','Alaska',7,1],['FL','Florida',7,8],
+].map(([abbr,name,row,col])=>({abbr,name,row,col}));
+const STATE_BY = Object.fromEntries(STATES.map(s=>[s.abbr,s]));
+const stateName = (a) => (STATE_BY[a]||{}).name || a;
+const isStateAbbr = (a) => !!STATE_BY[(a||'').toUpperCase()];
+function stateFromLocation(loc){ if(!loc) return null; const text=String(loc).trim(); const tail=text.split(',').pop().trim(); const up=tail.toUpperCase(); if(STATE_BY[up]) return up; const byName=STATES.find(s=>s.name.toLowerCase()===tail.toLowerCase()||s.name.toLowerCase()===text.toLowerCase()); return byName?byName.abbr:null; }
 const cuid = () => 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const hashCode = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i) | 0; return h; };
@@ -133,25 +147,26 @@ function seedDB() {
 
   const catalog = [
     { brand:'Michelin', model:'Pilot Sport 4S', size:'245/40R18', cond:'new', tread:'10/32in', qty:4, price:920, loc:'Dallas, TX', desc:'Brand new set of 4, never mounted. Summer performance.' },
-    { brand:'Goodyear', model:'Eagle F1', size:'225/45R17', cond:'used', tread:'7/32in', qty:4, price:340, loc:'Dallas, TX', desc:'One season on these. Even wear, no patches or plugs.' },
-    { brand:'Bridgestone', model:'Blizzak WS90', size:'205/55R16', cond:'used', tread:'8/32in', qty:4, price:280, loc:'Houston, TX', desc:'Winter tires, two seasons. Stored indoors.' },
+    { brand:'Goodyear', model:'Eagle F1', size:'225/45R17', cond:'used', tread:'7/32in', qty:4, price:340, loc:'Los Angeles, CA', desc:'One season on these. Even wear, no patches or plugs.' },
+    { brand:'Bridgestone', model:'Blizzak WS90', size:'205/55R16', cond:'used', tread:'8/32in', qty:4, price:280, loc:'Chicago, IL', desc:'Winter tires, two seasons. Stored indoors.' },
     { brand:'BFGoodrich', model:'All-Terrain T/A KO2', size:'265/70R17', cond:'new', tread:'15/32in', qty:5, price:1150, loc:'Phoenix, AZ', desc:'Full set of 5 including spare. Truck/SUV all-terrain.' },
     { brand:'Continental', model:'ExtremeContact DWS06', size:'245/45R18', cond:'used', tread:'6/32in', qty:2, price:160, loc:'Atlanta, GA', desc:'Pair of 2 fronts. Good rubber left.' },
     { brand:'Pirelli', model:'P Zero', size:'275/35R19', cond:'used', tread:'5/32in', qty:4, price:420, loc:'Houston, TX', desc:'Staggered rear pair available too. DM me.' },
-    { brand:'Cooper', model:'Discoverer AT3', size:'265/65R18', cond:'new', tread:'14/32in', qty:4, price:760, loc:'Phoenix, AZ', desc:'New takeoffs from a new truck, 20 miles.' },
-    { brand:'Hankook', model:'Kinergy GT', size:'215/60R16', cond:'used', tread:'9/32in', qty:4, price:220, loc:'Atlanta, GA', desc:'Plenty of tread, all-season touring.' },
-    { brand:'Falken', model:'Wildpeak A/T3W', size:'285/70R17', cond:'new', tread:'16/32in', qty:4, price:980, loc:'Dallas, TX', desc:'Aggressive all-terrain, brand new.' },
-    { brand:'Toyo', model:'Proxes Sport', size:'255/40R19', cond:'used', tread:'6/32in', qty:4, price:380, loc:'Houston, TX', desc:'Sticky summer set, lots of grip remaining.' },
+    { brand:'Cooper', model:'Discoverer AT3', size:'265/65R18', cond:'new', tread:'14/32in', qty:4, price:760, loc:'Denver, CO', desc:'New takeoffs from a new truck, 20 miles.' },
+    { brand:'Hankook', model:'Kinergy GT', size:'215/60R16', cond:'used', tread:'9/32in', qty:4, price:220, loc:'Miami, FL', desc:'Plenty of tread, all-season touring.' },
+    { brand:'Falken', model:'Wildpeak A/T3W', size:'285/70R17', cond:'new', tread:'16/32in', qty:4, price:980, loc:'Seattle, WA', desc:'Aggressive all-terrain, brand new.' },
+    { brand:'Toyo', model:'Proxes Sport', size:'255/40R19', cond:'used', tread:'6/32in', qty:4, price:380, loc:'New York, NY', desc:'Sticky summer set, lots of grip remaining.' },
     { brand:'Yokohama', model:'AVID Ascend GT', size:'225/65R17', cond:'new', tread:'11/32in', qty:4, price:540, loc:'Phoenix, AZ', desc:'New set, all-season SUV.' },
-    { brand:'Firestone', model:'WeatherGrip', size:'235/55R17', cond:'used', tread:'7/32in', qty:4, price:260, loc:'Atlanta, GA', desc:'Great all-weather set. Smooth and quiet.' },
+    { brand:'Firestone', model:'WeatherGrip', size:'235/55R17', cond:'used', tread:'7/32in', qty:4, price:260, loc:'Charlotte, NC', desc:'Great all-weather set. Smooth and quiet.' },
     { brand:'Michelin', model:'Defender T+H', size:'215/55R17', cond:'used', tread:'8/32in', qty:4, price:300, loc:'Dallas, TX', desc:'Long-life touring tires, low miles.' },
-    { brand:'Goodyear', model:'Wrangler DuraTrac', size:'275/55R20', cond:'new', tread:'17/32in', qty:4, price:1240, loc:'Houston, TX', desc:'Heavy duty, brand new set for full-size trucks.' },
+    { brand:'Goodyear', model:'Wrangler DuraTrac', size:'275/55R20', cond:'new', tread:'17/32in', qty:4, price:1240, loc:'Nashville, TN', desc:'Heavy duty, brand new set for full-size trucks.' },
   ];
   const listings = catalog.map((c, i) => {
     const seller = sellers[i % sellers.length];
     return {
       id: cuid(), sellerId: seller.id, brand: c.brand, size: c.size, quantity: c.qty,
       condition: c.cond, treadDepth: c.tread, priceCents: c.price * 100, location: c.loc,
+      state: stateFromLocation(c.loc),
       description: `${c.model}. ${c.desc}`, status: i === 5 ? 'sold' : 'active',
       views: (i * 13 + 4) % 90, createdAt: now - ((i * 37) % 60) * 864e5, photoIdx: i,
     };
@@ -237,7 +252,7 @@ function Header() {
         <a href="#/" className="flex items-center gap-2.5"><Logo /><span className="font-display text-xl font-extrabold tracking-tight text-white">Tire<span className="text-brand-400">Trader</span></span></a>
         <nav className="flex items-center gap-1 sm:gap-2">
           {me ? <>
-            <a href="#/" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Browse</a>
+            <a href="#/browse" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Browse</a>
             <a href="#/messages" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Messages</a>
             <a href="#/dashboard" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Dashboard</a>
             {active ? <a href="#/sell" className="btn-primary"><span className="text-base leading-none">+</span><span className="hidden sm:inline">Sell tires</span></a>
@@ -254,7 +269,7 @@ function Header() {
               </div>}
             </div>
           </> : <>
-            <a href="#/" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">Browse</a>
+            <a href="#/browse" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">Browse</a>
             <a href="#/login" className="btn-secondary">Log in</a>
             <a href="#/signup" className="btn-primary">Get started</a>
           </>}
@@ -290,16 +305,75 @@ function Card({ l }) {
   );
 }
 
-/* ───────────────────────── Marketplace ───────────────────────── */
-function Marketplace() {
+/* ───────────────────────── State map + Landing ───────────────────────── */
+function StateMap({ counts, selected }) {
+  const [hover, setHover] = useState(selected);
+  const max = Math.max(1, ...STATES.map(s => counts[s.abbr] || 0));
+  const go = (a) => navigate('/browse?state=' + a);
+  const cls = (a) => { const n = counts[a]||0; if (!n) return 'bg-white/[0.04] text-slate-500 hover:bg-white/10 hover:text-slate-300'; const t=n/max; if(t>0.66) return 'bg-brand-500 text-white hover:bg-brand-400'; if(t>0.33) return 'bg-brand-500/60 text-white hover:bg-brand-500/80'; return 'bg-brand-500/30 text-brand-100 hover:bg-brand-500/50'; };
+  const focus = hover || selected; const fc = focus ? (counts[focus]||0) : 0;
+  return (
+    <div className="card p-4 sm:p-6">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div><p className="eyebrow">Step 1 · Choose your state</p><h2 className="font-display text-xl font-bold text-white">{focus ? <>{stateName(focus)} <span className="text-sm font-medium text-slate-400">· {fc} listing{fc!==1?'s':''}</span></> : 'Where are you shopping?'}</h2></div>
+        {selected && <button onClick={()=>go(selected)} className="btn-primary">Browse {stateName(selected)} →</button>}
+      </div>
+      <div className="-mx-1 overflow-x-auto pb-1">
+        <div className="mx-auto grid gap-1.5" style={{gridTemplateColumns:`repeat(${GRID_COLS},minmax(0,1fr))`, gridTemplateRows:`repeat(${GRID_ROWS},minmax(0,1fr))`, minWidth:540, maxWidth:760}}>
+          {STATES.map(s => { const n = counts[s.abbr]||0; const isSel = selected===s.abbr; return (
+            <button key={s.abbr} onClick={()=>go(s.abbr)} onMouseEnter={()=>setHover(s.abbr)} onMouseLeave={()=>setHover(selected)} title={`${stateName(s.abbr)} — ${n} listing${n!==1?'s':''}`} style={{gridColumn:s.col+1, gridRow:s.row+1}} className={`relative grid aspect-square place-items-center rounded-lg text-[11px] font-bold transition ${cls(s.abbr)} ${isSel?'ring-2 ring-accent-400 ring-offset-2 ring-offset-[#13161c]':''}`}>
+              {s.abbr}
+              {n>0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-ink-950 px-1 text-[9px] font-bold text-white ring-1 ring-white/15">{n}</span>}
+              {isSel && <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-accent-400" />}
+            </button>
+          ); })}
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs text-slate-400"><span>Fewer</span><span className="h-3 w-5 rounded bg-white/[0.06]" /><span className="h-3 w-5 rounded bg-brand-500/30" /><span className="h-3 w-5 rounded bg-brand-500/60" /><span className="h-3 w-5 rounded bg-brand-500" /><span>More listings</span></div>
+        <button onClick={()=>navigate('/browse')} className="text-sm font-semibold text-brand-300 hover:underline">Browse all states →</button>
+      </div>
+    </div>
+  );
+}
+
+function Landing() {
+  const { db, me } = useApp();
+  const activeListings = db.listings.filter(l => l.status === 'active');
+  const counts = {}; activeListings.forEach(l => { if (l.state) counts[l.state] = (counts[l.state]||0)+1; });
+  const selected = me ? stateFromLocation(me.location) : null;
+  const statesWith = Object.keys(counts).length;
+  return (
+    <div className="space-y-7">
+      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white">
+        <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-40" />
+        <div className="relative grid items-center gap-6 px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[1.4fr_1fr]">
+          <div className="animate-fadeup">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{activeListings.length} listings across {statesWith} states</span>
+            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tires <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">near you</span></h1>
+            <p className="mt-4 max-w-xl text-slate-300">{selected ? <>Welcome back — we&apos;ve got your state, <span className="font-semibold text-white">{stateName(selected)}</span>, ready to go. Or pick another on the map.</> : <>Pick your state to see new &amp; used tires for sale locally. Browsing is always free — sellers list for $10/month (first year on us).</>}</p>
+            <div className="mt-6 flex flex-wrap gap-3">{selected && <a href={`#/browse?state=${selected}`} className="btn-accent">Browse {stateName(selected)} tires</a>}<a href="#/browse" className="btn-secondary bg-white/10 text-white ring-white/20 hover:bg-white/15">Browse all states</a></div>
+          </div>
+          <div className="hidden justify-center lg:flex"><div className="relative"><div className="absolute -inset-6 rounded-full bg-brand-500/25 blur-3xl" /><Logo cls="relative h-44 w-44" spin bare /></div></div>
+        </div>
+      </section>
+      <StateMap counts={counts} selected={selected} />
+    </div>
+  );
+}
+
+/* ───────────────────────── Browse (marketplace) ───────────────────────── */
+function Marketplace({ stateParam }) {
   const { db } = useApp();
+  const st = stateParam && isStateAbbr(stateParam) ? stateParam.toUpperCase() : null;
   const [q, setQ] = useState(''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
   const [size, setSize] = useState(''); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('');
+  useEffect(()=>{ setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort(''); }, [st]);
   const filtered = q || brand || cond || size || maxPrice || sort;
   const brands = useMemo(() => [...new Set(db.listings.filter(l => l.status==='active').map(l => l.brand))].sort(), [db]);
-  const active = db.listings.filter(l => l.status === 'active').length;
 
   let list = db.listings.filter(l => l.status === 'active');
+  if (st) list = list.filter(l => l.state === st);
   if (brand) list = list.filter(l => l.brand === brand);
   if (cond) list = list.filter(l => l.condition === cond);
   if (size) list = list.filter(l => l.size.toLowerCase().includes(size.toLowerCase()));
@@ -308,21 +382,15 @@ function Marketplace() {
   list = [...list].sort((a,b) => sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt);
 
   return (
-    <div className="space-y-7">
-      {!filtered && (
-        <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white">
-          <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-40" />
-          <div className="relative grid items-center gap-6 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1.4fr_1fr]">
-            <div className="animate-fadeup">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{active}+ live listings · resellers welcome</span>
-              <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">The marketplace built for <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">tire resellers</span></h1>
-              <p className="mt-4 max-w-xl text-slate-300">Stop juggling Facebook listings. Browse new &amp; used tires near you for free — and when you're ready to sell, list unlimited sets for <span className="font-semibold text-white">$10/month</span> with built-in messaging and a real seller dashboard.</p>
-              <div className="mt-6 flex flex-wrap gap-3"><a href="#/signup" className="btn-accent">Start selling</a><a href="#listings" className="btn-secondary bg-white/10 text-white ring-white/20 hover:bg-white/15">Browse tires</a></div>
-            </div>
-            <div className="hidden justify-center lg:flex"><div className="relative"><div className="absolute -inset-6 rounded-full bg-brand-500/25 blur-3xl" /><Logo cls="relative h-52 w-52" spin bare /></div></div>
-          </div>
-        </section>
-      )}
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/" className="hover:text-brand-300">Map</a><span>/</span><span className="font-medium text-slate-200">{st ? stateName(st) : 'All states'}</span></nav>
+          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{st ? `Tires in ${stateName(st)}` : 'All listings'}</h1>
+          <p className="text-sm text-slate-400">{list.length} tire set{list.length!==1?'s':''}{filtered ? ' match your filters' : ' available'}</p>
+        </div>
+        <a href="#/" className="btn-secondary"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>{st ? 'Change state' : 'Open map'}</a>
+      </div>
 
       <div id="listings" className="card p-3 sm:p-4">
         <form onSubmit={e=>e.preventDefault()} className="flex gap-2">
@@ -341,12 +409,8 @@ function Marketplace() {
         {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
       </div>
 
-      <div className="flex items-end justify-between">
-        <div><h2 className="font-display text-xl font-bold text-white">{filtered ? 'Search results' : 'Latest listings'}</h2><p className="text-sm text-slate-400">{list.length} tire set{list.length!==1?'s':''} available</p></div>
-      </div>
-
       {list.length === 0 ? (
-        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">No tires match your filters</p><p className="mt-1 text-sm text-slate-400">Try clearing filters or broadening your search.</p></div>
+        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state or broaden your search.</p><a href="#/" className="btn-secondary mt-4">Browse the map</a></div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{list.map(l => <Card key={l.id} l={l} />)}</div>
       )}
@@ -604,7 +668,7 @@ function Messages() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4"><p className="eyebrow">Inbox</p><h1 className="font-display text-2xl font-extrabold text-white">Messages</h1></div>
-      {mine.length === 0 ? <div className="card grid place-items-center px-6 py-14 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">💬</span><p className="mt-3 font-display font-bold text-slate-200">No conversations yet</p><p className="text-sm text-slate-400">Message a seller from any listing to start chatting.</p><a href="#/" className="btn-secondary mt-4">Browse tires</a></div> : (
+      {mine.length === 0 ? <div className="card grid place-items-center px-6 py-14 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">💬</span><p className="mt-3 font-display font-bold text-slate-200">No conversations yet</p><p className="text-sm text-slate-400">Message a seller from any listing to start chatting.</p><a href="#/browse" className="btn-secondary mt-4">Browse tires</a></div> : (
         <div className="space-y-2">{mine.map(t => {
           const l = db.listings.find(x=>x.id===t.listingId); const other = otherOf(t);
           const msgs = db.messages.filter(m=>m.threadId===t.id); const last = msgs[msgs.length-1];
@@ -697,7 +761,7 @@ function App() {
     },
     sendMessage: (tid, body) => { const th = db.threads.find(t=>t.id===tid); update(d => { d.messages.push({ id: cuid(), threadId: tid, senderId: d.session, body, createdAt: Date.now() }); }); if (th) { const otherId = th.buyerId === db.session ? th.sellerId : th.buyerId; scheduleReply(tid, otherId); } },
     saveListing: (id, f) => {
-      const data = { brand:f.brand, size:f.size, quantity:Math.max(1,parseInt(f.quantity)||1), condition:f.condition==='new'?'new':'used', treadDepth:f.treadDepth||null, priceCents:Math.round(Number(f.price)*100), location:f.location, description:f.description||null, status:f.status==='sold'?'sold':'active', photoIdx:f.photoIdx };
+      const data = { brand:f.brand, size:f.size, quantity:Math.max(1,parseInt(f.quantity)||1), condition:f.condition==='new'?'new':'used', treadDepth:f.treadDepth||null, priceCents:Math.round(Number(f.price)*100), location:f.location, state:stateFromLocation(f.location), description:f.description||null, status:f.status==='sold'?'sold':'active', photoIdx:f.photoIdx };
       let nid = id;
       update(d => { if (id) { const l = d.listings.find(x=>x.id===id); Object.assign(l, data); } else { nid = cuid(); d.listings.unshift({ id:nid, sellerId:d.session, views:0, createdAt:Date.now(), ...data }); } });
       return nid;
@@ -717,8 +781,11 @@ function App() {
   }
 
   let view;
-  const seg = route.split('/').filter(Boolean);
-  if (route === '/' || seg.length === 0) view = <Marketplace />;
+  const [routePath, routeQuery] = route.split('?');
+  const qp = new URLSearchParams(routeQuery || '');
+  const seg = routePath.split('/').filter(Boolean);
+  if (routePath === '/' || seg.length === 0) view = <Landing />;
+  else if (seg[0] === 'browse') view = <Marketplace stateParam={qp.get('state')} />;
   else if (seg[0] === 'listings' && seg[1]) view = <Detail id={seg[1]} />;
   else if (seg[0] === 'login') view = <Auth mode="login" />;
   else if (seg[0] === 'signup') view = <Auth mode="signup" />;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { stateFromLocation } from "@/lib/states";
 
 async function requireOwner(id) {
   const user = await getCurrentUser();
@@ -24,7 +25,10 @@ export async function PATCH(req, { params }) {
   if (b.condition !== undefined) data.condition = b.condition === "new" ? "new" : "used";
   if (b.treadDepth !== undefined) data.treadDepth = b.treadDepth || null;
   if (b.price !== undefined) data.priceCents = Math.round(Number(b.price) * 100);
-  if (b.location !== undefined) data.location = b.location;
+  if (b.location !== undefined) {
+    data.location = b.location;
+    data.state = stateFromLocation(b.location);
+  }
   if (b.description !== undefined) data.description = b.description || null;
   if (b.status !== undefined && ["active", "sold"].includes(b.status)) data.status = b.status;
 

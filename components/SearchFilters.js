@@ -1,9 +1,10 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
 export default function SearchFilters({ brands }) {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
 
@@ -17,7 +18,7 @@ export default function SearchFilters({ brands }) {
       if (v) sp.set(k, v);
       else sp.delete(k);
     });
-    router.push(`/?${sp.toString()}#listings`);
+    router.push(`${pathname}?${sp.toString()}`);
   }
 
   function onSearch(e) {
@@ -86,7 +87,10 @@ export default function SearchFilters({ brands }) {
 
       {anyFilter && (
         <button
-          onClick={() => router.push("/")}
+          onClick={() => {
+            const state = params.get("state");
+            router.push(state ? `${pathname}?state=${state}` : pathname);
+          }}
           className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-slate-400 hover:text-brand-300"
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current"><path d="M4.3 4.3a1 1 0 0 1 1.4 0L8 6.6l2.3-2.3a1 1 0 1 1 1.4 1.4L9.4 8l2.3 2.3a1 1 0 0 1-1.4 1.4L8 9.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L6.6 8 4.3 5.7a1 1 0 0 1 0-1.4Z"/></svg>

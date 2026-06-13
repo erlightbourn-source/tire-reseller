@@ -152,22 +152,24 @@ async function main() {
   }
 
   console.log("Creating listings…");
+  // Spread locations across many states so the state map looks alive.
   const catalog = [
     { brand: "Michelin", model: "Pilot Sport 4S", size: "245/40R18", cond: "new", tread: "10/32in", qty: 4, price: 920, loc: "Dallas, TX", desc: "Brand new set of 4, never mounted. Summer performance." },
-    { brand: "Goodyear", model: "Eagle F1", size: "225/45R17", cond: "used", tread: "7/32in", qty: 4, price: 340, loc: "Dallas, TX", desc: "One season on these. Even wear, no patches or plugs." },
-    { brand: "Bridgestone", model: "Blizzak WS90", size: "205/55R16", cond: "used", tread: "8/32in", qty: 4, price: 280, loc: "Houston, TX", desc: "Winter tires, two seasons. Stored indoors." },
+    { brand: "Goodyear", model: "Eagle F1", size: "225/45R17", cond: "used", tread: "7/32in", qty: 4, price: 340, loc: "Los Angeles, CA", desc: "One season on these. Even wear, no patches or plugs." },
+    { brand: "Bridgestone", model: "Blizzak WS90", size: "205/55R16", cond: "used", tread: "8/32in", qty: 4, price: 280, loc: "Chicago, IL", desc: "Winter tires, two seasons. Stored indoors." },
     { brand: "BFGoodrich", model: "All-Terrain T/A KO2", size: "265/70R17", cond: "new", tread: "15/32in", qty: 5, price: 1150, loc: "Phoenix, AZ", desc: "Full set of 5 including spare. Truck/SUV all-terrain." },
     { brand: "Continental", model: "ExtremeContact DWS06", size: "245/45R18", cond: "used", tread: "6/32in", qty: 2, price: 160, loc: "Atlanta, GA", desc: "Pair of 2 fronts. Good rubber left." },
     { brand: "Pirelli", model: "P Zero", size: "275/35R19", cond: "used", tread: "5/32in", qty: 4, price: 420, loc: "Houston, TX", desc: "Staggered rear pair available too. DM me." },
-    { brand: "Cooper", model: "Discoverer AT3", size: "265/65R18", cond: "new", tread: "14/32in", qty: 4, price: 760, loc: "Phoenix, AZ", desc: "New takeoffs from a new truck, 20 miles." },
-    { brand: "Hankook", model: "Kinergy GT", size: "215/60R16", cond: "used", tread: "9/32in", qty: 4, price: 220, loc: "Atlanta, GA", desc: "Plenty of tread, all-season touring." },
-    { brand: "Falken", model: "Wildpeak A/T3W", size: "285/70R17", cond: "new", tread: "16/32in", qty: 4, price: 980, loc: "Dallas, TX", desc: "Aggressive all-terrain, brand new." },
-    { brand: "Toyo", model: "Proxes Sport", size: "255/40R19", cond: "used", tread: "6/32in", qty: 4, price: 380, loc: "Houston, TX", desc: "Sticky summer set, lots of grip remaining." },
+    { brand: "Cooper", model: "Discoverer AT3", size: "265/65R18", cond: "new", tread: "14/32in", qty: 4, price: 760, loc: "Denver, CO", desc: "New takeoffs from a new truck, 20 miles." },
+    { brand: "Hankook", model: "Kinergy GT", size: "215/60R16", cond: "used", tread: "9/32in", qty: 4, price: 220, loc: "Miami, FL", desc: "Plenty of tread, all-season touring." },
+    { brand: "Falken", model: "Wildpeak A/T3W", size: "285/70R17", cond: "new", tread: "16/32in", qty: 4, price: 980, loc: "Seattle, WA", desc: "Aggressive all-terrain, brand new." },
+    { brand: "Toyo", model: "Proxes Sport", size: "255/40R19", cond: "used", tread: "6/32in", qty: 4, price: 380, loc: "New York, NY", desc: "Sticky summer set, lots of grip remaining." },
     { brand: "Yokohama", model: "AVID Ascend GT", size: "225/65R17", cond: "new", tread: "11/32in", qty: 4, price: 540, loc: "Phoenix, AZ", desc: "New set, all-season SUV." },
-    { brand: "Firestone", model: "WeatherGrip", size: "235/55R17", cond: "used", tread: "7/32in", qty: 4, price: 260, loc: "Atlanta, GA", desc: "Great all-weather set. Smooth and quiet." },
+    { brand: "Firestone", model: "WeatherGrip", size: "235/55R17", cond: "used", tread: "7/32in", qty: 4, price: 260, loc: "Charlotte, NC", desc: "Great all-weather set. Smooth and quiet." },
     { brand: "Michelin", model: "Defender T+H", size: "215/55R17", cond: "used", tread: "8/32in", qty: 4, price: 300, loc: "Dallas, TX", desc: "Long-life touring tires, low miles." },
-    { brand: "Goodyear", model: "Wrangler DuraTrac", size: "275/55R20", cond: "new", tread: "17/32in", qty: 4, price: 1240, loc: "Houston, TX", desc: "Heavy duty, brand new set for full-size trucks." },
+    { brand: "Goodyear", model: "Wrangler DuraTrac", size: "275/55R20", cond: "new", tread: "17/32in", qty: 4, price: 1240, loc: "Nashville, TN", desc: "Heavy duty, brand new set for full-size trucks." },
   ];
+  const stateOf = (loc) => (loc.split(",").pop() || "").trim().toUpperCase();
 
   const listings = [];
   for (let i = 0; i < catalog.length; i++) {
@@ -184,6 +186,7 @@ async function main() {
         treadDepth: c.tread,
         priceCents: c.price * 100,
         location: c.loc,
+        state: stateOf(c.loc),
         description: `${c.model}. ${c.desc}`,
         status: i === 5 ? "sold" : "active",
         views: (i * 13 + 4) % 90,
