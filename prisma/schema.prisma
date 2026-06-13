@@ -13,6 +13,7 @@ model User {
   passwordHash       String
   name               String
   location           String?
+  state              String?  // 2-letter home state — used to pre-load local listings
   createdAt          DateTime @default(now())
 
   // Account type. Buyers browse free; sellers can list tires.

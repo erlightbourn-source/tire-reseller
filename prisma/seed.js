@@ -115,6 +115,7 @@ async function main() {
       passwordHash: pw("demo1234"),
       name: "Demo Seller",
       location: "Dallas, TX",
+      state: "TX",
       role: "seller",
       sellerFreeUntil: freeUntil,
     },
@@ -126,14 +127,15 @@ async function main() {
       passwordHash: pw("buyer1234"),
       name: "Sam Buyer",
       location: "Fort Worth, TX",
+      state: "TX",
       role: "buyer",
     },
   });
 
   const sellerData = [
-    { email: "mike@tiretrader.test", name: "Mike's Tire Co", location: "Houston, TX" },
-    { email: "rosa@tiretrader.test", name: "Rosa Wheels", location: "Phoenix, AZ" },
-    { email: "ken@tiretrader.test", name: "Ken Auto", location: "Atlanta, GA" },
+    { email: "mike@tiretrader.test", name: "Mike's Tire Co", location: "Houston, TX", state: "TX" },
+    { email: "rosa@tiretrader.test", name: "Rosa Wheels", location: "Phoenix, AZ", state: "AZ" },
+    { email: "ken@tiretrader.test", name: "Ken Auto", location: "Atlanta, GA", state: "GA" },
   ];
   const sellers = [demo];
   for (const s of sellerData) {
@@ -144,6 +146,7 @@ async function main() {
           passwordHash: pw("seller1234"),
           name: s.name,
           location: s.location,
+          state: s.state,
           role: "seller",
           sellerFreeUntil: freeUntil,
         },

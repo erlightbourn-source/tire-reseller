@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, createSession, freeYearFromNow } from "@/lib/auth";
+import { isStateAbbr } from "@/lib/states";
 
 export async function POST(req) {
-  const { email, password, name, location, role } = await req.json();
+  const { email, password, name, location, role, state } = await req.json();
 
   if (!email || !password || !name) {
     return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
@@ -25,6 +26,7 @@ export async function POST(req) {
       passwordHash: await hashPassword(password),
       name,
       location: location || null,
+      state: isStateAbbr(state) ? state.toUpperCase() : null,
       role: isSeller ? "seller" : "buyer",
       // Sellers get their first year free — no charge until this date.
       sellerFreeUntil: isSeller ? freeYearFromNow() : null,

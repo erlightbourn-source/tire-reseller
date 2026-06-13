@@ -56,7 +56,7 @@ export default async function BrowsePage({ searchParams }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <nav className="flex items-center gap-1.5 text-sm text-slate-400">
-            <Link href="/" className="hover:text-brand-300">Map</Link>
+            <Link href="/states" className="hover:text-brand-300">Map</Link>
             <span>/</span>
             <span className="font-medium text-slate-200">{state ? stateName(state) : "All states"}</span>
           </nav>
@@ -68,7 +68,7 @@ export default async function BrowsePage({ searchParams }) {
             {otherFilters ? " match your filters" : " available"}
           </p>
         </div>
-        <Link href="/" className="btn-secondary">
+        <Link href="/states" className="btn-secondary">
           <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>
           {state ? "Change state" : "Open map"}
         </Link>
@@ -85,7 +85,7 @@ export default async function BrowsePage({ searchParams }) {
             {state ? `No tires in ${stateName(state)} yet` : "No tires match your filters"}
           </p>
           <p className="mt-1 text-sm text-slate-400">Try another state or broaden your search.</p>
-          <Link href="/" className="btn-secondary mt-4">Browse the map</Link>
+          <Link href="/states" className="btn-secondary mt-4">Browse the map</Link>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

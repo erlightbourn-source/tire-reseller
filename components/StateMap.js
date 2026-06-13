@@ -3,13 +3,24 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { STATES, GRID_COLS, GRID_ROWS, stateName } from "@/lib/states";
 
-export default function StateMap({ counts = {}, selected = null }) {
+export default function StateMap({ counts = {}, selected = null, loggedIn = false }) {
   const router = useRouter();
   const [hover, setHover] = useState(selected);
   const max = Math.max(1, ...STATES.map((s) => counts[s.abbr] || 0));
 
-  function go(abbr) {
+  async function go(abbr) {
+    // Logged-in members: remember this as their home state.
+    if (loggedIn) {
+      try {
+        await fetch("/api/profile/state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: abbr }),
+        });
+      } catch {}
+    }
     router.push(`/browse?state=${abbr}`);
+    router.refresh();
   }
 
   // graduated fill by listing count

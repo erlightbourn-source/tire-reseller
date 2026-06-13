@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
+import { STATES } from "@/lib/states";
 
 export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
@@ -131,9 +132,20 @@ export default function AuthForm({ mode }) {
               <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
             </div>
             {isSignup && (
-              <div>
-                <label className="label">Location <span className="font-normal text-slate-400">(optional)</span></label>
-                <input name="location" className="input" placeholder="Dallas, TX" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">City <span className="font-normal text-slate-400">(optional)</span></label>
+                  <input name="location" className="input" placeholder="Dallas" />
+                </div>
+                <div>
+                  <label className="label">Your state</label>
+                  <select name="state" className="input" defaultValue="">
+                    <option value="">Select…</option>
+                    {STATES.map((s) => (
+                      <option key={s.abbr} value={s.abbr}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
             <button disabled={loading} className="btn-primary w-full">
