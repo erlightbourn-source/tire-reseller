@@ -54,7 +54,7 @@ export default function ListingForm({ initial }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {err && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">{err}</div>
+        <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -111,7 +111,7 @@ export default function ListingForm({ initial }) {
         {photos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {photos.map((url) => (
-              <div key={url} className="relative h-20 w-20 overflow-hidden rounded-lg ring-1 ring-slate-200">
+              <div key={url} className="relative h-20 w-20 overflow-hidden rounded-lg ring-1 ring-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
                 <button

@@ -12,7 +12,7 @@ export default function PhotoGallery({ photos, alt }) {
   }
   return (
     <div>
-      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-soft">
+      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-900 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.8)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={photos[active].url} alt={alt} className="h-full w-full object-cover" />
       </div>
@@ -23,7 +23,7 @@ export default function PhotoGallery({ photos, alt }) {
               key={p.id || i}
               onClick={() => setActive(i)}
               className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl ring-2 transition ${
-                i === active ? "ring-brand-500" : "ring-transparent hover:ring-slate-300"
+                i === active ? "ring-brand-400" : "ring-white/10 hover:ring-white/30"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

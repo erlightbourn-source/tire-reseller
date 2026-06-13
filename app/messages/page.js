@@ -36,13 +36,13 @@ export default async function MessagesPage() {
     <div className="mx-auto max-w-2xl">
       <div className="mb-4">
         <p className="eyebrow">Inbox</p>
-        <h1 className="font-display text-2xl font-extrabold text-slate-900">Messages</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white">Messages</h1>
       </div>
       {threads.length === 0 ? (
         <div className="card grid place-items-center px-6 py-14 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-2xl">💬</span>
-          <p className="mt-3 font-display font-bold text-slate-700">No conversations yet</p>
-          <p className="text-sm text-slate-500">Message a seller from any listing to start chatting.</p>
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">💬</span>
+          <p className="mt-3 font-display font-bold text-slate-200">No conversations yet</p>
+          <p className="text-sm text-slate-400">Message a seller from any listing to start chatting.</p>
           <Link href="/" className="btn-secondary mt-4">Browse tires</Link>
         </div>
       ) : (
@@ -53,8 +53,8 @@ export default async function MessagesPage() {
             const last = t.messages[0];
             const photo = t.listing.photos[0]?.url;
             return (
-              <Link key={t.id} href={`/messages/${t.id}`} className="card flex items-center gap-3 p-3 hover:shadow-md">
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+              <Link key={t.id} href={`/messages/${t.id}`} className="card card-hover flex items-center gap-3 p-3">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={photo} alt="" className="h-full w-full object-cover" />
@@ -64,7 +64,7 @@ export default async function MessagesPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-semibold">{t.listing.brand} · {t.listing.size}</p>
+                    <p className="truncate font-semibold text-white">{t.listing.brand} · {t.listing.size}</p>
                     <span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(t.updatedAt)}</span>
                   </div>
                   <p className="text-xs text-slate-500">{role}: {other.name} · {formatPrice(t.listing.priceCents)}</p>

@@ -24,8 +24,8 @@ export default async function SubscribePage() {
     <div className="mx-auto max-w-lg">
       <div className="mb-5 text-center">
         <p className="eyebrow">Seller plan</p>
-        <h1 className="mt-1 font-display text-3xl font-extrabold text-slate-900">Sell tires the easy way</h1>
-        <p className="mt-2 text-slate-500">One simple price. Everything you need to run your tire resale.</p>
+        <h1 className="mt-1 font-display text-3xl font-extrabold text-white">Sell tires the easy way</h1>
+        <p className="mt-2 text-slate-400">One simple price. Everything you need to run your tire resale.</p>
       </div>
 
       <div className="card overflow-hidden">
@@ -44,12 +44,12 @@ export default async function SubscribePage() {
           <ul className="space-y-3">
             {FEATURES.map(([title, sub]) => (
               <li key={title} className="flex gap-3">
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
                   <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4L8 13.2Z"/></svg>
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">{title}</p>
-                  <p className="text-xs text-slate-500">{sub}</p>
+                  <p className="text-sm font-semibold text-slate-100">{title}</p>
+                  <p className="text-xs text-slate-400">{sub}</p>
                 </div>
               </li>
             ))}

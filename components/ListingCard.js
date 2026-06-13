@@ -8,7 +8,7 @@ export default function ListingCard({ listing }) {
 
   return (
     <Link href={`/listings/${listing.id}`} className="card card-hover group block overflow-hidden">
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -36,22 +36,22 @@ export default function ListingCard({ listing }) {
 
       <div className="p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display font-bold leading-tight text-slate-900">{listing.brand}</h3>
-          <span className="whitespace-nowrap font-display text-lg font-extrabold text-slate-900">
+          <h3 className="font-display font-bold leading-tight text-white">{listing.brand}</h3>
+          <span className="whitespace-nowrap font-display text-lg font-extrabold text-white">
             {formatPrice(listing.priceCents)}
           </span>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
           <span className="inline-flex items-center gap-1">
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-slate-400"><path d="M2 4h12v2H2zm0 3h12v2H2zm0 3h12v2H2z"/></svg>
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-slate-500"><path d="M2 4h12v2H2zm0 3h12v2H2zm0 3h12v2H2z"/></svg>
             Qty {listing.quantity}
           </span>
           {listing.treadDepth && (
-            <span className="text-slate-300">·</span>
+            <span className="text-slate-600">·</span>
           )}
           {listing.treadDepth && <span>{listing.treadDepth} tread</span>}
         </div>
-        <p className="mt-2 flex items-center gap-1 truncate text-xs text-slate-400">
+        <p className="mt-2 flex items-center gap-1 truncate text-xs text-slate-500">
           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 fill-slate-400"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
           {listing.location}
         </p>

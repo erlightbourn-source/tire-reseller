@@ -27,10 +27,10 @@ export default async function ThreadPage({ params }) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href="/messages" className="text-sm text-brand-600 hover:underline">← All messages</Link>
+      <Link href="/messages" className="text-sm text-brand-300 hover:underline">← All messages</Link>
 
-      <Link href={`/listings/${thread.listing.id}`} className="card mt-2 flex items-center gap-3 p-3 hover:shadow">
-        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+      <Link href={`/listings/${thread.listing.id}`} className="card mt-2 flex items-center gap-3 p-3 transition hover:border-white/20">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photo} alt="" className="h-full w-full object-cover" />
@@ -39,8 +39,8 @@ export default async function ThreadPage({ params }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{thread.listing.brand} · {thread.listing.size}</p>
-          <p className="text-sm text-slate-500">{formatPrice(thread.listing.priceCents)} · with {other.name}</p>
+          <p className="truncate font-semibold text-white">{thread.listing.brand} · {thread.listing.size}</p>
+          <p className="text-sm text-slate-400">{formatPrice(thread.listing.priceCents)} · with {other.name}</p>
         </div>
       </Link>
 

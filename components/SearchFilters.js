@@ -87,7 +87,7 @@ export default function SearchFilters({ brands }) {
       {anyFilter && (
         <button
           onClick={() => router.push("/")}
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-brand-600"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-slate-400 hover:text-brand-300"
         >
           <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current"><path d="M4.3 4.3a1 1 0 0 1 1.4 0L8 6.6l2.3-2.3a1 1 0 1 1 1.4 1.4L9.4 8l2.3 2.3a1 1 0 0 1-1.4 1.4L8 9.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L6.6 8 4.3 5.7a1 1 0 0 1 0-1.4Z"/></svg>
           Clear all filters

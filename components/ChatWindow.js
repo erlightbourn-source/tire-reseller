@@ -46,9 +46,9 @@ export default function ChatWindow({ threadId, otherName }) {
 
   return (
     <div className="card flex h-[62vh] flex-col overflow-hidden">
-      <div className="flex-1 space-y-2 overflow-y-auto bg-slate-50/60 p-4">
+      <div className="flex-1 space-y-2 overflow-y-auto bg-black/20 p-4">
         {loaded && messages.length === 0 && (
-          <p className="mt-10 text-center text-sm text-slate-400">
+          <p className="mt-10 text-center text-sm text-slate-500">
             Start the conversation with {otherName}.
           </p>
         )}
@@ -60,7 +60,7 @@ export default function ChatWindow({ threadId, otherName }) {
             <div key={m.id}>
               {showDay && (
                 <div className="my-3 flex justify-center">
-                  <span className="rounded-full bg-white px-3 py-0.5 text-xs text-slate-400 ring-1 ring-slate-200">{day}</span>
+                  <span className="rounded-full bg-white/5 px-3 py-0.5 text-xs text-slate-400 ring-1 ring-white/10">{day}</span>
                 </div>
               )}
               <div className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
@@ -68,11 +68,11 @@ export default function ChatWindow({ threadId, otherName }) {
                   className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
                     m.mine
                       ? "rounded-br-md bg-brand-600 text-white"
-                      : "rounded-bl-md bg-white text-slate-800 ring-1 ring-slate-200"
+                      : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"
                   }`}
                 >
                   {m.body}
-                  <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-400"}`}>
+                  <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-500"}`}>
                     {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                   </div>
                 </div>
@@ -82,7 +82,7 @@ export default function ChatWindow({ threadId, otherName }) {
         })}
         <div ref={bottomRef} />
       </div>
-      <form onSubmit={send} className="flex gap-2 border-t border-slate-200 bg-white p-3">
+      <form onSubmit={send} className="flex gap-2 border-t border-white/10 bg-white/[0.02] p-3">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}

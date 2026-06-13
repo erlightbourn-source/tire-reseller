@@ -19,9 +19,9 @@ export default async function SellPage() {
             <h1 className="relative mt-3 font-display text-xl font-bold">Selling requires a subscription</h1>
           </div>
           <div className="p-6">
-            <p className="text-slate-500">
+            <p className="text-slate-400">
               List unlimited tires, message buyers, and track your activity for{" "}
-              <strong className="text-slate-800">$10/month</strong>.
+              <strong className="text-white">$10/month</strong>.
             </p>
             <Link href="/subscribe" className="btn-accent mt-4">Become a seller</Link>
           </div>
@@ -34,7 +34,7 @@ export default async function SellPage() {
     <div className="mx-auto max-w-2xl">
       <div className="mb-4">
         <p className="eyebrow">New listing</p>
-        <h1 className="font-display text-2xl font-extrabold text-slate-900">List a set of tires</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white">List a set of tires</h1>
       </div>
       <div className="card p-6">
         <ListingForm />

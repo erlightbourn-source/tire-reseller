@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Seller</p>
-          <h1 className="font-display text-2xl font-extrabold text-slate-900">Dashboard</h1>
+          <h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1>
         </div>
         {isSeller ? (
           <Link href="/sell" className="btn-primary">+ New listing</Link>
@@ -88,12 +88,12 @@ export default async function DashboardPage() {
 
       {/* Listings */}
       <div>
-        <h2 className="mb-3 font-display text-lg font-bold text-slate-900">Your listings</h2>
+        <h2 className="mb-3 font-display text-lg font-bold text-white">Your listings</h2>
         {listings.length === 0 ? (
           <div className="card grid place-items-center px-6 py-14 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-2xl">🛞</span>
-            <p className="mt-3 font-display font-bold text-slate-700">No tires listed yet</p>
-            <p className="text-sm text-slate-500">Create your first listing to start selling.</p>
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">🛞</span>
+            <p className="mt-3 font-display font-bold text-slate-200">No tires listed yet</p>
+            <p className="text-sm text-slate-400">Create your first listing to start selling.</p>
             {isSeller ? (
               <Link href="/sell" className="btn-primary mt-4">Create your first listing</Link>
             ) : (
@@ -101,10 +101,10 @@ export default async function DashboardPage() {
             )}
           </div>
         ) : (
-          <div className="card divide-y divide-slate-100">
+          <div className="card divide-y divide-white/5">
             {listings.map((l) => (
-              <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-slate-50/60">
-                <Link href={`/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
+              <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
+                <Link href={`/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
                   {l.photos[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={l.photos[0].url} alt="" className="h-full w-full object-cover" />
@@ -114,17 +114,17 @@ export default async function DashboardPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <Link href={`/listings/${l.id}`} className="truncate font-display font-bold text-slate-900 hover:underline">
+                    <Link href={`/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">
                       {l.brand} · {l.size}
                     </Link>
-                    <span className={`badge ${l.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
+                    <span className={`badge ${l.status === "active" ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30" : "bg-white/10 text-slate-300"}`}>
                       {l.status === "active" ? "Active" : "Sold"}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    <span className="font-semibold text-slate-700">{formatPrice(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}
+                  <p className="mt-0.5 text-sm text-slate-400">
+                    <span className="font-semibold text-slate-200">{formatPrice(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-3 text-xs text-slate-400">
+                  <p className="mt-0.5 flex items-center gap-3 text-xs text-slate-500">
                     <span>👁 {l.views} views</span>
                     <span>💬 {l._count.threads} chats</span>
                   </p>
@@ -152,9 +152,9 @@ function Stat({ label, value, icon, tone = "blue", sub, small }) {
       <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${TONES[tone]} text-white`}>
         <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" dangerouslySetInnerHTML={{ __html: icon }} />
       </span>
-      <p className={`font-display font-extrabold text-slate-900 ${small ? "text-xl" : "text-2xl"}`}>{value}</p>
-      <p className="text-xs text-slate-500">{label}</p>
-      {sub && <p className="mt-0.5 text-xs font-medium text-brand-600">{sub}</p>}
+      <p className={`font-display font-extrabold text-white ${small ? "text-xl" : "text-2xl"}`}>{value}</p>
+      <p className="text-xs text-slate-400">{label}</p>
+      {sub && <p className="mt-0.5 text-xs font-medium text-brand-300">{sub}</p>}
     </div>
   );
 }

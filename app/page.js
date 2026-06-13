@@ -104,15 +104,15 @@ export default async function MarketplacePage({ searchParams }) {
 
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="font-display text-xl font-bold text-slate-900">
+          <h2 className="font-display text-xl font-bold text-white">
             {filtered ? "Search results" : "Latest listings"}
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             {listings.length} tire set{listings.length !== 1 ? "s" : ""} available
           </p>
         </div>
         {filtered && (
-          <Link href="/" className="text-sm font-semibold text-brand-600 hover:underline">
+          <Link href="/" className="text-sm font-semibold text-brand-300 hover:underline">
             Clear search
           </Link>
         )}
@@ -121,8 +121,8 @@ export default async function MarketplacePage({ searchParams }) {
       {listings.length === 0 ? (
         <div className="card grid place-items-center px-6 py-16 text-center">
           <Logo className="h-14 w-14 opacity-60" />
-          <p className="mt-4 font-display text-lg font-bold text-slate-700">No tires match your filters</p>
-          <p className="mt-1 text-sm text-slate-500">Try clearing filters or broadening your search.</p>
+          <p className="mt-4 font-display text-lg font-bold text-slate-200">No tires match your filters</p>
+          <p className="mt-1 text-sm text-slate-400">Try clearing filters or broadening your search.</p>
           <Link href="/" className="btn-secondary mt-4">Reset filters</Link>
         </div>
       ) : (

@@ -45,8 +45,8 @@ export default async function SuccessPage({ searchParams }) {
     <div className="mx-auto max-w-md">
       <div className="card p-8 text-center">
         <p className="text-5xl">🎉</p>
-        <h1 className="mt-3 text-xl font-bold">You're a TireTrader seller!</h1>
-        <p className="mt-2 text-slate-500">Your subscription is active. Time to list some tires.</p>
+        <h1 className="mt-3 font-display text-xl font-bold text-white">You're a TireTrader seller!</h1>
+        <p className="mt-2 text-slate-400">Your subscription is active. Time to list some tires.</p>
         <div className="mt-5 flex justify-center gap-2">
           <Link href="/sell" className="btn-primary">List your first set</Link>
           <Link href="/dashboard" className="btn-secondary">Go to dashboard</Link>

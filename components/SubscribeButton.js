@@ -27,7 +27,7 @@ export default function SubscribeButton() {
 
   return (
     <>
-      {err && <div className="mb-2 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>}
+      {err && <div className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
       <button onClick={go} disabled={busy} className="btn-primary w-full">
         {busy ? "Starting checkout…" : "Subscribe for $10/month"}
       </button>

@@ -34,7 +34,7 @@ export default function AuthForm({ mode }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-200/80 shadow-lift">
+    <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.9)]">
       <div className="grid md:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-8 text-white md:flex">
@@ -63,22 +63,22 @@ export default function AuthForm({ mode }) {
         </div>
 
         {/* Form panel */}
-        <div className="bg-white p-7 sm:p-9">
+        <div className="bg-[#13161c] p-7 sm:p-9">
           <div className="mb-1 flex items-center gap-2 md:hidden">
             <Logo className="h-8 w-8" />
-            <span className="font-display text-lg font-extrabold">TireTrader</span>
+            <span className="font-display text-lg font-extrabold text-white">TireTrader</span>
           </div>
-          <h1 className="font-display text-2xl font-bold text-slate-900">
+          <h1 className="font-display text-2xl font-bold text-white">
             {isSignup ? "Create your account" : "Log in"}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-400">
             {isSignup
               ? "Buyers browse for free. Become a seller anytime."
               : "Manage your listings and messages."}
           </p>
 
           {err && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-red-200">
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">
               <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-current"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 11H9v-2h2v2Zm0-3H9V6h2v4Z"/></svg>
               {err}
             </div>
@@ -111,16 +111,16 @@ export default function AuthForm({ mode }) {
           </form>
 
           {!isSignup && (
-            <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5 text-xs text-slate-500 ring-1 ring-inset ring-slate-200">
-              <span className="font-semibold text-slate-600">Demo:</span> demo@tiretrader.test / demo1234
+            <div className="mt-4 rounded-xl bg-white/5 px-3 py-2.5 text-xs text-slate-400 ring-1 ring-inset ring-white/10">
+              <span className="font-semibold text-slate-300">Demo:</span> demo@tiretrader.test / demo1234
             </div>
           )}
 
-          <p className="mt-5 text-center text-sm text-slate-500">
+          <p className="mt-5 text-center text-sm text-slate-400">
             {isSignup ? (
-              <>Already have an account? <Link href="/login" className="font-semibold text-brand-600 hover:underline">Log in</Link></>
+              <>Already have an account? <Link href="/login" className="font-semibold text-brand-300 hover:underline">Log in</Link></>
             ) : (
-              <>New here? <Link href="/signup" className="font-semibold text-brand-600 hover:underline">Create an account</Link></>
+              <>New here? <Link href="/signup" className="font-semibold text-brand-300 hover:underline">Create an account</Link></>
             )}
           </p>
         </div>
