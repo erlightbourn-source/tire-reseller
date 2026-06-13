@@ -39,7 +39,7 @@ export default function NavUser({ user }) {
     );
   }
 
-  const active = user.subscriptionStatus === "active";
+  const active = user.canSell;
   const links = [
     { href: "/", label: "Browse" },
     { href: "/messages", label: "Messages" },
@@ -82,7 +82,7 @@ export default function NavUser({ user }) {
           <div className="glass absolute right-0 mt-2 w-48 overflow-hidden py-1 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.9)]">
             <div className="border-b border-white/10 px-3 py-2">
               <p className="text-sm font-semibold text-white">{user.name}</p>
-              <p className="text-xs text-slate-400">{active ? "Seller · Active" : "Buyer"}</p>
+              <p className="text-xs text-slate-400">{user.role === "seller" ? "Seller" : "Buyer"}</p>
             </div>
             <Link href="/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</Link>
             <Link href="/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</Link>

@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser, isActiveSeller } from "@/lib/auth";
+import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
   }
-  if (!isActiveSeller(user)) {
+  if (!canSell(user)) {
+    const expired = sellerStatus(user) === "expired";
     return NextResponse.json(
-      { error: "An active seller subscription is required to create listings.", code: "subscription_required" },
+      {
+        error: expired
+          ? "Your free selling year has ended. Subscribe for $10/month to keep listing."
+          : "Create a seller account to list tires — your first year is free.",
+        code: expired ? "subscription_required" : "become_seller",
+      },
       { status: 402 }
     );
   }

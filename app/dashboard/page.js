@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, sellerStatus } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -29,13 +29,38 @@ export default async function DashboardPage() {
     where: { senderId: { not: user.id }, readAt: null, thread: { sellerId: user.id } },
   });
 
-  const isSeller = user.subscriptionStatus === "active";
+  const status = sellerStatus(user); // none | free | paid | expired
+  const isSeller = status === "free" || status === "paid";
+  const freeEndsStr = user.sellerFreeUntil ? new Date(user.sellerFreeUntil).toLocaleDateString() : null;
+
+  const banner = {
+    free: {
+      title: "Free seller year active 🎉",
+      sub: freeEndsStr ? `$0 until ${freeEndsStr} — then $10/month. No card on file.` : "Your first year of selling is free.",
+      good: true,
+    },
+    paid: {
+      title: "Seller subscription active",
+      sub: user.subscriptionCurrentEnd ? `$10/month · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}` : "$10/month seller plan",
+      good: true,
+    },
+    expired: {
+      title: "Free year ended",
+      sub: "Subscribe for $10/month to keep your listings live.",
+      good: false,
+    },
+    none: {
+      title: "You're browsing as a buyer",
+      sub: "Become a seller to list tires — your first year is free.",
+      good: false,
+    },
+  }[status];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="eyebrow">Seller</p>
+          <p className="eyebrow">{isSeller ? "Seller" : "Account"}</p>
           <h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1>
         </div>
         {isSeller ? (
@@ -45,31 +70,25 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Subscription banner */}
+      {/* Account / billing banner */}
       <div
         className={`relative overflow-hidden rounded-2xl p-5 text-white shadow-soft ${
-          isSeller ? "bg-gradient-to-br from-brand-600 to-brand-800" : "bg-gradient-to-br from-slate-700 to-ink-900"
+          banner.good ? "bg-gradient-to-br from-brand-600 to-brand-800" : "bg-gradient-to-br from-slate-700 to-ink-900"
         }`}
       >
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${isSeller ? "bg-emerald-400" : "bg-amber-400"}`} />
-              <p className="font-display text-lg font-bold">
-                {isSeller ? "Seller subscription active" : user.subscriptionStatus === "canceled" ? "Subscription canceled" : "Not subscribed"}
-              </p>
+              <span className={`h-2.5 w-2.5 rounded-full ${banner.good ? "bg-emerald-400" : "bg-amber-400"}`} />
+              <p className="font-display text-lg font-bold">{banner.title}</p>
             </div>
-            <p className="mt-1 text-sm text-white/70">
-              {isSeller
-                ? user.subscriptionCurrentEnd
-                  ? `$10/month · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}`
-                  : "$10/month seller plan"
-                : "Subscribe to publish listings and message buyers."}
-            </p>
+            <p className="mt-1 text-sm text-white/70">{banner.sub}</p>
           </div>
           {!isSeller && (
-            <Link href="/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">Subscribe — $10/mo</Link>
+            <Link href="/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">
+              {status === "expired" ? "Subscribe — $10/mo" : "Start free year"}
+            </Link>
           )}
         </div>
       </div>

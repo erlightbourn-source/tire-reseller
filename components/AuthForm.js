@@ -8,7 +8,7 @@ export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || (isSignup ? "/subscribe" : "/");
+  const [role, setRole] = useState("buyer");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,7 @@ export default function AuthForm({ mode }) {
     setLoading(true);
     const form = new FormData(e.currentTarget);
     const body = Object.fromEntries(form.entries());
+    if (isSignup) body.role = role;
     const res = await fetch(`/api/auth/${isSignup ? "signup" : "login"}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -29,7 +30,10 @@ export default function AuthForm({ mode }) {
       setErr(data.error || "Something went wrong.");
       return;
     }
-    router.push(next);
+    // Sellers land on their dashboard; buyers on the marketplace.
+    const dest =
+      params.get("next") || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");
+    router.push(dest);
     router.refresh();
   }
 
@@ -87,6 +91,33 @@ export default function AuthForm({ mode }) {
           <form onSubmit={onSubmit} className="mt-5 space-y-3.5">
             {isSignup && (
               <div>
+                <label className="label">I want to…</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <RoleCard
+                    active={role === "buyer"}
+                    onClick={() => setRole("buyer")}
+                    title="Buy tires"
+                    sub="Browse & message — free"
+                    icon="🔎"
+                  />
+                  <RoleCard
+                    active={role === "seller"}
+                    onClick={() => setRole("seller")}
+                    title="Sell tires"
+                    sub="1st year free, then $10/mo"
+                    icon="🏷️"
+                  />
+                </div>
+                {role === "seller" && (
+                  <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
+                    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>
+                    Your first year of selling is on us — $0 today, no card required.
+                  </p>
+                )}
+              </div>
+            )}
+            {isSignup && (
+              <div>
                 <label className="label">Full name</label>
                 <input name="name" required className="input" placeholder="Jordan Tires" />
               </div>
@@ -126,5 +157,23 @@ export default function AuthForm({ mode }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function RoleCard({ active, onClick, title, sub, icon }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-xl border p-3 text-left transition ${
+        active
+          ? "border-brand-400/60 bg-brand-500/10 ring-2 ring-brand-500/30"
+          : "border-white/10 bg-white/[0.03] hover:border-white/20"
+      }`}
+    >
+      <div className="text-lg">{icon}</div>
+      <div className="mt-1 text-sm font-semibold text-white">{title}</div>
+      <div className="text-xs text-slate-400">{sub}</div>
+    </button>
   );
 }

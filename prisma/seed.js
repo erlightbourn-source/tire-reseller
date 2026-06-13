@@ -105,6 +105,8 @@ async function main() {
   }
 
   const pw = (p) => bcrypt.hashSync(p, 10);
+  // Every seller is in their free first year (no charge until this date).
+  const freeUntil = new Date(Date.now() + 365 * 864e5);
 
   console.log("Creating users…");
   const demo = await prisma.user.create({
@@ -113,9 +115,8 @@ async function main() {
       passwordHash: pw("demo1234"),
       name: "Demo Seller",
       location: "Dallas, TX",
-      subscriptionStatus: "active",
-      subscriptionPriceId: "dev_seeded",
-      subscriptionCurrentEnd: new Date(Date.now() + 30 * 864e5),
+      role: "seller",
+      sellerFreeUntil: freeUntil,
     },
   });
 
@@ -125,6 +126,7 @@ async function main() {
       passwordHash: pw("buyer1234"),
       name: "Sam Buyer",
       location: "Fort Worth, TX",
+      role: "buyer",
     },
   });
 
@@ -142,9 +144,8 @@ async function main() {
           passwordHash: pw("seller1234"),
           name: s.name,
           location: s.location,
-          subscriptionStatus: "active",
-          subscriptionPriceId: "dev_seeded",
-          subscriptionCurrentEnd: new Date(Date.now() + 30 * 864e5),
+          role: "seller",
+          sellerFreeUntil: freeUntil,
         },
       })
     );
@@ -223,8 +224,8 @@ async function main() {
 
   console.log("\n✅ Seed complete.");
   console.log(`   Users: ${sellers.length + 1}  Listings: ${listings.length}`);
-  console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (active subscription)");
-  console.log("   Demo buyer:   buyer@tiretrader.test / buyer1234\n");
+  console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (seller · free first year)");
+  console.log("   Demo buyer:   buyer@tiretrader.test / buyer1234   (buyer)\n");
 }
 
 main()

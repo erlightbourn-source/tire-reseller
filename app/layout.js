@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter, Sora } from "next/font/google";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canSell } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
 
@@ -35,7 +35,7 @@ export default async function RootLayout({ children }) {
             <NavUser
               user={
                 user
-                  ? { id: user.id, name: user.name, subscriptionStatus: user.subscriptionStatus }
+                  ? { id: user.id, name: user.name, role: user.role, canSell: canSell(user) }
                   : null
               }
             />

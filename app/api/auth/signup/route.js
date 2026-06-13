@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { hashPassword, createSession } from "@/lib/auth";
+import { hashPassword, createSession, freeYearFromNow } from "@/lib/auth";
 
 export async function POST(req) {
-  const { email, password, name, location } = await req.json();
+  const { email, password, name, location, role } = await req.json();
 
   if (!email || !password || !name) {
     return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
@@ -17,15 +17,20 @@ export async function POST(req) {
     return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
 
+  const isSeller = role === "seller";
+
   const user = await prisma.user.create({
     data: {
       email: email.toLowerCase(),
       passwordHash: await hashPassword(password),
       name,
       location: location || null,
+      role: isSeller ? "seller" : "buyer",
+      // Sellers get their first year free — no charge until this date.
+      sellerFreeUntil: isSeller ? freeYearFromNow() : null,
     },
   });
 
   await createSession(user.id);
-  return NextResponse.json({ ok: true, userId: user.id });
+  return NextResponse.json({ ok: true, userId: user.id, role: user.role });
 }

@@ -15,7 +15,12 @@ model User {
   location           String?
   createdAt          DateTime @default(now())
 
-  // Stripe subscription state (sellers only)
+  // Account type. Buyers browse free; sellers can list tires.
+  role               String   @default("buyer") // buyer | seller
+
+  // Seller billing. The first year of selling is free for every seller;
+  // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
+  sellerFreeUntil        DateTime?
   stripeCustomerId       String?
   subscriptionStatus     String   @default("inactive") // inactive | active | canceled | past_due
   subscriptionPriceId    String?

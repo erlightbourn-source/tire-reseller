@@ -80,7 +80,7 @@
 const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
 
 /* ───────────────────────── Data layer (localStorage) ───────────────────────── */
-const LS_KEY = 'tiretrader_demo_v1';
+const LS_KEY = 'tiretrader_demo_v2';
 const cuid = () => 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const hashCode = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i) | 0; return h; };
@@ -119,14 +119,16 @@ function tireSVG(brand, size, condition, idx) {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
+const FREE_MS = 365 * 864e5; // one free year of selling
+
 function seedDB() {
   const now = Date.now();
-  const mkUser = (email, name, location, sub) => ({ id: cuid(), email, password: email.startsWith('demo') ? 'demo1234' : (email.startsWith('buyer') ? 'buyer1234' : 'seller1234'), name, location, subscriptionStatus: sub ? 'active' : 'inactive' });
-  const demo = mkUser('demo@tiretrader.test', 'Demo Seller', 'Dallas, TX', true);
-  const buyer = mkUser('buyer@tiretrader.test', 'Sam Buyer', 'Fort Worth, TX', false);
-  const mike = mkUser('mike@tiretrader.test', "Mike's Tire Co", 'Houston, TX', true);
-  const rosa = mkUser('rosa@tiretrader.test', 'Rosa Wheels', 'Phoenix, AZ', true);
-  const ken = mkUser('ken@tiretrader.test', 'Ken Auto', 'Atlanta, GA', true);
+  const mkUser = (email, name, location, role) => ({ id: cuid(), email, password: email.startsWith('demo') ? 'demo1234' : (email.startsWith('buyer') ? 'buyer1234' : 'seller1234'), name, location, role, sellerFreeUntil: role === 'seller' ? now + FREE_MS : null, subscriptionStatus: 'inactive' });
+  const demo = mkUser('demo@tiretrader.test', 'Demo Seller', 'Dallas, TX', 'seller');
+  const buyer = mkUser('buyer@tiretrader.test', 'Sam Buyer', 'Fort Worth, TX', 'buyer');
+  const mike = mkUser('mike@tiretrader.test', "Mike's Tire Co", 'Houston, TX', 'seller');
+  const rosa = mkUser('rosa@tiretrader.test', 'Rosa Wheels', 'Phoenix, AZ', 'seller');
+  const ken = mkUser('ken@tiretrader.test', 'Ken Auto', 'Atlanta, GA', 'seller');
   const sellers = [demo, mike, rosa, ken];
 
   const catalog = [
@@ -193,6 +195,16 @@ function timeAgo(d) {
 }
 const initials = (name) => name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
 
+// Seller billing state: 'none' | 'free' | 'paid' | 'expired'
+function sellerStatus(u) {
+  if (!u || u.role !== 'seller') return 'none';
+  if (u.subscriptionStatus === 'active') return 'paid';
+  if (u.sellerFreeUntil && u.sellerFreeUntil > Date.now()) return 'free';
+  return 'expired';
+}
+const canSell = (u) => { const s = sellerStatus(u); return s === 'free' || s === 'paid'; };
+const freeEndsStr = (u) => u && u.sellerFreeUntil ? new Date(u.sellerFreeUntil).toLocaleDateString() : '';
+
 /* ───────────────────────── Logo ───────────────────────── */
 function Logo({ cls = 'h-9 w-9', spin = false, bare = false }) {
   const scale = bare ? 1.5 : 1;
@@ -218,7 +230,7 @@ function Logo({ cls = 'h-9 w-9', spin = false, bare = false }) {
 function Header() {
   const { me } = useApp();
   const [open, setOpen] = useState(false);
-  const active = me && me.subscriptionStatus === 'active';
+  const active = canSell(me);
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
@@ -235,7 +247,7 @@ function Header() {
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">{initials(me.name)}</span>
               </button>
               {open && <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] py-1 backdrop-blur-xl shadow-2xl">
-                <div className="border-b border-white/10 px-3 py-2"><p className="text-sm font-semibold text-white">{me.name}</p><p className="text-xs text-slate-400">{active ? 'Seller · Active' : 'Buyer'}</p></div>
+                <div className="border-b border-white/10 px-3 py-2"><p className="text-sm font-semibold text-white">{me.name}</p><p className="text-xs text-slate-400">{me.role === 'seller' ? 'Seller' : 'Buyer'}</p></div>
                 <a href="#/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</a>
                 <a href="#/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</a>
                 <LogoutBtn />
@@ -407,16 +419,25 @@ function MessageSeller({ listing }) {
 }
 
 /* ───────────────────────── Auth ───────────────────────── */
+function RoleCard({ active, onClick, title, sub, icon }) {
+  return (
+    <button type="button" onClick={onClick} className={`rounded-xl border p-3 text-left transition ${active ? 'border-brand-400/60 bg-brand-500/10 ring-2 ring-brand-500/30' : 'border-white/10 bg-white/[0.03] hover:border-white/20'}`}>
+      <div className="text-lg">{icon}</div><div className="mt-1 text-sm font-semibold text-white">{title}</div><div className="text-xs text-slate-400">{sub}</div>
+    </button>
+  );
+}
 function Auth({ mode }) {
   const { login, signup } = useApp();
   const isSignup = mode === 'signup';
   const [err, setErr] = useState('');
+  const [role, setRole] = useState('buyer');
   function submit(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target).entries());
+    if (isSignup) f.role = role;
     const res = isSignup ? signup(f) : login(f);
     if (res.error) return setErr(res.error);
-    navigate(isSignup ? '/subscribe' : '/');
+    navigate(isSignup ? (role === 'seller' ? '/dashboard' : '/') : '/');
   }
   return (
     <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
@@ -432,6 +453,14 @@ function Auth({ mode }) {
           <p className="mt-1 text-sm text-slate-400">{isSignup ? 'Buyers browse for free. Become a seller anytime.' : 'Manage your listings and messages.'}</p>
           {err && <div className="mt-4 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
           <form onSubmit={submit} className="mt-5 space-y-3.5">
+            {isSignup && <div>
+              <label className="label">I want to…</label>
+              <div className="grid grid-cols-2 gap-2">
+                <RoleCard active={role==='buyer'} onClick={()=>setRole('buyer')} title="Buy tires" sub="Browse & message — free" icon="🔎" />
+                <RoleCard active={role==='seller'} onClick={()=>setRole('seller')} title="Sell tires" sub="1st year free, then $10/mo" icon="🏷️" />
+              </div>
+              {role==='seller' && <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 ring-1 ring-inset ring-emerald-400/20"><span>✓</span>Your first year of selling is on us — $0 today, no card required.</p>}
+            </div>}
             {isSignup && <div><label className="label">Full name</label><input name="name" required className="input" placeholder="Jordan Tires" /></div>}
             <div><label className="label">Email</label><input name="email" type="email" required className="input" placeholder="you@example.com" /></div>
             <div><label className="label">Password</label><input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" /></div>
@@ -448,19 +477,25 @@ function Auth({ mode }) {
 
 /* ───────────────────────── Subscribe ───────────────────────── */
 function Subscribe() {
-  const { me, subscribe } = useApp();
-  useEffect(() => { if (!me) navigate('/login'); else if (me.subscriptionStatus === 'active') navigate('/dashboard'); }, [me]);
-  if (!me || me.subscriptionStatus === 'active') return null;
+  const { me, subscribe, becomeSeller } = useApp();
+  const status = sellerStatus(me);
+  useEffect(() => { if (!me) navigate('/login'); else if (status === 'free' || status === 'paid') navigate('/dashboard'); }, [me]);
+  if (!me || status === 'free' || status === 'paid') return null;
+  const expired = status === 'expired';
+  const freeEnds = new Date(Date.now() + FREE_MS).toLocaleDateString();
   const feats = [['List unlimited tire sets','No per-listing fees, ever.'],['Built-in buyer messaging','Negotiate without sharing your number.'],['Seller activity dashboard','Track views, chats, and inventory value.'],['Manage everything','Edit, mark sold, and delete in a click.'],['Cancel anytime','No contracts. Keep it as long as it pays off.']];
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-5 text-center"><p className="eyebrow">Seller plan</p><h1 className="mt-1 font-display text-3xl font-extrabold text-white">Sell tires the easy way</h1><p className="mt-2 text-slate-400">One simple price. Everything you need to run your tire resale.</p></div>
+      <div className="mb-5 text-center"><p className="eyebrow">Seller plan</p><h1 className="mt-1 font-display text-3xl font-extrabold text-white">{expired ? 'Keep selling on TireTrader' : 'Start selling — your first year is free'}</h1><p className="mt-2 text-slate-400">{expired ? "Your free year has ended. Continue for $10/month." : "Buyers always browse free. Sellers get a full year on us — then it's just $10/month."}</p></div>
       <div className="card overflow-hidden">
-        <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" /><div className="relative"><p className="text-sm font-medium text-brand-200">TireTrader Seller</p><p className="mt-1 font-display text-5xl font-extrabold">$10<span className="text-lg font-medium text-slate-400">/month</span></p></div></div>
+        <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" /><div className="relative"><p className="text-sm font-medium text-brand-200">TireTrader Seller</p>{expired ? <p className="mt-1 font-display text-5xl font-extrabold">$10<span className="text-lg font-medium text-slate-400">/month</span></p> : <><p className="mt-1 font-display text-5xl font-extrabold">$0<span className="text-lg font-medium text-slate-400"> for year one</span></p><p className="mt-1 text-sm text-slate-400">then $10/month after {freeEnds} · cancel anytime</p></>}</div></div>
         <div className="p-6">
+          {!expired && <div className="mb-5 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20"><span>✓</span>First year free — <strong>$0 today, no card required.</strong></div>}
           <ul className="space-y-3">{feats.map(([t,s])=><li key={t} className="flex gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30">✓</span><div><p className="text-sm font-semibold text-slate-100">{t}</p><p className="text-xs text-slate-400">{s}</p></div></li>)}</ul>
-          <button onClick={()=>{ subscribe(); navigate('/dashboard'); }} className="btn-primary mt-6 w-full">Subscribe for $10/month</button>
-          <p className="mt-3 text-center text-xs text-slate-400">⚙️ Demo mode: checkout is simulated. The real app uses Stripe.</p>
+          {expired
+            ? <button onClick={()=>{ subscribe(); navigate('/dashboard'); }} className="btn-primary mt-6 w-full">Subscribe for $10/month</button>
+            : <button onClick={()=>{ becomeSeller(); navigate('/dashboard'); }} className="btn-primary mt-6 w-full">Start selling free for a year</button>}
+          <p className="mt-3 text-center text-xs text-slate-400">{expired ? '⚙️ Demo mode: checkout is simulated. The real app uses Stripe.' : "You won't be charged today — no card required."}</p>
         </div>
       </div>
     </div>
@@ -472,9 +507,9 @@ function Sell({ id }) {
   const { me, db, saveListing } = useApp();
   useEffect(() => { if (!me) navigate('/login'); }, [me]);
   if (!me) return null;
-  if (me.subscriptionStatus !== 'active') return (
-    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><span className="relative inline-grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15">🔒</span><h1 className="relative mt-3 font-display text-xl font-bold">Selling requires a subscription</h1></div><div className="p-6"><p className="text-slate-400">List unlimited tires, message buyers, and track your activity for <strong className="text-white">$10/month</strong>.</p><a href="#/subscribe" className="btn-accent mt-4">Become a seller</a></div></div></div>
-  );
+  if (!canSell(me)) { const expired = sellerStatus(me)==='expired'; return (
+    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><span className="relative inline-grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15">{expired?'🔒':'🏷️'}</span><h1 className="relative mt-3 font-display text-xl font-bold">{expired?'Your free year has ended':'Become a seller to list tires'}</h1></div><div className="p-6"><p className="text-slate-400">{expired ? <>Continue listing and messaging buyers for <strong className="text-white">$10/month</strong>.</> : <>List unlimited tires, message buyers, and track activity — <strong className="text-white">free for your first year</strong>, then $10/month.</>}</p><a href="#/subscribe" className="btn-accent mt-4">{expired?'Subscribe — $10/mo':'Start selling free'}</a></div></div></div>
+  ); }
   const editing = id ? db.listings.find(l => l.id === id && l.sellerId === me.id) : null;
   const [photoIdx] = useState(editing ? editing.photoIdx : Math.floor(Math.random()*14));
   function submit(e) {
@@ -519,16 +554,23 @@ function Dashboard() {
   const inv = active.reduce((s,l)=>s+l.priceCents*l.quantity,0);
   const convos = db.threads.filter(t => t.sellerId === me.id);
   const unread = db.messages.filter(m => m.senderId !== me.id && convos.some(t => t.id === m.threadId) && !m.read).length;
-  const isSeller = me.subscriptionStatus === 'active';
+  const status = sellerStatus(me);
+  const isSeller = status === 'free' || status === 'paid';
+  const banner = {
+    free: { title:'Free seller year active 🎉', sub:`$0 until ${freeEndsStr(me)} — then $10/month. No card on file.`, good:true },
+    paid: { title:'Seller subscription active', sub:'$10/month · demo subscription', good:true },
+    expired: { title:'Free year ended', sub:'Subscribe for $10/month to keep your listings live.', good:false },
+    none: { title:"You're browsing as a buyer", sub:'Become a seller to list tires — your first year is free.', good:false },
+  }[status];
   const Stat = ({ tone, val, label, sub, icon }) => (
     <div className="card p-4"><span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${tone} text-white text-lg`}>{icon}</span><p className="font-display text-2xl font-extrabold text-white">{val}</p><p className="text-xs text-slate-400">{label}</p>{sub && <p className="mt-0.5 text-xs font-medium text-brand-300">{sub}</p>}</div>
   );
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">Seller</p><h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1></div>{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div>
-      <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${isSeller ? 'bg-gradient-to-br from-brand-600 to-brand-800' : 'bg-gradient-to-br from-slate-700 to-ink-900'}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">{isSeller ? 'Seller' : 'Account'}</p><h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1></div>{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div>
+      <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${banner.good ? 'bg-gradient-to-br from-brand-600 to-brand-800' : 'bg-gradient-to-br from-slate-700 to-ink-900'}`}>
         <div className="tread absolute inset-0 opacity-30" />
-        <div className="relative flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${isSeller?'bg-emerald-400':'bg-amber-400'}`} /><p className="font-display text-lg font-bold">{isSeller ? 'Seller subscription active' : 'Not subscribed'}</p></div><p className="mt-1 text-sm text-white/70">{isSeller ? '$10/month · demo subscription' : 'Subscribe to publish listings and message buyers.'}</p></div>{!isSeller && <a href="#/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">Subscribe — $10/mo</a>}</div>
+        <div className="relative flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${banner.good?'bg-emerald-400':'bg-amber-400'}`} /><p className="font-display text-lg font-bold">{banner.title}</p></div><p className="mt-1 text-sm text-white/70">{banner.sub}</p></div>{!isSeller && <a href="#/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">{status==='expired'?'Subscribe — $10/mo':'Start free year'}</a>}</div>
       </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat tone="from-brand-500 to-brand-700" val={views} label="Listing views" icon="👁" />
@@ -636,8 +678,9 @@ function App() {
   const actions = {
     db, me,
     login: ({ email, password }) => { const u = db.users.find(x => x.email === (email||'').toLowerCase()); if (!u || u.password !== password) return { error: 'Invalid email or password.' }; update(d => { d.session = u.id; }); return {}; },
-    signup: ({ email, password, name, location }) => { email=(email||'').toLowerCase(); if (!name||!email||!password) return {error:'Name, email and password are required.'}; if (password.length<6) return {error:'Password must be at least 6 characters.'}; if (db.users.some(u=>u.email===email)) return {error:'An account with that email already exists.'}; const u={id:cuid(),email,password,name,location:location||null,subscriptionStatus:'inactive'}; update(d=>{ d.users.push(u); d.session=u.id; }); return {}; },
+    signup: ({ email, password, name, location, role }) => { email=(email||'').toLowerCase(); if (!name||!email||!password) return {error:'Name, email and password are required.'}; if (password.length<6) return {error:'Password must be at least 6 characters.'}; if (db.users.some(u=>u.email===email)) return {error:'An account with that email already exists.'}; const isSeller = role==='seller'; const u={id:cuid(),email,password,name,location:location||null,role:isSeller?'seller':'buyer',sellerFreeUntil:isSeller?Date.now()+FREE_MS:null,subscriptionStatus:'inactive'}; update(d=>{ d.users.push(u); d.session=u.id; }); return {}; },
     logout: () => { update(d => { d.session = null; }); navigate('/'); },
+    becomeSeller: () => update(d => { const u = d.users.find(x=>x.id===d.session); if (u && !(sellerStatus(u)==='free'||sellerStatus(u)==='paid')) { u.role='seller'; u.sellerFreeUntil = u.sellerFreeUntil || (Date.now()+FREE_MS); } }),
     subscribe: () => update(d => { const u = d.users.find(x=>x.id===d.session); if (u) u.subscriptionStatus = 'active'; }),
     update,
     otherOf: (t) => db.users.find(u => u.id === (t.buyerId === db.session ? t.sellerId : t.buyerId)),

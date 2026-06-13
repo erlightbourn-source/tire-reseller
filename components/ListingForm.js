@@ -41,7 +41,7 @@ export default function ListingForm({ initial }) {
     const data = await res.json();
     setSaving(false);
     if (!res.ok) {
-      if (data.code === "subscription_required") {
+      if (data.code === "subscription_required" || data.code === "become_seller") {
         router.push("/subscribe");
         return;
       }
