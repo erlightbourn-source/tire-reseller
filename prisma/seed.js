@@ -253,6 +253,43 @@ async function main() {
   });
   await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
 
+  console.log("Seeding reviews, view history, saved searches…");
+  // Reviews for sellers
+  const mike = sellers[1], rosa = sellers[2];
+  const reviewData = [
+    [demo.id, buyer.id, 5, "Smooth deal, tires exactly as described. Would buy again."],
+    [demo.id, mike.id, 4, "Good communication, fair price."],
+    [demo.id, rosa.id, 5, null],
+    [mike.id, buyer.id, 4, "Quick to respond."],
+    [rosa.id, buyer.id, 5, "Great seller!"],
+  ];
+  for (const [sellerId, authorId, rating, body] of reviewData) {
+    await prisma.review.create({ data: { sellerId, authorId, rating, body } });
+  }
+
+  // View events over the last 14 days for the demo seller's listings
+  const demoListings = listings.filter((l) => l.sellerId === demo.id);
+  const viewEvents = [];
+  for (let d = 0; d < 14; d++) {
+    const dayCount = 1 + ((d * 7 + 3) % 9); // 1..9 views/day
+    for (let k = 0; k < dayCount; k++) {
+      const l = demoListings[(d + k) % demoListings.length];
+      const when = new Date(Date.now() - d * 864e5 - k * 36e5);
+      viewEvents.push({ listingId: l.id, createdAt: when });
+    }
+  }
+  await prisma.listingView.createMany({ data: viewEvents });
+
+  // A saved search for the buyer
+  await prisma.savedSearch.create({
+    data: { userId: buyer.id, query: "season=winter", label: "Winter", lastSeenAt: new Date(Date.now() - 30 * 864e5) },
+  });
+
+  // An example offer in the conversation
+  await prisma.message.create({
+    data: { threadId: thread.id, senderId: buyer.id, kind: "offer", offerCents: 85000, offerStatus: "pending", body: "Offer: $850", createdAt: new Date() },
+  });
+
   console.log("\n✅ Seed complete.");
   console.log(`   Users: ${sellers.length + 1}  Listings: ${listings.length}`);
   console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (seller · free first year)");

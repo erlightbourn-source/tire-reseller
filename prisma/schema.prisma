@@ -32,6 +32,9 @@ model User {
   sellerThreads Thread[]  @relation("SellerThreads")
   messages  Message[]
   favorites Favorite[]
+  savedSearches   SavedSearch[]
+  reviewsReceived Review[] @relation("ReviewsReceived")
+  reviewsWritten  Review[] @relation("ReviewsWritten")
 }
 
 model Listing {
@@ -68,6 +71,7 @@ model Listing {
   photos    Photo[]
   threads   Thread[]
   favorites Favorite[]
+  viewEvents ListingView[]
 
   @@index([sellerId])
   @@index([brand])
@@ -130,5 +134,46 @@ model Message {
   createdAt DateTime @default(now())
   readAt    DateTime?
 
+  // "make an offer" support
+  kind        String  @default("text") // text | offer
+  offerCents  Int?
+  offerStatus String? // pending | accepted | declined
+
   @@index([threadId])
+}
+
+model SavedSearch {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  query      String   // URL querystring of the filters
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  sellerId  String
+  seller    User     @relation("ReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("ReviewsWritten", fields: [authorId], references: [id], onDelete: Cascade)
+  rating    Int      // 1-5
+  body      String?
+  createdAt DateTime @default(now())
+
+  @@unique([sellerId, authorId])
+  @@index([sellerId])
+}
+
+model ListingView {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([createdAt])
 }

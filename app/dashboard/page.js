@@ -30,6 +30,31 @@ export default async function DashboardPage() {
     where: { senderId: { not: user.id }, readAt: null, thread: { sellerId: user.id } },
   });
 
+  // Views over the last 14 days (for the analytics chart)
+  const listingIds = listings.map((l) => l.id);
+  const since = new Date();
+  since.setDate(since.getDate() - 13);
+  since.setHours(0, 0, 0, 0);
+  const events = listingIds.length
+    ? await prisma.listingView.findMany({
+        where: { listingId: { in: listingIds }, createdAt: { gte: since } },
+        select: { createdAt: true },
+      })
+    : [];
+  const days = [];
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(since);
+    d.setDate(since.getDate() + i);
+    days.push({ key: d.toLocaleDateString(), label: d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" }), count: 0 });
+  }
+  for (const e of events) {
+    const k = new Date(e.createdAt).toLocaleDateString();
+    const day = days.find((x) => x.key === k);
+    if (day) day.count++;
+  }
+  const maxDay = Math.max(1, ...days.map((d) => d.count));
+  const views14 = events.length;
+
   const status = sellerStatus(user); // none | free | paid | expired
   const isSeller = status === "free" || status === "paid";
   const freeEndsStr = user.sellerFreeUntil ? new Date(user.sellerFreeUntil).toLocaleDateString() : null;
@@ -105,6 +130,34 @@ export default async function DashboardPage() {
         <Stat tone="slate" label="Inventory value" value={formatPrice(inventoryValue)} small sub={`${sold.length} sold`}
           icon='<path d="M10 2 3 5v5c0 4 3 6.5 7 8 4-1.5 7-4 7-8V5l-7-3Z"/>' />
       </div>
+
+      {/* Views chart */}
+      {isSeller && (
+        <div className="card p-5">
+          <div className="mb-3 flex items-end justify-between">
+            <div>
+              <p className="text-sm font-bold text-slate-200">Listing views</p>
+              <p className="text-xs text-slate-500">Last 14 days</p>
+            </div>
+            <p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-500">views</span></p>
+          </div>
+          <div className="flex h-28 items-end gap-1.5">
+            {days.map((d) => (
+              <div
+                key={d.key}
+                title={`${d.label}: ${d.count} views`}
+                className="flex-1 rounded-t bg-gradient-to-t from-brand-700 to-brand-400 transition hover:from-brand-600 hover:to-brand-300"
+                style={{ height: `${Math.max(3, (d.count / maxDay) * 100)}%` }}
+              />
+            ))}
+          </div>
+          <div className="mt-1 flex gap-1.5">
+            {days.map((d) => (
+              <span key={d.key} className="flex-1 text-center text-[9px] text-slate-600">{d.label}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Listings */}
       <div>

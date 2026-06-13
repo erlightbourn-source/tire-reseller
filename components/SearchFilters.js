@@ -2,6 +2,28 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
+function SaveSearch({ params, router }) {
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function save() {
+    setBusy(true);
+    const res = await fetch("/api/saved-searches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: params.toString() }),
+    });
+    setBusy(false);
+    if (res.status === 401) return router.push("/login?next=/browse");
+    if (res.ok) setSaved(true);
+  }
+  return (
+    <button type="button" onClick={save} disabled={busy || saved} className="btn-ghost px-3 py-1.5">
+      <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>
+      {saved ? "Saved ✓" : "Save search"}
+    </button>
+  );
+}
+
 export default function SearchFilters({ brands }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -128,6 +150,7 @@ export default function SearchFilters({ brands }) {
         <button type="button" onClick={() => setMore((m) => !m)} className="btn-ghost px-3 py-1.5">
           {more ? "Fewer filters" : "More filters"}
         </button>
+        <SaveSearch params={params} router={router} />
       </div>
 
       {more && (

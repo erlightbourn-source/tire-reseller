@@ -45,7 +45,7 @@ export default async function ThreadPage({ params }) {
       </Link>
 
       <div className="mt-3">
-        <ChatWindow threadId={thread.id} otherName={other.name} />
+        <ChatWindow threadId={thread.id} otherName={other.name} listingPrice={thread.listing.priceCents} />
       </div>
     </div>
   );

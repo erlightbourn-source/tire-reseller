@@ -7,6 +7,7 @@ import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
 import FavoriteButton from "@/components/FavoriteButton";
+import Stars from "@/components/Stars";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function ListingDetail({ params }) {
   const isOwner = user?.id === listing.sellerId;
   if (!isOwner) {
     await prisma.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
+    await prisma.listingView.create({ data: { listingId: listing.id } }).catch(() => {});
   }
 
   let favorited = false;
@@ -35,6 +37,14 @@ export default async function ListingDetail({ params }) {
       where: { userId_listingId: { userId: user.id, listingId: listing.id } },
     }));
   }
+
+  const sellerRating = await prisma.review.aggregate({
+    where: { sellerId: listing.sellerId },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  const avgRating = sellerRating._avg.rating || 0;
+  const reviewCount = sellerRating._count._all;
 
   const isNew = listing.condition === "new";
   const ageYears = listing.dotYear ? new Date().getFullYear() - listing.dotYear : null;
@@ -95,18 +105,22 @@ export default async function ListingDetail({ params }) {
             </div>
           )}
 
-          <div className="card flex items-center gap-3 p-4">
+          <Link href={`/sellers/${listing.seller.id}`} className="card flex items-center gap-3 p-4 transition hover:border-white/20">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">
               {listing.seller.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-white">{listing.seller.name}</p>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <Stars value={avgRating} size="h-3 w-3" />
+                <span>{reviewCount ? `${avgRating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
+              </div>
               <p className="text-xs text-slate-500">
-                {listing.seller.location ? `${listing.seller.location} · ` : ""}
-                Member since {new Date(listing.seller.createdAt).getFullYear()} · Listed {timeAgo(listing.createdAt)}
+                {listing.seller.location ? `${listing.seller.location} · ` : ""}Listed {timeAgo(listing.createdAt)}
               </p>
             </div>
-          </div>
+            <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-slate-500"><path d="M7 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
+          </Link>
 
           {isOwner ? (
             <div className="card p-5">

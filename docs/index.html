@@ -80,7 +80,7 @@
 const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
 
 /* ───────────────────────── Data layer (localStorage) ───────────────────────── */
-const LS_KEY = 'tiretrader_demo_v5';
+const LS_KEY = 'tiretrader_demo_v6';
 // Vehicle → factory tire size (popular models)
 const FITMENT = {
   Toyota:{Camry:[[2018,2025,"215/55R17"],[2012,2017,"205/65R16"]],Corolla:[[2020,2025,"205/55R16"],[2014,2019,"195/65R15"]],RAV4:[[2013,2025,"225/65R17"]],Tacoma:[[2016,2025,"265/70R16"]],Highlander:[[2020,2025,"235/65R18"]]},
@@ -108,6 +108,18 @@ const CITY_COORDS = {
 };
 function milesBetween(a,b,c,d){ if([a,b,c,d].some(v=>typeof v!=='number')) return Infinity; const R=3958.8,rad=x=>x*Math.PI/180; const dLa=rad(c-a),dLo=rad(d-b); const h=Math.sin(dLa/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 const SEASON_LABEL = { summer:'Summer', winter:'Winter', 'all-season':'All-season', 'all-weather':'All-weather' };
+function matchSearch(l, p){
+  if(p.state && l.state!==String(p.state).toUpperCase()) return false;
+  if(p.brand && l.brand!==p.brand) return false;
+  if(p.condition && l.condition!==p.condition) return false;
+  if(p.size && !l.size.toLowerCase().includes(p.size.toLowerCase())) return false;
+  if(p.season && l.season!==p.season) return false;
+  if(p.runFlat==='1' && !l.runFlat) return false;
+  if(p.maxPrice && l.priceCents>Math.round(Number(p.maxPrice)*100)) return false;
+  if(p.q){ const Q=p.q.toLowerCase(); if(![l.brand,l.size,l.location,l.description].join(' ').toLowerCase().includes(Q)) return false; }
+  return true;
+}
+function describeSearchDemo(p){ const a=[]; if(p.q)a.push(`"${p.q}"`); if(p.brand)a.push(p.brand); if(p.size)a.push(p.size); if(p.season)a.push(p.season); if(p.condition)a.push(p.condition==='new'?'New':'Used'); if(p.runFlat==='1')a.push('Run-flat'); if(p.maxPrice)a.push('under $'+p.maxPrice); if(p.state)a.push(stateName(p.state)); return a.length?a.join(' · '):'All tires'; }
 const GRID_ROWS = 8, GRID_COLS = 11;
 const STATES = [
   ['ME','Maine',0,10],['VT','Vermont',1,9],['NH','New Hampshire',1,10],
@@ -214,7 +226,24 @@ function seedDB() {
 
   const favorites = listings.filter(l => l.sellerId !== buyer.id).slice(1, 4).map(l => ({ userId: buyer.id, listingId: l.id }));
 
-  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages, favorites };
+  // reviews
+  const reviews = [
+    { id: cuid(), sellerId: demo.id, authorId: buyer.id, rating: 5, body: 'Smooth deal, tires exactly as described. Would buy again.', createdAt: now - 5*864e5 },
+    { id: cuid(), sellerId: demo.id, authorId: mike.id, rating: 4, body: 'Good communication, fair price.', createdAt: now - 12*864e5 },
+    { id: cuid(), sellerId: demo.id, authorId: rosa.id, rating: 5, body: null, createdAt: now - 20*864e5 },
+    { id: cuid(), sellerId: mike.id, authorId: buyer.id, rating: 4, body: 'Quick to respond.', createdAt: now - 8*864e5 },
+    { id: cuid(), sellerId: rosa.id, authorId: buyer.id, rating: 5, body: 'Great seller!', createdAt: now - 3*864e5 },
+  ];
+  // view events over last 14 days for demo's listings
+  const demoL = listings.filter(l => l.sellerId === demo.id);
+  const views = [];
+  for (let d=0; d<14; d++){ const dc = 1 + ((d*7+3)%9); for(let k=0;k<dc;k++){ const l = demoL[(d+k)%demoL.length]; views.push({ id: cuid(), listingId: l.id, createdAt: now - d*864e5 - k*36e5 }); } }
+  // saved search for buyer
+  const savedSearches = [{ id: cuid(), userId: buyer.id, query: 'season=winter', label: 'Winter', createdAt: now - 30*864e5, lastSeenAt: now - 30*864e5 }];
+  // an offer in the conversation
+  messages.push({ id: cuid(), threadId: thread.id, senderId: buyer.id, kind: 'offer', offerCents: 85000, offerStatus: 'pending', body: 'Offer: $850', createdAt: now });
+
+  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages, favorites, reviews, views, savedSearches };
 }
 
 function loadDB() {
@@ -289,6 +318,7 @@ function Header() {
           {me ? <>
             <a href="#/browse" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Browse</a>
             <a href="#/favorites" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Saved</a>
+            <a href="#/saved" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Alerts</a>
             <a href="#/messages" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Messages</a>
             <a href="#/dashboard" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Dashboard</a>
             {active ? <a href="#/sell" className="btn-primary"><span className="text-base leading-none">+</span><span className="hidden sm:inline">Sell tires</span></a>
@@ -452,6 +482,78 @@ function AppPage() {
   );
 }
 
+function Stars({ value=0, size='h-4 w-4' }) {
+  return <span className="inline-flex items-center">{[1,2,3,4,5].map(n=><svg key={n} viewBox="0 0 20 20" className={`${size} ${n<=Math.round(value)?'fill-accent-400':'fill-white/15'}`}><path d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6Z"/></svg>)}</span>;
+}
+const initialsOf = (name) => name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+function SellerProfile({ id }) {
+  const { db, me, sellerRating, myReview, addReview } = useApp();
+  const seller = db.users.find(u=>u.id===id);
+  const [rating, setRating] = useState(0); const [hover, setHover] = useState(0); const [body, setBody] = useState(''); const [done, setDone] = useState(false);
+  useEffect(()=>{ const mr = me && myReview(id); if(mr){ setRating(mr.rating); setBody(mr.body||''); } }, [me, id]);
+  if(!seller || seller.role!=='seller') return <Empty title="Seller not found" />;
+  const { avg, count, list } = sellerRating(id);
+  const active = db.listings.filter(l=>l.sellerId===id && l.status==='active').sort((a,b)=>(b.featured-a.featured)||(b.createdAt-a.createdAt));
+  const sold = db.listings.filter(l=>l.sellerId===id && l.status==='sold').length;
+  const canReview = me && me.id!==id;
+  return (
+    <div className="space-y-6">
+      <div className="card flex flex-wrap items-center gap-4 p-5">
+        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-xl font-bold text-white">{initialsOf(seller.name)}</span>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400"><Stars value={avg} /><span className="font-semibold text-slate-200">{avg?avg.toFixed(1):'—'}</span><span>({count} review{count!==1?'s':''})</span>{seller.location && <span>· 📍 {seller.location}</span>}</div>
+          <p className="mt-1 text-xs text-slate-500">{active.length} active · {sold} sold · Member since 2026</p>
+        </div>
+      </div>
+      <div><h2 className="mb-3 font-display text-lg font-bold text-white">Active listings ({active.length})</h2>
+        {active.length===0 ? <div className="card px-6 py-10 text-center text-sm text-slate-400">No active listings right now.</div>
+          : <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{active.map(l=><Card key={l.id} l={l} />)}</div>}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div><h2 className="mb-3 font-display text-lg font-bold text-white">Reviews</h2>
+          {list.length===0 ? <div className="card px-6 py-8 text-center text-sm text-slate-400">No reviews yet.</div>
+            : <div className="space-y-2">{list.map(r=>{ const a=db.users.find(u=>u.id===r.authorId); return <div key={r.id} className="card p-4"><div className="flex items-center justify-between"><span className="font-semibold text-white">{a?a.name:'User'}</span><Stars value={r.rating} size="h-3.5 w-3.5" /></div>{r.body && <p className="mt-1 text-sm text-slate-400">{r.body}</p>}<p className="mt-1 text-xs text-slate-500">{timeAgo(r.createdAt)}</p></div>; })}</div>}
+        </div>
+        <div>
+          {canReview ? (
+            <form onSubmit={e=>{ e.preventDefault(); if(!rating) return; addReview(id, rating, body); setDone(true); }} className="card space-y-3 p-4">
+              <p className="text-sm font-bold text-slate-200">Rate this seller</p>
+              {done && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">Thanks — your review was saved.</div>}
+              <div className="flex gap-1" onMouseLeave={()=>setHover(0)}>{[1,2,3,4,5].map(n=><button key={n} type="button" onClick={()=>setRating(n)} onMouseEnter={()=>setHover(n)}><svg viewBox="0 0 20 20" className={`h-7 w-7 ${n<=(hover||rating)?'fill-accent-400':'fill-white/15'}`}><path d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6Z"/></svg></button>)}</div>
+              <textarea value={body} onChange={e=>setBody(e.target.value)} rows={3} className="input" placeholder="How was the transaction? (optional)" />
+              <button className="btn-primary">{myReview(id)?'Update review':'Post review'}</button>
+            </form>
+          ) : <div className="card p-4 text-sm text-slate-400">{me?'This is your seller profile.':<>Log in to leave a review — <a href="#/login" className="font-semibold text-brand-300">log in</a>.</>}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SavedSearches() {
+  const { db, me, newCount, deleteSearch, seenSearch } = useApp();
+  useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
+  if(!me) return null;
+  const mine = (db.savedSearches||[]).filter(s=>s.userId===me.id).sort((a,b)=>b.createdAt-a.createdAt);
+  return (
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div><p className="eyebrow">Alerts</p><h1 className="font-display text-2xl font-extrabold text-white">Saved searches</h1><p className="text-sm text-slate-400">We track new matches for each search.</p></div>
+      {mine.length===0 ? <div className="card grid place-items-center px-6 py-14 text-center"><span className="text-4xl">🔔</span><p className="mt-3 font-display text-lg font-bold text-slate-200">No saved searches yet</p><p className="mt-1 text-sm text-slate-400">Set up filters on browse, then tap “Save search”.</p><a href="#/browse" className="btn-secondary mt-4">Browse tires</a></div>
+        : <div className="space-y-2">{mine.map(s=>{ const nc=newCount(s); return (
+          <div key={s.id} className="card flex items-center gap-3 p-4">
+            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{s.label}</p><p className="text-xs text-slate-500">Saved {new Date(s.createdAt).toLocaleDateString()}</p></div>
+            {nc>0 && <span className="badge bg-brand-600 text-white">{nc} new</span>}
+            <a href={`#/browse?${s.query}`} onClick={()=>seenSearch(s.id)} className="btn-secondary">View</a>
+            <button onClick={()=>deleteSearch(s.id)} className="btn-ghost px-2" aria-label="Delete"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M7 2h6l1 2h3v2H3V4h3l1-2Zm-2 5h10l-1 11H6L5 7Z"/></svg></button>
+          </div>
+        ); })}</div>}
+      <p className="text-xs text-slate-500">In production these become email/push alerts. Here, new-match counts update live.</p>
+    </div>
+  );
+}
+
 function Landing({ force }) {
   const { db, me } = useApp();
   const selected = userStateOf(me);
@@ -483,7 +585,8 @@ function Landing({ force }) {
 
 /* ───────────────────────── Browse (marketplace) ───────────────────────── */
 function Marketplace({ params }) {
-  const { db } = useApp();
+  const { db, saveSearch } = useApp();
+  const [savedSearch, setSavedSearch] = useState(false);
   const stateParam = params.get('state'), fits = params.get('fits');
   const st = stateParam && isStateAbbr(stateParam) ? stateParam.toUpperCase() : null;
   const [q, setQ] = useState(''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
@@ -541,6 +644,7 @@ function Marketplace({ params }) {
           <button type="button" onClick={near?()=>setNear(null):useMyLocation} className={`btn ${near?'bg-brand-600 text-white':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'} px-3 py-1.5`}><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>{locating?'Locating…':near?'Near me ✓':'Near me'}</button>
           {near && <select className="input w-auto py-1.5" value={radius} onChange={e=>setRadius(e.target.value)}><option value="25">25 mi</option><option value="50">50 mi</option><option value="100">100 mi</option><option value="250">250 mi</option></select>}
           <button type="button" onClick={()=>setMore(m=>!m)} className="btn-ghost px-3 py-1.5">{more?'Fewer filters':'More filters'}</button>
+          <button type="button" onClick={()=>{ const sp=new URLSearchParams(); if(st)sp.set('state',st); if(brand)sp.set('brand',brand); if(cond)sp.set('condition',cond); if(size)sp.set('size',size); if(maxPrice)sp.set('maxPrice',maxPrice); if(season)sp.set('season',season); if(runFlat)sp.set('runFlat','1'); if(q)sp.set('q',q); saveSearch(sp.toString()); setSavedSearch(true); }} disabled={savedSearch} className="btn-ghost px-3 py-1.5"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>{savedSearch?'Saved ✓':'Save search'}</button>
         </div>
         {more && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <select className="input" value={season} onChange={e=>setSeason(e.target.value)}><option value="">Any season</option><option value="all-season">All-season</option><option value="summer">Summer</option><option value="winter">Winter</option><option value="all-weather">All-weather</option></select>
@@ -560,17 +664,18 @@ function Marketplace({ params }) {
 
 /* ───────────────────────── Listing detail ───────────────────────── */
 function Detail({ id }) {
-  const { db, me, update, startThread } = useApp();
+  const { db, me, recordView, startThread, sellerRating } = useApp();
   const l = db.listings.find(x => x.id === id);
   const viewed = useRef(false);
   useEffect(() => {
-    if (l && !viewed.current && (!me || me.id !== l.sellerId)) { viewed.current = true; update(d => { const t = d.listings.find(x=>x.id===id); if (t) t.views++; }); }
+    if (l && !viewed.current && (!me || me.id !== l.sellerId)) { viewed.current = true; recordView(id); }
   }, [id]);
   if (!l) return <Empty title="Listing not found" />;
   const seller = db.users.find(u => u.id === l.sellerId);
   const isOwner = me && me.id === l.sellerId;
   const isNew = l.condition === 'new';
   const threadCount = db.threads.filter(t => t.listingId === l.id).length;
+  const sr = sellerRating(l.sellerId);
   return (
     <div className="space-y-4">
       <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/" className="hover:text-brand-300">Marketplace</a><span>/</span><span className="truncate font-medium text-slate-200">{l.brand} {l.size}</span></nav>
@@ -595,10 +700,11 @@ function Detail({ id }) {
             <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">📍 {l.location}</p>
           </div>
           {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Description</h2><p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{l.description}</p></div>}
-          <div className="card flex items-center gap-3 p-4">
+          <a href={`#/sellers/${seller.id}`} className="card flex items-center gap-3 p-4 transition hover:border-white/20">
             <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials(seller.name)}</span>
-            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{seller.name}</p><p className="text-xs text-slate-500">{seller.location} · Listed {timeAgo(l.createdAt)}</p></div>
-          </div>
+            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{seller.name}</p><div className="flex items-center gap-1.5 text-xs text-slate-400"><Stars value={sr.avg} size="h-3 w-3" /><span>{sr.count?`${sr.avg.toFixed(1)} (${sr.count})`:'No reviews yet'}</span></div><p className="text-xs text-slate-500">{seller.location} · Listed {timeAgo(l.createdAt)}</p></div>
+            <span className="text-slate-500">›</span>
+          </a>
           {isOwner ? (
             <div className="card p-5"><p className="mb-3 text-sm font-bold text-slate-200">Your listing</p><div className="mb-4 grid grid-cols-2 gap-2.5"><Spec k="Views" v={l.views} /><Spec k="Conversations" v={threadCount} /></div>
               <div className="flex gap-2"><a href={`#/sell/${l.id}`} className="btn-secondary flex-1">Edit listing</a><DeleteBtn id={l.id} /></div></div>
@@ -780,6 +886,12 @@ function Dashboard() {
   const unread = db.messages.filter(m => m.senderId !== me.id && convos.some(t => t.id === m.threadId) && !m.read).length;
   const status = sellerStatus(me);
   const isSeller = status === 'free' || status === 'paid';
+  // 14-day views chart
+  const myIds = new Set(mine.map(l=>l.id));
+  const since = new Date(); since.setDate(since.getDate()-13); since.setHours(0,0,0,0);
+  const chartDays = []; for(let i=0;i<14;i++){ const d=new Date(since); d.setDate(since.getDate()+i); chartDays.push({ key:d.toLocaleDateString(), label:d.toLocaleDateString(undefined,{month:'numeric',day:'numeric'}), count:0 }); }
+  (db.views||[]).forEach(v=>{ if(myIds.has(v.listingId) && v.createdAt>=since.getTime()){ const k=new Date(v.createdAt).toLocaleDateString(); const day=chartDays.find(x=>x.key===k); if(day) day.count++; } });
+  const maxDay = Math.max(1, ...chartDays.map(d=>d.count)); const views14 = chartDays.reduce((s,d)=>s+d.count,0);
   const banner = {
     free: { title:'Free seller year active 🎉', sub:`$0 until ${freeEndsStr(me)} — then $10/month. No card on file.`, good:true },
     paid: { title:'Seller subscription active', sub:'$10/month · demo subscription', good:true },
@@ -802,6 +914,11 @@ function Dashboard() {
         <Stat tone="from-amber-500 to-amber-600" val={convos.length} label="Conversations" sub={unread>0?`${unread} unread`:'All read'} icon="💬" />
         <Stat tone="from-slate-600 to-slate-800" val={fmt(inv)} label="Inventory value" sub={`${sold.length} sold`} icon="🛡" />
       </div>
+      {isSeller && <div className="card p-5">
+        <div className="mb-3 flex items-end justify-between"><div><p className="text-sm font-bold text-slate-200">Listing views</p><p className="text-xs text-slate-500">Last 14 days</p></div><p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-500">views</span></p></div>
+        <div className="flex h-28 items-end gap-1.5">{chartDays.map(d=><div key={d.key} title={`${d.label}: ${d.count} views`} className="flex-1 rounded-t bg-gradient-to-t from-brand-700 to-brand-400" style={{height:`${Math.max(3,(d.count/maxDay)*100)}%`}} />)}</div>
+        <div className="mt-1 flex gap-1.5">{chartDays.map(d=><span key={d.key} className="flex-1 text-center text-[9px] text-slate-600">{d.label}</span>)}</div>
+      </div>}
       <div><h2 className="mb-3 font-display text-lg font-bold text-white">Your listings</h2>
         {mine.length === 0 ? (
           <div className="card grid place-items-center px-6 py-14 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">🛞</span><p className="mt-3 font-display font-bold text-slate-200">No tires listed yet</p>{isSeller ? <a href="#/sell" className="btn-primary mt-4">Create your first listing</a> : <a href="#/subscribe" className="btn-accent mt-4">Subscribe to start selling</a>}</div>
@@ -846,10 +963,12 @@ function Messages() {
 function lastTime(db, t) { const m = db.messages.filter(x=>x.threadId===t.id); return m.length ? m[m.length-1].createdAt : t.createdAt; }
 
 function Thread({ id }) {
-  const { me, db, otherOf, sendMessage } = useApp();
+  const { me, db, otherOf, sendMessage, makeOffer, respondOffer } = useApp();
   const [text, setText] = useState('');
-  const bottom = useRef(null);
+  const [offerOpen, setOfferOpen] = useState(false);
   const t = db.threads.find(x => x.id === id);
+  const [offer, setOffer] = useState(t ? Math.round((db.listings.find(x=>x.id===t.listingId)?.priceCents||0)/100) : '');
+  const bottom = useRef(null);
   useEffect(() => { if (!me) navigate('/login'); }, [me]);
   const msgs = t ? db.messages.filter(m => m.threadId === t.id) : [];
   useEffect(() => { bottom.current?.scrollIntoView({ behavior:'smooth' }); }, [msgs.length]);
@@ -857,6 +976,7 @@ function Thread({ id }) {
   if (!t) return <Empty title="Conversation not found" />;
   const l = db.listings.find(x => x.id === t.listingId); const other = otherOf(t);
   function send(e) { e.preventDefault(); if (!text.trim()) return; sendMessage(t.id, text.trim()); setText(''); }
+  const money = (c) => '$'+(c/100).toLocaleString();
   return (
     <div className="mx-auto max-w-2xl">
       <a href="#/messages" className="text-sm text-brand-300 hover:underline">← All messages</a>
@@ -864,12 +984,27 @@ function Thread({ id }) {
       <div className="card mt-3 flex h-[60vh] flex-col overflow-hidden">
         <div className="flex-1 space-y-2 overflow-y-auto bg-black/20 p-4">
           {msgs.length===0 && <p className="mt-10 text-center text-sm text-slate-500">Start the conversation with {other.name}.</p>}
-          {msgs.map(m => { const mine = m.senderId===me.id; return (
-            <div key={m.id} className={`flex ${mine?'justify-end':'justify-start'}`}><div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-500'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div></div>
+          {msgs.map(m => { const mine = m.senderId===me.id; const isOffer = m.kind==='offer'; return (
+            <div key={m.id} className={`flex ${mine?'justify-end':'justify-start'}`}>
+              {isOffer ? (
+                <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus==='accepted'?'border-emerald-400/40 bg-emerald-500/10':m.offerStatus==='declined'?'border-white/10 bg-white/5 opacity-70':'border-accent-400/40 bg-accent-500/10'}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">{mine?'Your offer':'Offer'}</p>
+                  <p className="font-display text-2xl font-extrabold text-white">{money(m.offerCents)}</p>
+                  {m.offerStatus==='accepted' && <p className="text-xs font-semibold text-emerald-300">✓ Accepted</p>}
+                  {m.offerStatus==='declined' && <p className="text-xs text-slate-400">Declined</p>}
+                  {m.offerStatus==='pending' && !mine && <div className="mt-2 flex gap-2"><button onClick={()=>respondOffer(m.id,'accept')} className="btn bg-emerald-500 px-3 py-1 text-xs text-ink-950 hover:bg-emerald-400">Accept</button><button onClick={()=>respondOffer(m.id,'decline')} className="btn bg-white/10 px-3 py-1 text-xs text-slate-200 hover:bg-white/20">Decline</button></div>}
+                  {m.offerStatus==='pending' && mine && <p className="text-xs text-slate-400">Waiting for a response…</p>}
+                  <div className="mt-1 text-[10px] text-slate-400">{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div>
+                </div>
+              ) : (
+                <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-500'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>
+              )}
+            </div>
           ); })}
           <div ref={bottom} />
         </div>
-        <form onSubmit={send} className="flex gap-2 border-t border-white/10 bg-white/[0.02] p-3"><input value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message…" className="input" /><button className="btn-primary px-4">Send</button></form>
+        {offerOpen && <div className="flex items-center gap-2 border-t border-white/10 bg-accent-500/5 p-3"><span className="text-sm text-slate-300">Offer $</span><input type="number" min="1" value={offer} onChange={e=>setOffer(e.target.value)} className="input max-w-[140px]" /><button onClick={()=>{ const c=Math.round(Number(offer)*100); if(c>0){ makeOffer(t.id,c); setOfferOpen(false); } }} className="btn-accent px-4">Send offer</button><button onClick={()=>setOfferOpen(false)} className="btn-ghost px-3">Cancel</button></div>}
+        <form onSubmit={send} className="flex gap-2 border-t border-white/10 bg-white/[0.02] p-3"><button type="button" onClick={()=>setOfferOpen(o=>!o)} className="btn-secondary px-3" title="Make an offer"><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 1l2 2h3a2 2 0 0 1 2 2v3l2 2-2 2v3a2 2 0 0 1-2 2h-3l-2 2-2-2H5a2 2 0 0 1-2-2v-3l-2-2 2-2V5a2 2 0 0 1 2-2h3l2-2Zm-1 5v2H7v2h2v2h2v-2h2V8h-2V6H9Z"/></svg></button><input value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message…" className="input" /><button className="btn-primary px-4">Send</button></form>
       </div>
     </div>
   );
@@ -932,6 +1067,16 @@ function App() {
     isFavorited: (lid) => !!(db.favorites||[]).find(x=>x.userId===db.session && x.listingId===lid),
     toggleFavorite: (lid) => { if(!db.session){ navigate('/login'); return; } update(d => { d.favorites = d.favorites||[]; const i = d.favorites.findIndex(x=>x.userId===d.session && x.listingId===lid); if(i>=0) d.favorites.splice(i,1); else d.favorites.push({ userId:d.session, listingId:lid }); }); },
     togglePromote: (lid) => update(d => { const l = d.listings.find(x=>x.id===lid); if(l) l.featured = !l.featured; }),
+    sellerRating: (sid) => { const rs = (db.reviews||[]).filter(r=>r.sellerId===sid); return { avg: rs.length? rs.reduce((s,r)=>s+r.rating,0)/rs.length : 0, count: rs.length, list: rs.slice().sort((a,b)=>b.createdAt-a.createdAt) }; },
+    myReview: (sid) => (db.reviews||[]).find(r=>r.sellerId===sid && r.authorId===db.session) || null,
+    addReview: (sid, rating, body) => { if(!db.session) { navigate('/login'); return {error:'login'}; } update(d => { d.reviews = d.reviews||[]; const ex = d.reviews.find(r=>r.sellerId===sid && r.authorId===d.session); if(ex){ ex.rating=rating; ex.body=body||null; } else d.reviews.push({ id:cuid(), sellerId:sid, authorId:d.session, rating, body:body||null, createdAt:Date.now() }); }); return {}; },
+    recordView: (lid) => update(d => { d.views = d.views||[]; d.views.push({ id:cuid(), listingId:lid, createdAt:Date.now() }); const l=d.listings.find(x=>x.id===lid); if(l) l.views=(l.views||0)+1; }),
+    saveSearch: (query) => { if(!db.session){ navigate('/login'); return; } const sp=new URLSearchParams(query); const allow=['q','brand','condition','size','maxPrice','season','runFlat','state']; const p={}; allow.forEach(k=>{ if(sp.get(k)) p[k]=sp.get(k); }); const clean=new URLSearchParams(p).toString(); const label=describeSearchDemo(p); update(d=>{ d.savedSearches=d.savedSearches||[]; if(!d.savedSearches.find(s=>s.userId===d.session && s.query===clean)) d.savedSearches.push({ id:cuid(), userId:d.session, query:clean, label, createdAt:Date.now(), lastSeenAt:Date.now() }); }); },
+    deleteSearch: (id) => update(d => { d.savedSearches = (d.savedSearches||[]).filter(s=>s.id!==id); }),
+    seenSearch: (id) => update(d => { const s=(d.savedSearches||[]).find(x=>x.id===id); if(s) s.lastSeenAt=Date.now(); }),
+    newCount: (s) => { const p=Object.fromEntries(new URLSearchParams(s.query)); return db.listings.filter(l=>l.status==='active' && matchSearch(l,p) && l.createdAt>s.lastSeenAt).length; },
+    makeOffer: (tid, cents) => update(d => { d.messages.push({ id:cuid(), threadId:tid, senderId:d.session, kind:'offer', offerCents:cents, offerStatus:'pending', body:`Offer: $${(cents/100).toLocaleString()}`, createdAt:Date.now() }); const th=d.threads.find(t=>t.id===tid); if(th) th.updatedAt=Date.now(); }),
+    respondOffer: (mid, action) => update(d => { const m=d.messages.find(x=>x.id===mid); if(!m||m.kind!=='offer'||m.offerStatus!=='pending') return; const acc=action==='accept'; m.offerStatus=acc?'accepted':'declined'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, body: acc?`✅ Accepted your offer of $${(m.offerCents/100).toLocaleString()}. Let's arrange pickup!`:`Declined the offer of $${(m.offerCents/100).toLocaleString()}.`, createdAt:Date.now() }); if(acc){ const th=d.threads.find(t=>t.id===m.threadId); const l=th&&d.listings.find(x=>x.id===th.listingId); if(l) l.status='sold'; } }),
     reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
   };
 
@@ -954,6 +1099,8 @@ function App() {
   else if (seg[0] === 'states') view = <Landing force />;
   else if (seg[0] === 'browse') view = <Marketplace params={qp} />;
   else if (seg[0] === 'favorites') view = <Favorites />;
+  else if (seg[0] === 'saved') view = <SavedSearches />;
+  else if (seg[0] === 'sellers' && seg[1]) view = <SellerProfile id={seg[1]} />;
   else if (seg[0] === 'app') view = <AppPage />;
   else if (seg[0] === 'listings' && seg[1]) view = <Detail id={seg[1]} />;
   else if (seg[0] === 'login') view = <Auth mode="login" />;

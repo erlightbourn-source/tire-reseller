@@ -43,6 +43,7 @@ export default function NavUser({ user }) {
   const links = [
     { href: "/browse", label: "Browse" },
     { href: "/favorites", label: "Saved" },
+    { href: "/saved", label: "Alerts" },
     { href: "/messages", label: "Messages" },
     { href: "/dashboard", label: "Dashboard" },
   ];

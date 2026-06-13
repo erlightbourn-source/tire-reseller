@@ -28,16 +28,20 @@ export async function GET(_req, { params }) {
   });
 
   return NextResponse.json({
+    isSeller: thread.sellerId === user.id,
     messages: messages.map((m) => ({
       id: m.id,
       body: m.body,
       mine: m.senderId === user.id,
+      kind: m.kind,
+      offerCents: m.offerCents,
+      offerStatus: m.offerStatus,
       createdAt: m.createdAt,
     })),
   });
 }
 
-// Send a message.
+// Send a message — text or an offer (kind:"offer", offerCents).
 export async function POST(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
@@ -45,13 +49,29 @@ export async function POST(req, { params }) {
   const { thread, code } = await loadThread(params.threadId, user.id);
   if (code) return NextResponse.json({ error: "Not found." }, { status: code });
 
-  const { body } = await req.json();
-  if (!body || !body.trim()) return NextResponse.json({ error: "Empty message." }, { status: 400 });
+  const { body, kind, offerCents } = await req.json();
 
+  if (kind === "offer") {
+    const cents = Math.round(Number(offerCents));
+    if (!cents || cents <= 0) return NextResponse.json({ error: "Enter an offer amount." }, { status: 400 });
+    const msg = await prisma.message.create({
+      data: {
+        threadId: thread.id,
+        senderId: user.id,
+        kind: "offer",
+        offerCents: cents,
+        offerStatus: "pending",
+        body: (body && body.trim()) || `Offer: $${(cents / 100).toLocaleString()}`,
+      },
+    });
+    await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
+    return NextResponse.json({ ok: true, id: msg.id });
+  }
+
+  if (!body || !body.trim()) return NextResponse.json({ error: "Empty message." }, { status: 400 });
   const msg = await prisma.message.create({
     data: { threadId: thread.id, senderId: user.id, body: body.trim() },
   });
   await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
-
   return NextResponse.json({ ok: true, id: msg.id });
 }
