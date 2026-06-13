@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TireTrader — Buy & Sell Tires (Live Demo)</title>
+  <meta name="description" content="TireTrader — the marketplace built for tire resellers. Live front-end demo." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232545e6'/%3E%3Ccircle cx='24' cy='24' r='15' fill='%230d0f13'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%232a2f3c'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            display: ['Sora', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            ink: { 800: '#15171c', 900: '#0d0f13', 950: '#070809' },
+            brand: { 50:'#eff4ff',100:'#dbe6fe',200:'#bdd0fe',300:'#90b0fc',400:'#5c86f8',500:'#3b63f1',600:'#2545e6',700:'#1d33d3',800:'#1e2cab',900:'#1e2b87' },
+            accent: { 400:'#fbbf24',500:'#f59e0b',600:'#d97706' },
+          },
+          keyframes: {
+            spinslow: { to: { transform: 'rotate(360deg)' } },
+            fadeup: { '0%': { opacity:0, transform:'translateY(8px)' }, '100%': { opacity:1, transform:'translateY(0)' } },
+          },
+          animation: { spinslow: 'spinslow 18s linear infinite', fadeup: 'fadeup .4s ease-out both' },
+        },
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      body { @apply bg-ink-950 text-slate-200 font-sans antialiased; }
+    }
+    @layer components {
+      .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer; }
+      .btn-primary { @apply btn text-white; background-image: linear-gradient(180deg,#3b63f1,#2545e6); box-shadow: 0 8px 26px -8px rgba(37,69,230,.6), inset 0 1px 0 rgba(255,255,255,.15); }
+      .btn-primary:hover { background-image: linear-gradient(180deg,#4c72f5,#2c4ce8); @apply -translate-y-0.5; }
+      .btn-secondary { @apply btn bg-white/5 text-slate-100 ring-1 ring-inset ring-white/10 hover:bg-white/10 hover:ring-white/20; }
+      .btn-accent { @apply btn bg-accent-500 text-ink-950 hover:bg-accent-400; box-shadow: 0 8px 26px -8px rgba(245,158,11,.55); }
+      .btn-danger { @apply btn bg-red-500/90 text-white hover:bg-red-500; }
+      .input { @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-brand-500/15; }
+      .input option { @apply bg-ink-800 text-slate-100; }
+      .label { @apply mb-1.5 block text-sm font-medium text-slate-300; }
+      .card { @apply rounded-2xl border border-white/10 bg-[#13161c]; box-shadow: 0 1px 0 0 rgba(255,255,255,.04) inset, 0 18px 40px -24px rgba(0,0,0,.8); }
+      .card-hover { @apply transition-all duration-200 hover:-translate-y-1 hover:border-white/20; }
+      .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
+      .badge-new { @apply badge bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30; }
+      .badge-used { @apply badge bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-400/30; }
+      .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-brand-300; }
+    }
+    @layer utilities {
+      .tread { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 14px); }
+      .mesh { background-image: radial-gradient(40rem 30rem at 80% -20%, rgba(91,134,248,.4), transparent 60%), radial-gradient(34rem 30rem at 0% 120%, rgba(245,158,11,.28), transparent 55%); }
+      .no-scrollbar::-webkit-scrollbar { display:none; } .no-scrollbar { scrollbar-width:none; }
+    }
+    html { color-scheme: dark; }
+    body {
+      background-color:#070809;
+      background-image:
+        radial-gradient(48rem 42rem at 88% -8%, rgba(37,99,235,.18), transparent 60%),
+        radial-gradient(42rem 40rem at -8% 6%, rgba(245,158,11,.1), transparent 55%),
+        radial-gradient(60rem 50rem at 50% 120%, rgba(59,99,241,.08), transparent 60%);
+      background-attachment: fixed;
+    }
+    body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.5;
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
+
+/* ───────────────────────── Data layer (localStorage) ───────────────────────── */
+const LS_KEY = 'tiretrader_demo_v1';
+const cuid = () => 'id' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const hashCode = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i) | 0; return h; };
+
+function tireSVG(brand, size, condition, idx) {
+  const palettes = [['#1f2937','#0b1220'],['#1e293b','#0a0f1a'],['#26211c','#100b07'],['#1b2530','#080d13']];
+  const [c1, c2] = palettes[Math.abs(hashCode(brand + size)) % palettes.length];
+  const spokes = 5 + (Math.abs(hashCode(size)) % 3);
+  const u = 'g' + idx;
+  const spokeShapes = Array.from({ length: spokes }).map((_, i) => {
+    const a = (i / spokes) * 360;
+    return `<g transform="rotate(${a})"><path d="M -16 -52 Q 0 -118 16 -52 L 22 -120 Q 0 -132 -22 -120 Z" fill="url(#${u}spoke)" stroke="#0b0e14" stroke-width="2"/></g>`;
+  }).join('');
+  const tread = Array.from({ length: 60 }).map((_, i) => {
+    const a = (i / 60) * Math.PI * 2; const x = Math.cos(a) * 192, y = Math.sin(a) * 192;
+    return `<rect x="${(x-7).toFixed(1)}" y="${(y-11).toFixed(1)}" width="14" height="22" rx="2" transform="rotate(${(a*180/Math.PI).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})" fill="#05070b"/>`;
+  }).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="${u}bg" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></radialGradient>
+    <radialGradient id="${u}rim" cx="42%" cy="36%" r="70%"><stop offset="0" stop-color="#e8edf5"/><stop offset="0.55" stop-color="#aab4c4"/><stop offset="1" stop-color="#5b6675"/></radialGradient>
+    <linearGradient id="${u}spoke" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe5ee"/><stop offset="1" stop-color="#8b95a6"/></linearGradient>
+    <radialGradient id="${u}rubber" cx="50%" cy="42%" r="60%"><stop offset="0" stop-color="#23262d"/><stop offset="1" stop-color="#0a0c10"/></radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#${u}bg)"/>
+  <ellipse cx="400" cy="520" rx="220" ry="34" fill="#000" opacity="0.45"/>
+  <g transform="translate(400,290)">
+    <circle r="232" fill="url(#${u}rubber)"/>${tread}
+    <circle r="205" fill="#0c0e12"/>
+    <text font-family="Arial" font-size="20" font-weight="700" fill="#e5e7eb" letter-spacing="3" opacity="0.85"><textPath href="#${u}arc" startOffset="50%" text-anchor="middle">${brand.toUpperCase()} · ${size}</textPath></text>
+    <path id="${u}arc" d="M -176 0 A 176 176 0 0 1 176 0" fill="none"/>
+    <circle r="150" fill="#11141a"/><circle r="138" fill="url(#${u}rim)"/>${spokeShapes}
+    <circle r="44" fill="#1a1e26"/><circle r="14" fill="#0b0e14"/>
+    <ellipse cx="-60" cy="-70" rx="120" ry="60" fill="#fff" opacity="0.06"/>
+  </g></svg>`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function seedDB() {
+  const now = Date.now();
+  const mkUser = (email, name, location, sub) => ({ id: cuid(), email, password: email.startsWith('demo') ? 'demo1234' : (email.startsWith('buyer') ? 'buyer1234' : 'seller1234'), name, location, subscriptionStatus: sub ? 'active' : 'inactive' });
+  const demo = mkUser('demo@tiretrader.test', 'Demo Seller', 'Dallas, TX', true);
+  const buyer = mkUser('buyer@tiretrader.test', 'Sam Buyer', 'Fort Worth, TX', false);
+  const mike = mkUser('mike@tiretrader.test', "Mike's Tire Co", 'Houston, TX', true);
+  const rosa = mkUser('rosa@tiretrader.test', 'Rosa Wheels', 'Phoenix, AZ', true);
+  const ken = mkUser('ken@tiretrader.test', 'Ken Auto', 'Atlanta, GA', true);
+  const sellers = [demo, mike, rosa, ken];
+
+  const catalog = [
+    { brand:'Michelin', model:'Pilot Sport 4S', size:'245/40R18', cond:'new', tread:'10/32in', qty:4, price:920, loc:'Dallas, TX', desc:'Brand new set of 4, never mounted. Summer performance.' },
+    { brand:'Goodyear', model:'Eagle F1', size:'225/45R17', cond:'used', tread:'7/32in', qty:4, price:340, loc:'Dallas, TX', desc:'One season on these. Even wear, no patches or plugs.' },
+    { brand:'Bridgestone', model:'Blizzak WS90', size:'205/55R16', cond:'used', tread:'8/32in', qty:4, price:280, loc:'Houston, TX', desc:'Winter tires, two seasons. Stored indoors.' },
+    { brand:'BFGoodrich', model:'All-Terrain T/A KO2', size:'265/70R17', cond:'new', tread:'15/32in', qty:5, price:1150, loc:'Phoenix, AZ', desc:'Full set of 5 including spare. Truck/SUV all-terrain.' },
+    { brand:'Continental', model:'ExtremeContact DWS06', size:'245/45R18', cond:'used', tread:'6/32in', qty:2, price:160, loc:'Atlanta, GA', desc:'Pair of 2 fronts. Good rubber left.' },
+    { brand:'Pirelli', model:'P Zero', size:'275/35R19', cond:'used', tread:'5/32in', qty:4, price:420, loc:'Houston, TX', desc:'Staggered rear pair available too. DM me.' },
+    { brand:'Cooper', model:'Discoverer AT3', size:'265/65R18', cond:'new', tread:'14/32in', qty:4, price:760, loc:'Phoenix, AZ', desc:'New takeoffs from a new truck, 20 miles.' },
+    { brand:'Hankook', model:'Kinergy GT', size:'215/60R16', cond:'used', tread:'9/32in', qty:4, price:220, loc:'Atlanta, GA', desc:'Plenty of tread, all-season touring.' },
+    { brand:'Falken', model:'Wildpeak A/T3W', size:'285/70R17', cond:'new', tread:'16/32in', qty:4, price:980, loc:'Dallas, TX', desc:'Aggressive all-terrain, brand new.' },
+    { brand:'Toyo', model:'Proxes Sport', size:'255/40R19', cond:'used', tread:'6/32in', qty:4, price:380, loc:'Houston, TX', desc:'Sticky summer set, lots of grip remaining.' },
+    { brand:'Yokohama', model:'AVID Ascend GT', size:'225/65R17', cond:'new', tread:'11/32in', qty:4, price:540, loc:'Phoenix, AZ', desc:'New set, all-season SUV.' },
+    { brand:'Firestone', model:'WeatherGrip', size:'235/55R17', cond:'used', tread:'7/32in', qty:4, price:260, loc:'Atlanta, GA', desc:'Great all-weather set. Smooth and quiet.' },
+    { brand:'Michelin', model:'Defender T+H', size:'215/55R17', cond:'used', tread:'8/32in', qty:4, price:300, loc:'Dallas, TX', desc:'Long-life touring tires, low miles.' },
+    { brand:'Goodyear', model:'Wrangler DuraTrac', size:'275/55R20', cond:'new', tread:'17/32in', qty:4, price:1240, loc:'Houston, TX', desc:'Heavy duty, brand new set for full-size trucks.' },
+  ];
+  const listings = catalog.map((c, i) => {
+    const seller = sellers[i % sellers.length];
+    return {
+      id: cuid(), sellerId: seller.id, brand: c.brand, size: c.size, quantity: c.qty,
+      condition: c.cond, treadDepth: c.tread, priceCents: c.price * 100, location: c.loc,
+      description: `${c.model}. ${c.desc}`, status: i === 5 ? 'sold' : 'active',
+      views: (i * 13 + 4) % 90, createdAt: now - ((i * 37) % 60) * 864e5, photoIdx: i,
+    };
+  });
+
+  // sample conversation between buyer and demo on demo's first listing
+  const target = listings.find((l) => l.sellerId === demo.id);
+  const thread = { id: cuid(), listingId: target.id, buyerId: buyer.id, sellerId: demo.id, createdAt: now - 6 * 36e5 };
+  const convo = [[buyer.id,'Hey! Are these still available?'],[demo.id,'Yep, all 4 are here. Never mounted.'],[buyer.id,'Would you take $850 cash?'],[demo.id,"Could do $880, they're basically new."],[buyer.id,'Deal. Can I pick up this weekend?'],[buyer.id,'Also — do you have the original box?']];
+  let t = now - 6 * 36e5;
+  const messages = convo.map(([senderId, body]) => { t += 22 * 60e3; return { id: cuid(), threadId: thread.id, senderId, body, createdAt: t }; });
+
+  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages };
+}
+
+function loadDB() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  const fresh = seedDB(); localStorage.setItem(LS_KEY, JSON.stringify(fresh)); return fresh;
+}
+
+/* ───────────────────────── App context / router ───────────────────────── */
+const Ctx = createContext(null);
+const useApp = () => useContext(Ctx);
+
+function useHashRoute() {
+  const [hash, setHash] = useState(() => window.location.hash || '#/');
+  useEffect(() => {
+    const on = () => { setHash(window.location.hash || '#/'); window.scrollTo(0, 0); };
+    window.addEventListener('hashchange', on); return () => window.removeEventListener('hashchange', on);
+  }, []);
+  return hash.replace(/^#/, '') || '/';
+}
+const navigate = (p) => { window.location.hash = '#' + p; };
+
+const fmt = (cents) => (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: cents % 100 === 0 ? 0 : 2 });
+function timeAgo(d) {
+  const s = Math.floor((Date.now() - d) / 1000);
+  const u = [['year',31536000],['month',2592000],['week',604800],['day',86400],['hour',3600],['min',60]];
+  for (const [n, sec] of u) { const v = Math.floor(s / sec); if (v >= 1) return `${v} ${n}${v>1?'s':''} ago`; }
+  return 'just now';
+}
+const initials = (name) => name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+
+/* ───────────────────────── Logo ───────────────────────── */
+function Logo({ cls = 'h-9 w-9', spin = false, bare = false }) {
+  const scale = bare ? 1.5 : 1;
+  const spokes = []; for (let i = 0; i < 16; i++) { const a = (i/16)*Math.PI*2; spokes.push(<line key={i} x1={(Math.cos(a)*9.5).toFixed(2)} y1={(Math.sin(a)*9.5).toFixed(2)} x2={(Math.cos(a)*15).toFixed(2)} y2={(Math.sin(a)*15).toFixed(2)} stroke="#1f2430" strokeWidth="2.4" />); }
+  const lugs = []; for (let i = 0; i < 5; i++) { const a = (i/5)*Math.PI*2 - Math.PI/2; lugs.push(<circle key={i} cx={(Math.cos(a)*5.6).toFixed(2)} cy={(Math.sin(a)*5.6).toFixed(2)} r="1.2" fill="#5c86f8" />); }
+  return (
+    <svg viewBox="0 0 48 48" className={cls} aria-hidden="true">
+      <defs><linearGradient id="ttRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#3b63f1" /><stop offset="1" stopColor="#1d33d3" /></linearGradient></defs>
+      {!bare && <rect width="48" height="48" rx="12" fill="url(#ttRim)" />}
+      <g transform={`translate(24 24) scale(${scale})`}>
+        <g className={spin ? 'animate-spinslow' : ''} style={spin ? { transformBox:'fill-box', transformOrigin:'center' } : undefined}>
+          <circle r="15.5" fill="#0d0f13" /><circle r="15.5" fill="none" stroke="#000" strokeOpacity="0.4" strokeWidth="1.5" />
+          {spokes}
+          <circle r="8.5" fill="#2a2f3c" /><circle r="8.5" fill="none" stroke="#3a4150" strokeWidth="1" /><circle r="3.4" fill="#0d0f13" />
+          {lugs}
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/* ───────────────────────── Header ───────────────────────── */
+function Header() {
+  const { me } = useApp();
+  const [open, setOpen] = useState(false);
+  const active = me && me.subscriptionStatus === 'active';
+  return (
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+        <a href="#/" className="flex items-center gap-2.5"><Logo /><span className="font-display text-xl font-extrabold tracking-tight text-white">Tire<span className="text-brand-400">Trader</span></span></a>
+        <nav className="flex items-center gap-1 sm:gap-2">
+          {me ? <>
+            <a href="#/" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Browse</a>
+            <a href="#/messages" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Messages</a>
+            <a href="#/dashboard" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Dashboard</a>
+            {active ? <a href="#/sell" className="btn-primary"><span className="text-base leading-none">+</span><span className="hidden sm:inline">Sell tires</span></a>
+                    : <a href="#/subscribe" className="btn-accent">Become a seller</a>}
+            <div className="relative">
+              <button onClick={() => setOpen(o => !o)} onBlur={() => setTimeout(() => setOpen(false), 160)} className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition hover:bg-white/10">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">{initials(me.name)}</span>
+              </button>
+              {open && <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] py-1 backdrop-blur-xl shadow-2xl">
+                <div className="border-b border-white/10 px-3 py-2"><p className="text-sm font-semibold text-white">{me.name}</p><p className="text-xs text-slate-400">{active ? 'Seller · Active' : 'Buyer'}</p></div>
+                <a href="#/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</a>
+                <a href="#/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</a>
+                <LogoutBtn />
+              </div>}
+            </div>
+          </> : <>
+            <a href="#/" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">Browse</a>
+            <a href="#/login" className="btn-secondary">Log in</a>
+            <a href="#/signup" className="btn-primary">Get started</a>
+          </>}
+        </nav>
+      </div>
+    </header>
+  );
+}
+function LogoutBtn() { const { logout } = useApp(); return <button onMouseDown={logout} className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10">Log out</button>; }
+
+/* ───────────────────────── Listing card ───────────────────────── */
+function Card({ l }) {
+  const isNew = l.condition === 'new';
+  return (
+    <a href={`#/listings/${l.id}`} className="card card-hover group block overflow-hidden">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
+        <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
+          <span className={isNew ? 'badge-new' : 'badge-used'}>{isNew ? 'New' : 'Used'}</span>
+          {l.status === 'sold' && <span className="badge bg-ink-900/90 text-white">Sold</span>}
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent p-2.5"><span className="font-mono text-sm font-semibold text-white drop-shadow">{l.size}</span></div>
+      </div>
+      <div className="p-3.5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-display font-bold leading-tight text-white">{l.brand}</h3>
+          <span className="whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>
+        </div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400"><span>Qty {l.quantity}</span>{l.treadDepth && <span className="text-slate-600">·</span>}{l.treadDepth && <span>{l.treadDepth} tread</span>}</div>
+        <p className="mt-2 truncate text-xs text-slate-500">📍 {l.location}</p>
+      </div>
+    </a>
+  );
+}
+
+/* ───────────────────────── Marketplace ───────────────────────── */
+function Marketplace() {
+  const { db } = useApp();
+  const [q, setQ] = useState(''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
+  const [size, setSize] = useState(''); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('');
+  const filtered = q || brand || cond || size || maxPrice || sort;
+  const brands = useMemo(() => [...new Set(db.listings.filter(l => l.status==='active').map(l => l.brand))].sort(), [db]);
+  const active = db.listings.filter(l => l.status === 'active').length;
+
+  let list = db.listings.filter(l => l.status === 'active');
+  if (brand) list = list.filter(l => l.brand === brand);
+  if (cond) list = list.filter(l => l.condition === cond);
+  if (size) list = list.filter(l => l.size.toLowerCase().includes(size.toLowerCase()));
+  if (maxPrice) list = list.filter(l => l.priceCents <= Math.round(Number(maxPrice) * 100));
+  if (q) { const Q = q.toLowerCase(); list = list.filter(l => [l.brand,l.size,l.location,l.description].join(' ').toLowerCase().includes(Q)); }
+  list = [...list].sort((a,b) => sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt);
+
+  return (
+    <div className="space-y-7">
+      {!filtered && (
+        <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white">
+          <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-40" />
+          <div className="relative grid items-center gap-6 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1.4fr_1fr]">
+            <div className="animate-fadeup">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{active}+ live listings · resellers welcome</span>
+              <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">The marketplace built for <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">tire resellers</span></h1>
+              <p className="mt-4 max-w-xl text-slate-300">Stop juggling Facebook listings. Browse new &amp; used tires near you for free — and when you're ready to sell, list unlimited sets for <span className="font-semibold text-white">$10/month</span> with built-in messaging and a real seller dashboard.</p>
+              <div className="mt-6 flex flex-wrap gap-3"><a href="#/signup" className="btn-accent">Start selling</a><a href="#listings" className="btn-secondary bg-white/10 text-white ring-white/20 hover:bg-white/15">Browse tires</a></div>
+            </div>
+            <div className="hidden justify-center lg:flex"><div className="relative"><div className="absolute -inset-6 rounded-full bg-brand-500/25 blur-3xl" /><Logo cls="relative h-52 w-52" spin bare /></div></div>
+          </div>
+        </section>
+      )}
+
+      <div id="listings" className="card p-3 sm:p-4">
+        <form onSubmit={e=>e.preventDefault()} className="flex gap-2">
+          <div className="relative flex-1">
+            <svg viewBox="0 0 20 20" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-slate-400"><path d="M9 3a6 6 0 1 0 3.7 10.7l3.3 3.3 1.4-1.4-3.3-3.3A6 6 0 0 0 9 3Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" /></svg>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search brand, size (225/45R17), or location…" className="input pl-10" />
+          </div>
+        </form>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <select className="input" value={brand} onChange={e=>setBrand(e.target.value)}><option value="">All brands</option>{brands.map(b=><option key={b} value={b}>{b}</option>)}</select>
+          <select className="input" value={cond} onChange={e=>setCond(e.target.value)}><option value="">New &amp; Used</option><option value="new">New</option><option value="used">Used</option></select>
+          <input className="input" placeholder="Size e.g. R17" value={size} onChange={e=>setSize(e.target.value)} />
+          <input className="input" placeholder="Max $" type="number" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} />
+          <select className="input" value={sort} onChange={e=>setSort(e.target.value)}><option value="">Sort: Newest</option><option value="price_asc">Price: Low → High</option><option value="price_desc">Price: High → Low</option></select>
+        </div>
+        {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
+      </div>
+
+      <div className="flex items-end justify-between">
+        <div><h2 className="font-display text-xl font-bold text-white">{filtered ? 'Search results' : 'Latest listings'}</h2><p className="text-sm text-slate-400">{list.length} tire set{list.length!==1?'s':''} available</p></div>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">No tires match your filters</p><p className="mt-1 text-sm text-slate-400">Try clearing filters or broadening your search.</p></div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{list.map(l => <Card key={l.id} l={l} />)}</div>
+      )}
+    </div>
+  );
+}
+
+/* ───────────────────────── Listing detail ───────────────────────── */
+function Detail({ id }) {
+  const { db, me, update, startThread } = useApp();
+  const l = db.listings.find(x => x.id === id);
+  const viewed = useRef(false);
+  useEffect(() => {
+    if (l && !viewed.current && (!me || me.id !== l.sellerId)) { viewed.current = true; update(d => { const t = d.listings.find(x=>x.id===id); if (t) t.views++; }); }
+  }, [id]);
+  if (!l) return <Empty title="Listing not found" />;
+  const seller = db.users.find(u => u.id === l.sellerId);
+  const isOwner = me && me.id === l.sellerId;
+  const isNew = l.condition === 'new';
+  const threadCount = db.threads.filter(t => t.listingId === l.id).length;
+  return (
+    <div className="space-y-4">
+      <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/" className="hover:text-brand-300">Marketplace</a><span>/</span><span className="truncate font-medium text-slate-200">{l.brand} {l.size}</span></nav>
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3"><div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-900"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div></div>
+        <div className="space-y-4 lg:col-span-2">
+          <div className="card p-5">
+            <div className="flex items-center gap-2"><span className={isNew?'badge-new':'badge-used'}>{isNew?'New':'Used'}</span>{l.status==='sold' && <span className="badge bg-ink-900 text-white">Sold</span>}</div>
+            <h1 className="mt-3 font-display text-2xl font-extrabold text-white">{l.brand}</h1>
+            <p className="font-mono text-lg text-slate-400">{l.size}</p>
+            <p className="mt-3 font-display text-4xl font-extrabold text-white">{fmt(l.priceCents)}<span className="ml-2 align-middle text-sm font-medium text-slate-500">for {l.quantity}</span></p>
+            <dl className="mt-4 grid grid-cols-2 gap-2.5">
+              <Spec k="Quantity" v={l.quantity} /><Spec k="Condition" v={isNew?'New':'Used'} /><Spec k="Tread depth" v={l.treadDepth||'—'} /><Spec k="Per tire" v={fmt(Math.round(l.priceCents/l.quantity))} />
+            </dl>
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">📍 {l.location}</p>
+          </div>
+          {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Description</h2><p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{l.description}</p></div>}
+          <div className="card flex items-center gap-3 p-4">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials(seller.name)}</span>
+            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{seller.name}</p><p className="text-xs text-slate-500">{seller.location} · Listed {timeAgo(l.createdAt)}</p></div>
+          </div>
+          {isOwner ? (
+            <div className="card p-5"><p className="mb-3 text-sm font-bold text-slate-200">Your listing</p><div className="mb-4 grid grid-cols-2 gap-2.5"><Spec k="Views" v={l.views} /><Spec k="Conversations" v={threadCount} /></div>
+              <div className="flex gap-2"><a href={`#/sell/${l.id}`} className="btn-secondary flex-1">Edit listing</a><DeleteBtn id={l.id} /></div></div>
+          ) : me ? (
+            <MessageSeller listing={l} />
+          ) : (
+            <div className="card p-5 text-center"><p className="text-sm text-slate-400">Log in to message the seller and make an offer.</p><a href="#/login" className="btn-primary mt-3 w-full">Log in to message</a></div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+function Spec({ k, v }) { return <div className="rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10"><dt className="text-xs text-slate-400">{k}</dt><dd className="font-semibold text-slate-100">{v}</dd></div>; }
+function DeleteBtn({ id }) { const { update } = useApp(); return <button onClick={()=>{ if(confirm('Delete this listing?')){ update(d=>{ d.listings = d.listings.filter(l=>l.id!==id); }); navigate('/dashboard'); } }} className="btn-danger">Delete</button>; }
+
+function MessageSeller({ listing }) {
+  const { startThread } = useApp();
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState('Hi! Is this set still available?');
+  if (!open) return <button onClick={()=>setOpen(true)} className="btn-primary w-full py-3 text-base">💬 Message seller</button>;
+  return (
+    <div className="card space-y-2 p-4">
+      <p className="text-sm font-semibold text-slate-200">Send a message</p>
+      <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={3} className="input" />
+      <div className="flex gap-2"><button onClick={()=>{ const tid = startThread(listing.id, msg); if(tid) navigate('/messages/'+tid); }} className="btn-primary flex-1">Send message</button><button onClick={()=>setOpen(false)} className="btn-secondary">Cancel</button></div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Auth ───────────────────────── */
+function Auth({ mode }) {
+  const { login, signup } = useApp();
+  const isSignup = mode === 'signup';
+  const [err, setErr] = useState('');
+  function submit(e) {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target).entries());
+    const res = isSignup ? signup(f) : login(f);
+    if (res.error) return setErr(res.error);
+    navigate(isSignup ? '/subscribe' : '/');
+  }
+  return (
+    <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+      <div className="grid md:grid-cols-2">
+        <div className="relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-8 text-white md:flex">
+          <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" />
+          <div className="relative flex items-center gap-2.5"><Logo /><span className="font-display text-xl font-extrabold">Tire<span className="text-brand-300">Trader</span></span></div>
+          <div className="relative"><Logo cls="mb-6 h-24 w-24" bare spin /><h2 className="font-display text-2xl font-bold leading-tight">{isSignup ? 'Turn your tire stash into a business.' : 'Welcome back to the lot.'}</h2><p className="mt-2 text-sm text-slate-300">Unlimited listings, built-in buyer messaging, and a real seller dashboard — for $10/month.</p></div>
+          <div className="relative flex gap-6 text-sm"><div><p className="font-display text-2xl font-extrabold">$10</p><p className="text-slate-400">per month</p></div><div><p className="font-display text-2xl font-extrabold">∞</p><p className="text-slate-400">listings</p></div><div><p className="font-display text-2xl font-extrabold">Free</p><p className="text-slate-400">to browse</p></div></div>
+        </div>
+        <div className="bg-[#13161c] p-7 sm:p-9">
+          <h1 className="font-display text-2xl font-bold text-white">{isSignup ? 'Create your account' : 'Log in'}</h1>
+          <p className="mt-1 text-sm text-slate-400">{isSignup ? 'Buyers browse for free. Become a seller anytime.' : 'Manage your listings and messages.'}</p>
+          {err && <div className="mt-4 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
+          <form onSubmit={submit} className="mt-5 space-y-3.5">
+            {isSignup && <div><label className="label">Full name</label><input name="name" required className="input" placeholder="Jordan Tires" /></div>}
+            <div><label className="label">Email</label><input name="email" type="email" required className="input" placeholder="you@example.com" /></div>
+            <div><label className="label">Password</label><input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" /></div>
+            {isSignup && <div><label className="label">Location <span className="font-normal text-slate-400">(optional)</span></label><input name="location" className="input" placeholder="Dallas, TX" /></div>}
+            <button className="btn-primary w-full">{isSignup ? 'Create account' : 'Log in'}</button>
+          </form>
+          {!isSignup && <div className="mt-4 rounded-xl bg-white/5 px-3 py-2.5 text-xs text-slate-400 ring-1 ring-inset ring-white/10"><span className="font-semibold text-slate-300">Demo:</span> demo@tiretrader.test / demo1234</div>}
+          <p className="mt-5 text-center text-sm text-slate-400">{isSignup ? <>Already have an account? <a href="#/login" className="font-semibold text-brand-300 hover:underline">Log in</a></> : <>New here? <a href="#/signup" className="font-semibold text-brand-300 hover:underline">Create an account</a></>}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Subscribe ───────────────────────── */
+function Subscribe() {
+  const { me, subscribe } = useApp();
+  useEffect(() => { if (!me) navigate('/login'); else if (me.subscriptionStatus === 'active') navigate('/dashboard'); }, [me]);
+  if (!me || me.subscriptionStatus === 'active') return null;
+  const feats = [['List unlimited tire sets','No per-listing fees, ever.'],['Built-in buyer messaging','Negotiate without sharing your number.'],['Seller activity dashboard','Track views, chats, and inventory value.'],['Manage everything','Edit, mark sold, and delete in a click.'],['Cancel anytime','No contracts. Keep it as long as it pays off.']];
+  return (
+    <div className="mx-auto max-w-lg">
+      <div className="mb-5 text-center"><p className="eyebrow">Seller plan</p><h1 className="mt-1 font-display text-3xl font-extrabold text-white">Sell tires the easy way</h1><p className="mt-2 text-slate-400">One simple price. Everything you need to run your tire resale.</p></div>
+      <div className="card overflow-hidden">
+        <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" /><div className="relative"><p className="text-sm font-medium text-brand-200">TireTrader Seller</p><p className="mt-1 font-display text-5xl font-extrabold">$10<span className="text-lg font-medium text-slate-400">/month</span></p></div></div>
+        <div className="p-6">
+          <ul className="space-y-3">{feats.map(([t,s])=><li key={t} className="flex gap-3"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30">✓</span><div><p className="text-sm font-semibold text-slate-100">{t}</p><p className="text-xs text-slate-400">{s}</p></div></li>)}</ul>
+          <button onClick={()=>{ subscribe(); navigate('/dashboard'); }} className="btn-primary mt-6 w-full">Subscribe for $10/month</button>
+          <p className="mt-3 text-center text-xs text-slate-400">⚙️ Demo mode: checkout is simulated. The real app uses Stripe.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Sell / listing form ───────────────────────── */
+function Sell({ id }) {
+  const { me, db, saveListing } = useApp();
+  useEffect(() => { if (!me) navigate('/login'); }, [me]);
+  if (!me) return null;
+  if (me.subscriptionStatus !== 'active') return (
+    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><span className="relative inline-grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15">🔒</span><h1 className="relative mt-3 font-display text-xl font-bold">Selling requires a subscription</h1></div><div className="p-6"><p className="text-slate-400">List unlimited tires, message buyers, and track your activity for <strong className="text-white">$10/month</strong>.</p><a href="#/subscribe" className="btn-accent mt-4">Become a seller</a></div></div></div>
+  );
+  const editing = id ? db.listings.find(l => l.id === id && l.sellerId === me.id) : null;
+  const [photoIdx] = useState(editing ? editing.photoIdx : Math.floor(Math.random()*14));
+  function submit(e) {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target).entries());
+    const nid = saveListing(editing ? editing.id : null, { ...f, photoIdx });
+    navigate('/listings/' + nid);
+  }
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-4"><p className="eyebrow">{editing ? 'Edit listing' : 'New listing'}</p><h1 className="font-display text-2xl font-extrabold text-white">{editing ? 'Edit your listing' : 'List a set of tires'}</h1></div>
+      <div className="card p-6">
+        <form onSubmit={submit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div><label className="label">Brand</label><input name="brand" required defaultValue={editing?.brand} className="input" placeholder="Michelin" /></div>
+            <div><label className="label">Size</label><input name="size" required defaultValue={editing?.size} className="input" placeholder="225/45R17" /></div>
+            <div><label className="label">Quantity</label><input name="quantity" type="number" min="1" defaultValue={editing?.quantity ?? 4} className="input" /></div>
+            <div><label className="label">Condition</label><select name="condition" defaultValue={editing?.condition||'used'} className="input"><option value="new">New</option><option value="used">Used</option></select></div>
+            <div><label className="label">Tread depth <span className="font-normal text-slate-400">(optional)</span></label><input name="treadDepth" defaultValue={editing?.treadDepth||''} className="input" placeholder="8/32in" /></div>
+            <div><label className="label">Price (USD)</label><input name="price" type="number" min="1" step="0.01" required defaultValue={editing ? editing.priceCents/100 : ''} className="input" placeholder="320" /></div>
+            <div className="sm:col-span-2"><label className="label">Location</label><input name="location" required defaultValue={editing?.location} className="input" placeholder="Dallas, TX" /></div>
+            <div className="sm:col-span-2"><label className="label">Description <span className="font-normal text-slate-400">(optional)</span></label><textarea name="description" rows={3} defaultValue={editing?.description||''} className="input" placeholder="Set of 4, mounted one season, no patches…" /></div>
+            {editing && <div className="sm:col-span-2"><label className="label">Status</label><select name="status" defaultValue={editing.status} className="input max-w-xs"><option value="active">Active</option><option value="sold">Sold</option></select></div>}
+          </div>
+          <div className="rounded-xl bg-white/[0.03] p-3 text-xs text-slate-400 ring-1 ring-inset ring-white/10">📷 A studio tire photo is auto-generated for this demo.</div>
+          <div className="flex gap-2"><button className="btn-primary">{editing ? 'Save changes' : 'Publish listing'}</button><a href="#/dashboard" className="btn-secondary">Cancel</a></div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Dashboard ───────────────────────── */
+function Dashboard() {
+  const { me, db } = useApp();
+  useEffect(() => { if (!me) navigate('/login'); }, [me]);
+  if (!me) return null;
+  const mine = db.listings.filter(l => l.sellerId === me.id);
+  const active = mine.filter(l => l.status === 'active');
+  const sold = mine.filter(l => l.status === 'sold');
+  const views = mine.reduce((s,l)=>s+l.views,0);
+  const inv = active.reduce((s,l)=>s+l.priceCents*l.quantity,0);
+  const convos = db.threads.filter(t => t.sellerId === me.id);
+  const unread = db.messages.filter(m => m.senderId !== me.id && convos.some(t => t.id === m.threadId) && !m.read).length;
+  const isSeller = me.subscriptionStatus === 'active';
+  const Stat = ({ tone, val, label, sub, icon }) => (
+    <div className="card p-4"><span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${tone} text-white text-lg`}>{icon}</span><p className="font-display text-2xl font-extrabold text-white">{val}</p><p className="text-xs text-slate-400">{label}</p>{sub && <p className="mt-0.5 text-xs font-medium text-brand-300">{sub}</p>}</div>
+  );
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">Seller</p><h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1></div>{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div>
+      <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${isSeller ? 'bg-gradient-to-br from-brand-600 to-brand-800' : 'bg-gradient-to-br from-slate-700 to-ink-900'}`}>
+        <div className="tread absolute inset-0 opacity-30" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${isSeller?'bg-emerald-400':'bg-amber-400'}`} /><p className="font-display text-lg font-bold">{isSeller ? 'Seller subscription active' : 'Not subscribed'}</p></div><p className="mt-1 text-sm text-white/70">{isSeller ? '$10/month · demo subscription' : 'Subscribe to publish listings and message buyers.'}</p></div>{!isSeller && <a href="#/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">Subscribe — $10/mo</a>}</div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat tone="from-brand-500 to-brand-700" val={views} label="Listing views" icon="👁" />
+        <Stat tone="from-emerald-500 to-emerald-700" val={active.length} label="Active listings" icon="🟢" />
+        <Stat tone="from-amber-500 to-amber-600" val={convos.length} label="Conversations" sub={unread>0?`${unread} unread`:'All read'} icon="💬" />
+        <Stat tone="from-slate-600 to-slate-800" val={fmt(inv)} label="Inventory value" sub={`${sold.length} sold`} icon="🛡" />
+      </div>
+      <div><h2 className="mb-3 font-display text-lg font-bold text-white">Your listings</h2>
+        {mine.length === 0 ? (
+          <div className="card grid place-items-center px-6 py-14 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">🛞</span><p className="mt-3 font-display font-bold text-slate-200">No tires listed yet</p>{isSeller ? <a href="#/sell" className="btn-primary mt-4">Create your first listing</a> : <a href="#/subscribe" className="btn-accent mt-4">Subscribe to start selling</a>}</div>
+        ) : (
+          <div className="card divide-y divide-white/5">{mine.map(l => (
+            <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
+              <a href={`#/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></a>
+              <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><a href={`#/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">{l.brand} · {l.size}</a><span className={`badge ${l.status==='active'?'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30':'bg-white/10 text-slate-300'}`}>{l.status==='active'?'Active':'Sold'}</span></div><p className="mt-0.5 text-sm text-slate-400"><span className="font-semibold text-slate-200">{fmt(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}</p><p className="mt-0.5 text-xs text-slate-500">👁 {l.views} views · 💬 {db.threads.filter(t=>t.listingId===l.id).length} chats</p></div>
+              <a href={`#/sell/${l.id}`} className="btn-secondary shrink-0">Edit</a>
+            </div>
+          ))}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────── Messages ───────────────────────── */
+function Messages() {
+  const { me, db, otherOf } = useApp();
+  useEffect(() => { if (!me) navigate('/login'); }, [me]);
+  if (!me) return null;
+  const mine = db.threads.filter(t => t.buyerId === me.id || t.sellerId === me.id).sort((a,b)=>(lastTime(db,b)-lastTime(db,a)));
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-4"><p className="eyebrow">Inbox</p><h1 className="font-display text-2xl font-extrabold text-white">Messages</h1></div>
+      {mine.length === 0 ? <div className="card grid place-items-center px-6 py-14 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">💬</span><p className="mt-3 font-display font-bold text-slate-200">No conversations yet</p><p className="text-sm text-slate-400">Message a seller from any listing to start chatting.</p><a href="#/" className="btn-secondary mt-4">Browse tires</a></div> : (
+        <div className="space-y-2">{mine.map(t => {
+          const l = db.listings.find(x=>x.id===t.listingId); const other = otherOf(t);
+          const msgs = db.messages.filter(m=>m.threadId===t.id); const last = msgs[msgs.length-1];
+          return (
+            <a key={t.id} href={`#/messages/${t.id}`} className="card card-hover flex items-center gap-3 p-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div>
+              <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><p className="truncate font-semibold text-white">{l.brand} · {l.size}</p><span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(lastTime(db,t))}</span></div><p className="text-xs text-slate-500">{t.buyerId===me.id?'Seller':'Buyer'}: {other.name} · {fmt(l.priceCents)}</p><p className="truncate text-sm text-slate-500">{last ? last.body : 'No messages yet'}</p></div>
+            </a>
+          );
+        })}</div>
+      )}
+    </div>
+  );
+}
+function lastTime(db, t) { const m = db.messages.filter(x=>x.threadId===t.id); return m.length ? m[m.length-1].createdAt : t.createdAt; }
+
+function Thread({ id }) {
+  const { me, db, otherOf, sendMessage } = useApp();
+  const [text, setText] = useState('');
+  const bottom = useRef(null);
+  const t = db.threads.find(x => x.id === id);
+  useEffect(() => { if (!me) navigate('/login'); }, [me]);
+  const msgs = t ? db.messages.filter(m => m.threadId === t.id) : [];
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior:'smooth' }); }, [msgs.length]);
+  if (!me) return null;
+  if (!t) return <Empty title="Conversation not found" />;
+  const l = db.listings.find(x => x.id === t.listingId); const other = otherOf(t);
+  function send(e) { e.preventDefault(); if (!text.trim()) return; sendMessage(t.id, text.trim()); setText(''); }
+  return (
+    <div className="mx-auto max-w-2xl">
+      <a href="#/messages" className="text-sm text-brand-300 hover:underline">← All messages</a>
+      <a href={`#/listings/${l.id}`} className="card mt-2 flex items-center gap-3 p-3 transition hover:border-white/20"><div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{l.brand} · {l.size}</p><p className="text-sm text-slate-400">{fmt(l.priceCents)} · with {other.name}</p></div></a>
+      <div className="card mt-3 flex h-[60vh] flex-col overflow-hidden">
+        <div className="flex-1 space-y-2 overflow-y-auto bg-black/20 p-4">
+          {msgs.length===0 && <p className="mt-10 text-center text-sm text-slate-500">Start the conversation with {other.name}.</p>}
+          {msgs.map(m => { const mine = m.senderId===me.id; return (
+            <div key={m.id} className={`flex ${mine?'justify-end':'justify-start'}`}><div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-500'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div></div>
+          ); })}
+          <div ref={bottom} />
+        </div>
+        <form onSubmit={send} className="flex gap-2 border-t border-white/10 bg-white/[0.02] p-3"><input value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message…" className="input" /><button className="btn-primary px-4">Send</button></form>
+      </div>
+    </div>
+  );
+}
+
+function Empty({ title }) { return <div className="mx-auto max-w-md py-16 text-center"><Logo cls="mx-auto h-14 w-14 opacity-60" /><h1 className="mt-3 font-display text-2xl font-bold text-white">{title}</h1><a href="#/" className="btn-primary mt-4">Back to marketplace</a></div>; }
+
+/* ───────────────────────── Footer + demo ribbon ───────────────────────── */
+function Footer() {
+  const { reset } = useApp();
+  return (
+    <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div>
+        <p className="text-sm text-slate-500">Live front-end demo · data saved in your browser · <a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">source on GitHub</a></p>
+        <button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-sm font-medium text-slate-400 hover:text-brand-300">↺ Reset demo</button>
+      </div>
+    </footer>
+  );
+}
+
+/* ───────────────────────── Root app + actions ───────────────────────── */
+function App() {
+  const [db, setDb] = useState(loadDB);
+  const route = useHashRoute();
+  const persist = (next) => { localStorage.setItem(LS_KEY, JSON.stringify(next)); setDb(next); };
+  const update = (mutator) => { const next = JSON.parse(JSON.stringify(db)); mutator(next); persist(next); };
+  const me = db.users.find(u => u.id === db.session) || null;
+
+  const actions = {
+    db, me,
+    login: ({ email, password }) => { const u = db.users.find(x => x.email === (email||'').toLowerCase()); if (!u || u.password !== password) return { error: 'Invalid email or password.' }; update(d => { d.session = u.id; }); return {}; },
+    signup: ({ email, password, name, location }) => { email=(email||'').toLowerCase(); if (!name||!email||!password) return {error:'Name, email and password are required.'}; if (password.length<6) return {error:'Password must be at least 6 characters.'}; if (db.users.some(u=>u.email===email)) return {error:'An account with that email already exists.'}; const u={id:cuid(),email,password,name,location:location||null,subscriptionStatus:'inactive'}; update(d=>{ d.users.push(u); d.session=u.id; }); return {}; },
+    logout: () => { update(d => { d.session = null; }); navigate('/'); },
+    subscribe: () => update(d => { const u = d.users.find(x=>x.id===d.session); if (u) u.subscriptionStatus = 'active'; }),
+    update,
+    otherOf: (t) => db.users.find(u => u.id === (t.buyerId === db.session ? t.sellerId : t.buyerId)),
+    startThread: (listingId, message) => {
+      const l = db.listings.find(x => x.id === listingId); if (!l || l.sellerId === db.session) return null;
+      let existing = db.threads.find(t => t.listingId === listingId && t.buyerId === db.session);
+      let tid = existing ? existing.id : cuid();
+      update(d => {
+        if (!existing) d.threads.push({ id: tid, listingId, buyerId: d.session, sellerId: l.sellerId, createdAt: Date.now() });
+        if (message && message.trim()) d.messages.push({ id: cuid(), threadId: tid, senderId: d.session, body: message.trim(), createdAt: Date.now() });
+      });
+      scheduleReply(tid, l.sellerId);
+      return tid;
+    },
+    sendMessage: (tid, body) => { const th = db.threads.find(t=>t.id===tid); update(d => { d.messages.push({ id: cuid(), threadId: tid, senderId: d.session, body, createdAt: Date.now() }); }); if (th) { const otherId = th.buyerId === db.session ? th.sellerId : th.buyerId; scheduleReply(tid, otherId); } },
+    saveListing: (id, f) => {
+      const data = { brand:f.brand, size:f.size, quantity:Math.max(1,parseInt(f.quantity)||1), condition:f.condition==='new'?'new':'used', treadDepth:f.treadDepth||null, priceCents:Math.round(Number(f.price)*100), location:f.location, description:f.description||null, status:f.status==='sold'?'sold':'active', photoIdx:f.photoIdx };
+      let nid = id;
+      update(d => { if (id) { const l = d.listings.find(x=>x.id===id); Object.assign(l, data); } else { nid = cuid(); d.listings.unshift({ id:nid, sellerId:d.session, views:0, createdAt:Date.now(), ...data }); } });
+      return nid;
+    },
+    reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
+  };
+
+  // canned auto-reply so conversations feel alive
+  const replyTimers = useRef({});
+  function scheduleReply(tid, fromUserId) {
+    if (replyTimers.current[tid]) return;
+    replyTimers.current[tid] = setTimeout(() => {
+      replyTimers.current[tid] = null;
+      const lines = ["Thanks for reaching out! Yep, still available.", "Sounds good — when works for pickup?", "I can do a small discount for cash. 👍", "Let me grab a few more photos for you."];
+      setDb(prev => { const next = JSON.parse(JSON.stringify(prev)); const last = next.messages.filter(m=>m.threadId===tid).slice(-1)[0]; if (last && last.senderId === fromUserId) return prev; next.messages.push({ id: cuid(), threadId: tid, senderId: fromUserId, body: lines[Math.floor(Date.now()/1000)%lines.length], createdAt: Date.now() }); localStorage.setItem(LS_KEY, JSON.stringify(next)); return next; });
+    }, 1400);
+  }
+
+  let view;
+  const seg = route.split('/').filter(Boolean);
+  if (route === '/' || seg.length === 0) view = <Marketplace />;
+  else if (seg[0] === 'listings' && seg[1]) view = <Detail id={seg[1]} />;
+  else if (seg[0] === 'login') view = <Auth mode="login" />;
+  else if (seg[0] === 'signup') view = <Auth mode="signup" />;
+  else if (seg[0] === 'subscribe') view = <Subscribe />;
+  else if (seg[0] === 'sell') view = <Sell id={seg[1]} />;
+  else if (seg[0] === 'dashboard') view = <Dashboard />;
+  else if (seg[0] === 'messages' && seg[1]) view = <Thread id={seg[1]} />;
+  else if (seg[0] === 'messages') view = <Messages />;
+  else view = <Empty title="Page not found" />;
+
+  return (
+    <Ctx.Provider value={actions}>
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">{view}</main>
+        <Footer />
+      </div>
+    </Ctx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

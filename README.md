@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <b><a href="https://erlightbourn-source.github.io/tire-reseller/">🔗 Live demo</a></b> — no install, runs entirely in your browser.
+</p>
+
+<p align="center">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white">
   <img alt="Prisma" src="https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma&logoColor=white">
@@ -26,6 +30,10 @@ This is a runnable MVP foundation (web first; mobile app and production deploy
 come later).
 
 ---
+
+> **Two ways to use this repo:**
+> - **[Live demo](https://erlightbourn-source.github.io/tire-reseller/)** (GitHub Pages) — a static front-end build of the app that runs fully in your browser, with data saved to `localStorage`. Great for a quick look; no backend.
+> - **Run it locally** (below) — the real full-stack app with a database, auth, messaging, and Stripe.
 
 ## 🚀 Try it in 3 commands
 
