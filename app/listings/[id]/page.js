@@ -9,6 +9,9 @@ import PhotoGallery from "@/components/PhotoGallery";
 import FavoriteButton from "@/components/FavoriteButton";
 import Stars from "@/components/Stars";
 import ListingCard from "@/components/ListingCard";
+import ReportListing from "@/components/ReportListing";
+import ShareListing from "@/components/ShareListing";
+import TrackView from "@/components/TrackView";
 
 export const dynamic = "force-dynamic";
 
@@ -152,8 +155,15 @@ export default async function ListingDetail({ params }) {
           ) : (
             <MessageSeller listingId={listing.id} loggedIn={!!user} />
           )}
+
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <ShareListing brand={listing.brand} size={listing.size} />
+            {!isOwner && <ReportListing listingId={listing.id} loggedIn={!!user} />}
+          </div>
         </div>
       </div>
+
+      <TrackView id={listing.id} brand={listing.brand} size={listing.size} priceCents={listing.priceCents} photo={listing.photos[0]?.url} />
 
       {similar.length > 0 && (
         <div className="pt-2">

@@ -87,7 +87,7 @@
 const { useState, useEffect, useMemo, useRef, useReducer, createContext, useContext } = React;
 
 /* ───────────────────────── Data layer (localStorage) ───────────────────────── */
-const LS_KEY = 'tiretrader_demo_v6';
+const LS_KEY = 'tiretrader_demo_v7';
 // Vehicle → factory tire size (popular models)
 const FITMENT = {
   Toyota:{Camry:[[2018,2025,"215/55R17"],[2012,2017,"205/65R16"]],Corolla:[[2020,2025,"205/55R16"],[2014,2019,"195/65R15"]],RAV4:[[2013,2025,"225/65R17"]],Tacoma:[[2016,2025,"265/70R16"]],Highlander:[[2020,2025,"235/65R18"]]},
@@ -184,10 +184,10 @@ const FREE_MS = 365 * 864e5; // one free year of selling
 
 function seedDB() {
   const now = Date.now();
-  const mkUser = (email, name, location, role) => ({ id: cuid(), email, password: email.startsWith('demo') ? 'demo1234' : (email.startsWith('buyer') ? 'buyer1234' : 'seller1234'), name, location, state: stateFromLocation(location), role, sellerFreeUntil: role === 'seller' ? now + FREE_MS : null, subscriptionStatus: 'inactive' });
+  const mkUser = (email, name, location, role) => ({ id: cuid(), email, password: email.startsWith('demo') ? 'demo1234' : (email.startsWith('buyer') ? 'buyer1234' : 'seller1234'), name, location, state: stateFromLocation(location), role, pro: false, sellerFreeUntil: role === 'seller' ? now + FREE_MS : null, subscriptionStatus: 'inactive' });
   const demo = mkUser('demo@tiretrader.test', 'Demo Seller', 'Dallas, TX', 'seller');
   const buyer = mkUser('buyer@tiretrader.test', 'Sam Buyer', 'Fort Worth, TX', 'buyer');
-  const mike = mkUser('mike@tiretrader.test', "Mike's Tire Co", 'Houston, TX', 'seller');
+  const mike = mkUser('mike@tiretrader.test', "Mike's Tire Co", 'Houston, TX', 'seller'); mike.pro = true;
   const rosa = mkUser('rosa@tiretrader.test', 'Rosa Wheels', 'Phoenix, AZ', 'seller');
   const ken = mkUser('ken@tiretrader.test', 'Ken Auto', 'Atlanta, GA', 'seller');
   const sellers = [demo, mike, rosa, ken];
@@ -250,7 +250,7 @@ function seedDB() {
   // an offer in the conversation
   messages.push({ id: cuid(), threadId: thread.id, senderId: buyer.id, kind: 'offer', offerCents: 85000, offerStatus: 'pending', body: 'Offer: $850', createdAt: now });
 
-  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages, favorites, reviews, views, savedSearches };
+  return { users: [demo, buyer, mike, rosa, ken], session: null, listings, threads: [thread], messages, favorites, reviews, views, savedSearches, reports: [], blocks: [] };
 }
 
 function loadDB() {
@@ -393,20 +393,41 @@ function Heart({ lid, className }) {
     </button>
   );
 }
+function ShareBtn({ brand, size }) {
+  const [copied, setCopied] = useState(false);
+  return <button onClick={async()=>{ const url=location.href; const data={title:`${brand} ${size} on TireTrader`, text:`Check out these ${brand} ${size} tires`, url}; if(navigator.share){ try{ await navigator.share(data); }catch(e){} return; } try{ await navigator.clipboard.writeText(url); setCopied(true); setTimeout(()=>setCopied(false),1500); }catch(e){} }} className="btn-ghost px-3 py-1.5 text-sm"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M14 7a3 3 0 1 0-2.8-4H11a3 3 0 0 0 .1.8L7.7 5.6a3 3 0 1 0 0 4.8l3.4 1.8a3 3 0 1 0 .8-1.4L8.5 9a3 3 0 0 0 0-.9l3.4-1.8A3 3 0 0 0 14 7Z"/></svg>{copied?'Link copied!':'Share'}</button>;
+}
+function ReportBtn({ lid }) {
+  const { me, report } = useApp();
+  const [open, setOpen] = useState(false); const [done, setDone] = useState(false);
+  const reasons = [['spam','Spam or duplicate'],['scam','Looks like a scam'],['prohibited','Prohibited / counterfeit'],['wrong category','Not tires / wrong category'],['other','Something else']];
+  if(done) return <p className="text-xs text-slate-500">Thanks — we'll review this listing.</p>;
+  if(!open) return <button onClick={()=>{ if(!me){ navigate('/login'); return; } setOpen(true); }} className="text-xs text-slate-500 hover:text-slate-300">⚐ Report this listing</button>;
+  return <div className="card p-3"><p className="mb-2 text-xs font-semibold text-slate-300">Why are you reporting this?</p><div className="space-y-1">{reasons.map(([v,lbl])=><button key={v} onClick={()=>{ report(lid,v); setOpen(false); setDone(true); }} className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-200 hover:bg-white/5">{lbl}</button>)}</div><button onClick={()=>setOpen(false)} className="mt-1 px-2.5 text-xs text-slate-500 hover:text-slate-300">Cancel</button></div>;
+}
+function RecentlyViewed({ exclude }) {
+  const [items, setItems] = useState([]);
+  useEffect(()=>{ try{ const all=JSON.parse(localStorage.getItem('tt_recently_viewed')||'[]'); setItems(all.filter(x=>x.id!==exclude).slice(0,8)); }catch(e){} },[exclude]);
+  if(items.length===0) return null;
+  return <div className="card p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-bold text-slate-200">Recently viewed</p><button onClick={()=>{ localStorage.removeItem('tt_recently_viewed'); setItems([]); }} className="text-xs text-slate-500 hover:text-slate-300">Clear</button></div><div className="no-scrollbar flex gap-3 overflow-x-auto">{items.map(l=><a key={l.id} href={`#/listings/${l.id}`} className="w-32 shrink-0"><div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-ink-900 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition||'used',l.photoIdx)} alt="" className="h-full w-full object-cover" /></div><p className="mt-1 truncate text-xs font-semibold text-white">{l.brand}</p><p className="text-xs text-slate-400">{fmt(l.priceCents)}</p></a>)}</div></div>;
+}
 function PromoteBtn({ l }) {
   const { togglePromote } = useApp();
   return <button onClick={()=>togglePromote(l.id)} className={`btn px-3 py-1.5 ${l.featured?'bg-accent-500 text-ink-950 hover:bg-accent-400':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'}`} title="Promote to the top of search (demo: free)">★ {l.featured?'Featured':'Promote'}</button>;
 }
 function Card({ l }) {
+  const { db } = useApp();
   const isNew = l.condition === 'new';
+  const sellerPro = db.users.find(u=>u.id===l.sellerId)?.pro;
   return (
     <div className="card card-hover group relative block overflow-hidden">
       <Heart lid={l.id} className="absolute right-2.5 top-2.5 z-10" />
       <a href={`#/listings/${l.id}`} className="block">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
           <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
-          <div className="absolute inset-x-0 top-0 flex items-start gap-1.5 p-2.5">
+          <div className="absolute inset-x-0 top-0 flex flex-wrap items-start gap-1.5 p-2.5">
             {l.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}
+            {sellerPro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
             <span className={isNew ? 'badge-new' : 'badge-used'}>{isNew ? 'New' : 'Used'}</span>
             {l.status === 'sold' && <span className="badge bg-ink-900/90 text-white">Sold</span>}
           </div>
@@ -526,13 +547,57 @@ function AppPage() {
   );
 }
 
+function ProPage() {
+  const { me, setPro } = useApp();
+  useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
+  if(!me) return null;
+  const eligible = sellerStatus(me)==='free' || sellerStatus(me)==='paid';
+  const perks = [['🚀','Priority placement','Your listings rank above standard sellers in every search.'],['✅','Pro badge','A trust badge on your profile and every listing.'],['📥','Bulk listing tool','Add a whole batch of tires in one paste — perfect for shops.'],['⭐','Unlimited featured','Promote as many listings as you want, anytime.'],['📈','Priority support','Jump the line when you need help.']];
+  return (
+    <div className="mx-auto max-w-lg space-y-5">
+      <div className="text-center"><p className="eyebrow">For serious sellers</p><h1 className="mt-1 font-display text-3xl font-extrabold text-white">TireTrader Pro</h1><p className="mt-2 text-slate-400">Sell more, faster — with priority placement and shop-grade tools.</p></div>
+      <div className="card overflow-hidden">
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-white"><div className="tread absolute inset-0 opacity-20" /><div className="relative"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><p className="mt-2 font-display text-5xl font-extrabold">$25<span className="text-lg font-medium text-slate-300">/month</span></p><p className="mt-1 text-sm text-slate-300">On top of your seller plan. Cancel anytime.</p></div></div>
+        <div className="p-6">
+          <ul className="space-y-3">{perks.map(([i,t,s])=><li key={t} className="flex gap-3"><span className="text-xl">{i}</span><div><p className="text-sm font-semibold text-slate-100">{t}</p><p className="text-xs text-slate-400">{s}</p></div></li>)}</ul>
+          <div className="mt-6">{eligible ? <button onClick={()=>{ setPro(!me.pro); navigate('/dashboard'); }} className={me.pro?'btn-secondary w-full':'btn-accent w-full'}>{me.pro?'Cancel Pro':'Upgrade to Pro — $25/mo'}</button> : <a href="#/subscribe" className="btn-accent w-full">Become a seller first</a>}</div>
+          <p className="mt-3 text-center text-xs text-slate-400">⚙️ Demo: upgrade is simulated. Real billing uses Stripe.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BulkAddPage() {
+  const { me, bulkAdd } = useApp();
+  const [text, setText] = useState(''); const [result, setResult] = useState(null);
+  useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
+  if(!me) return null;
+  const eligible = sellerStatus(me)==='free' || sellerStatus(me)==='paid';
+  if(!eligible) { navigate('/subscribe'); return null; }
+  if(!me.pro) return (
+    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-white"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><h1 className="mt-3 font-display text-xl font-bold">Bulk add is a Pro feature</h1></div><div className="p-6"><p className="text-slate-400">List a whole batch of tires in one paste. Upgrade to Pro to unlock it.</p><a href="#/pro" className="btn-accent mt-4">See TireTrader Pro</a></div></div></div>
+  );
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-4 flex items-center gap-2"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><h1 className="font-display text-2xl font-extrabold text-white">Bulk add listings</h1></div>
+      <div className="card space-y-3 p-6">
+        <p className="text-sm text-slate-400">One listing per line: <code className="rounded bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST</code></p>
+        {result && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">Added {result.count} listing{result.count!==1?'s':''}.{result.errors?` Skipped ${result.errors} line(s).`:''}</div>}
+        <textarea value={text} onChange={e=>setText(e.target.value)} rows={8} className="input font-mono text-sm" placeholder={"Michelin | 225/45R17 | 320 | 4 | used | Dallas, TX\nGoodyear | 265/70R17 | 540 | 4 | new | Austin, TX"} />
+        <div className="flex gap-2"><button onClick={()=>{ const r=bulkAdd(text); setResult(r); setText(''); }} disabled={!text.trim()} className="btn-primary">Add all</button><a href="#/dashboard" className="btn-secondary">Done</a></div>
+      </div>
+    </div>
+  );
+}
+
 function Stars({ value=0, size='h-4 w-4' }) {
   return <span className="inline-flex items-center">{[1,2,3,4,5].map(n=><svg key={n} viewBox="0 0 20 20" className={`${size} ${n<=Math.round(value)?'fill-accent-400':'fill-white/15'}`}><path d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6Z"/></svg>)}</span>;
 }
 const initialsOf = (name) => name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
 function SellerProfile({ id }) {
-  const { db, me, sellerRating, myReview, addReview } = useApp();
+  const { db, me, sellerRating, myReview, addReview, isBlocked, toggleBlock } = useApp();
   const seller = db.users.find(u=>u.id===id);
   const [rating, setRating] = useState(0); const [hover, setHover] = useState(0); const [body, setBody] = useState(''); const [done, setDone] = useState(false);
   useEffect(()=>{ const mr = me && myReview(id); if(mr){ setRating(mr.rating); setBody(mr.body||''); } }, [me, id]);
@@ -546,10 +611,11 @@ function SellerProfile({ id }) {
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-xl font-bold text-white">{initialsOf(seller.name)}</span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
+          <div className="flex items-center gap-2"><h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>{seller.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400"><Stars value={avg} /><span className="font-semibold text-slate-200">{avg?avg.toFixed(1):'—'}</span><span>({count} review{count!==1?'s':''})</span>{seller.location && <span>· 📍 {seller.location}</span>}</div>
           <p className="mt-1 text-xs text-slate-500">{active.length} active · {sold} sold · Member since 2026</p>
         </div>
+        {me && me.id!==id && <button onClick={()=>{ if(isBlocked(id)||confirm('Block this seller? You will not see their listings or be able to message them.')) toggleBlock(id); }} className={isBlocked(id)?'btn-secondary':'btn-ghost text-slate-400'}>{isBlocked(id)?'Unblock seller':'🚫 Block seller'}</button>}
       </div>
       <div><h2 className="mb-3 font-display text-lg font-bold text-white">Active listings ({active.length})</h2>
         {active.length===0 ? <div className="card px-6 py-10 text-center text-sm text-slate-400">No active listings right now.</div>
@@ -629,7 +695,7 @@ function Landing({ force }) {
 
 /* ───────────────────────── Browse (marketplace) ───────────────────────── */
 function Marketplace({ params }) {
-  const { db, saveSearch } = useApp();
+  const { db, saveSearch, blockedByMe } = useApp();
   const [savedSearch, setSavedSearch] = useState(false);
   const stateParam = params.get('state'), fits = params.get('fits');
   const st = stateParam && isStateAbbr(stateParam) ? stateParam.toUpperCase() : null;
@@ -643,7 +709,9 @@ function Marketplace({ params }) {
   function useMyLocation(){ if(!navigator.geolocation) return; setLocating(true); navigator.geolocation.getCurrentPosition(p=>{ setLocating(false); setNear({lat:p.coords.latitude,lng:p.coords.longitude}); }, ()=>setLocating(false), {timeout:8000}); }
   const brands = useMemo(() => [...new Set(db.listings.filter(l => l.status==='active').map(l => l.brand))].sort(), [db]);
 
-  let list = db.listings.filter(l => l.status === 'active');
+  const blocked = blockedByMe();
+  const proOf = (l) => db.users.find(u=>u.id===l.sellerId)?.pro ? 1 : 0;
+  let list = db.listings.filter(l => l.status === 'active' && !l.hidden && !blocked.includes(l.sellerId));
   if (st && !near) list = list.filter(l => l.state === st);
   if (brand) list = list.filter(l => l.brand === brand);
   if (cond) list = list.filter(l => l.condition === cond);
@@ -652,8 +720,8 @@ function Marketplace({ params }) {
   if (runFlat) list = list.filter(l => l.runFlat);
   if (maxPrice) list = list.filter(l => l.priceCents <= Math.round(Number(maxPrice) * 100));
   if (q) { const Q = q.toLowerCase(); list = list.filter(l => [l.brand,l.size,l.location,l.description].join(' ').toLowerCase().includes(Q)); }
-  if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(a.d-b.d)).map(x=>x.l); }
-  else list = [...list].sort((a,b) => (b.featured-a.featured) || (sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt));
+  if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(proOf(b.l)-proOf(a.l))||(a.d-b.d)).map(x=>x.l); }
+  else list = [...list].sort((a,b) => (b.featured-a.featured) || (proOf(b)-proOf(a)) || (sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt));
 
   const scope = near ? `Within ${radius} mi of you` : st ? `Tires in ${stateName(st)}` : 'All listings';
 
@@ -697,6 +765,8 @@ function Marketplace({ params }) {
         {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setNear(null);}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
       </div>
 
+      <RecentlyViewed />
+
       {list.length === 0 ? (
         <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
       ) : (
@@ -713,6 +783,7 @@ function Detail({ id }) {
   const viewed = useRef(false);
   useEffect(() => {
     if (l && !viewed.current && (!me || me.id !== l.sellerId)) { viewed.current = true; recordView(id); }
+    if (l) { try { const prev = JSON.parse(localStorage.getItem('tt_recently_viewed')||'[]'); const next=[{id:l.id,brand:l.brand,size:l.size,priceCents:l.priceCents,photoIdx:l.photoIdx,condition:l.condition}, ...prev.filter(x=>x.id!==l.id)].slice(0,12); localStorage.setItem('tt_recently_viewed', JSON.stringify(next)); } catch(e){} }
   }, [id]);
   if (!l) return <Empty title="Listing not found" />;
   const seller = db.users.find(u => u.id === l.sellerId);
@@ -757,6 +828,10 @@ function Detail({ id }) {
           ) : (
             <div className="card p-5 text-center"><p className="text-sm text-slate-400">Log in to message the seller and make an offer.</p><a href="#/login" className="btn-primary mt-3 w-full">Log in to message</a></div>
           )}
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <ShareBtn brand={l.brand} size={l.size} />
+            {!isOwner && <ReportBtn lid={l.id} />}
+          </div>
         </div>
       </div>
       {(() => {
@@ -954,7 +1029,7 @@ function Dashboard() {
   );
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">{isSeller ? 'Seller' : 'Account'}</p><h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1></div>{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">{isSeller ? 'Seller' : 'Account'}</p><h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">Dashboard{me.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}</h1></div><div className="flex flex-wrap gap-2">{isSeller && me.pro && <a href="#/sell/bulk" className="btn-secondary">📥 Bulk add</a>}{isSeller && !me.pro && <a href="#/pro" className="btn-secondary">✨ Go Pro</a>}{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div></div>
       <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${banner.good ? 'bg-gradient-to-br from-brand-600 to-brand-800' : 'bg-gradient-to-br from-slate-700 to-ink-900'}`}>
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${banner.good?'bg-emerald-400':'bg-amber-400'}`} /><p className="font-display text-lg font-bold">{banner.title}</p></div><p className="mt-1 text-sm text-white/70">{banner.sub}</p></div>{!isSeller && <a href="#/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">{status==='expired'?'Subscribe — $10/mo':'Start free year'}</a>}</div>
@@ -1104,6 +1179,7 @@ function App() {
     otherOf: (t) => db.users.find(u => u.id === (t.buyerId === db.session ? t.sellerId : t.buyerId)),
     startThread: (listingId, message) => {
       const l = db.listings.find(x => x.id === listingId); if (!l || l.sellerId === db.session) return null;
+      if ((db.blocks||[]).some(b => (b.blockerId===db.session && b.blockedId===l.sellerId) || (b.blockerId===l.sellerId && b.blockedId===db.session))) { alert("You can't message this seller."); return null; }
       let existing = db.threads.find(t => t.listingId === listingId && t.buyerId === db.session);
       let tid = existing ? existing.id : cuid();
       update(d => {
@@ -1126,6 +1202,12 @@ function App() {
     toggleFavorite: (lid) => { if(!db.session){ navigate('/login'); return; } update(d => { d.favorites = d.favorites||[]; const i = d.favorites.findIndex(x=>x.userId===d.session && x.listingId===lid); if(i>=0) d.favorites.splice(i,1); else d.favorites.push({ userId:d.session, listingId:lid }); }); },
     togglePromote: (lid) => update(d => { const l = d.listings.find(x=>x.id===lid); if(l) l.featured = !l.featured; }),
     markThreadRead: (tid) => update(d => { d.messages.forEach(m => { if(m.threadId===tid && m.senderId!==d.session) m.read = true; }); }),
+    report: (lid, reason) => { if(!db.session){ navigate('/login'); return {error:'login'}; } update(d => { d.reports = d.reports||[]; if(!d.reports.find(r=>r.listingId===lid && r.reporterId===d.session)) d.reports.push({ id:cuid(), listingId:lid, reporterId:d.session, reason }); const cnt = d.reports.filter(r=>r.listingId===lid).length; if(cnt>=3){ const l=d.listings.find(x=>x.id===lid); if(l) l.hidden=true; } }); return {}; },
+    isBlocked: (uid) => !!(db.blocks||[]).find(b=>b.blockerId===db.session && b.blockedId===uid),
+    blockedByMe: () => (db.blocks||[]).filter(b=>b.blockerId===db.session).map(b=>b.blockedId),
+    toggleBlock: (uid) => update(d => { d.blocks = d.blocks||[]; const i=d.blocks.findIndex(b=>b.blockerId===d.session && b.blockedId===uid); if(i>=0) d.blocks.splice(i,1); else d.blocks.push({ id:cuid(), blockerId:d.session, blockedId:uid }); }),
+    setPro: (on) => update(d => { const u=d.users.find(x=>x.id===d.session); if(u) u.pro=!!on; }),
+    bulkAdd: (text) => { const lines=String(text||'').split('\n').map(l=>l.trim()).filter(Boolean); let count=0, errors=0; update(d => { for(const ln of lines.slice(0,50)){ const p=ln.split('|').map(s=>s.trim()); const [brand,size,price,qty,cond,loc]=p; if(!brand||!size||!price||!loc){ errors++; continue; } const co=CITY_COORDS[loc]||[null,null]; d.listings.unshift({ id:cuid(), sellerId:d.session, brand, size, quantity:Math.max(1,parseInt(qty)||4), condition:cond==='new'?'new':'used', treadDepth:null, priceCents:Math.round(Number(price)*100)||0, location:loc, state:stateFromLocation(loc), lat:co[0], lng:co[1], season:null, runFlat:false, featured:false, hidden:false, views:0, createdAt:Date.now(), photoIdx:Math.floor(Math.random()*14) }); count++; } }); return { count, errors }; },
     sellerRating: (sid) => { const rs = (db.reviews||[]).filter(r=>r.sellerId===sid); return { avg: rs.length? rs.reduce((s,r)=>s+r.rating,0)/rs.length : 0, count: rs.length, list: rs.slice().sort((a,b)=>b.createdAt-a.createdAt) }; },
     myReview: (sid) => (db.reviews||[]).find(r=>r.sellerId===sid && r.authorId===db.session) || null,
     addReview: (sid, rating, body) => { if(!db.session) { navigate('/login'); return {error:'login'}; } update(d => { d.reviews = d.reviews||[]; const ex = d.reviews.find(r=>r.sellerId===sid && r.authorId===d.session); if(ex){ ex.rating=rating; ex.body=body||null; } else d.reviews.push({ id:cuid(), sellerId:sid, authorId:d.session, rating, body:body||null, createdAt:Date.now() }); }); return {}; },
@@ -1165,6 +1247,8 @@ function App() {
   else if (seg[0] === 'login') view = <Auth mode="login" />;
   else if (seg[0] === 'signup') view = <Auth mode="signup" />;
   else if (seg[0] === 'subscribe') view = <Subscribe />;
+  else if (seg[0] === 'pro') view = <ProPage />;
+  else if (seg[0] === 'sell' && seg[1] === 'bulk') view = <BulkAddPage />;
   else if (seg[0] === 'sell') view = <Sell id={seg[1]} />;
   else if (seg[0] === 'dashboard') view = <Dashboard />;
   else if (seg[0] === 'messages' && seg[1]) view = <Thread id={seg[1]} />;

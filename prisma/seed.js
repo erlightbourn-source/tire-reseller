@@ -133,7 +133,7 @@ async function main() {
   });
 
   const sellerData = [
-    { email: "mike@tiretrader.test", name: "Mike's Tire Co", location: "Houston, TX", state: "TX" },
+    { email: "mike@tiretrader.test", name: "Mike's Tire Co", location: "Houston, TX", state: "TX", pro: true },
     { email: "rosa@tiretrader.test", name: "Rosa Wheels", location: "Phoenix, AZ", state: "AZ" },
     { email: "ken@tiretrader.test", name: "Ken Auto", location: "Atlanta, GA", state: "GA" },
   ];
@@ -148,6 +148,7 @@ async function main() {
           location: s.location,
           state: s.state,
           role: "seller",
+          pro: !!s.pro,
           sellerFreeUntil: freeUntil,
         },
       })

@@ -32,9 +32,12 @@ export default function ListingCard({ listing, favorited = false }) {
             </div>
           )}
 
-          <div className="absolute inset-x-0 top-0 flex items-start gap-1.5 p-2.5">
+          <div className="absolute inset-x-0 top-0 flex flex-wrap items-start gap-1.5 p-2.5">
             {listing.featured && (
               <span className="badge bg-accent-500 text-ink-950">★ Featured</span>
+            )}
+            {listing.seller?.pro && (
+              <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>
             )}
             <span className={isNew ? "badge-new" : "badge-used"}>{isNew ? "New" : "Used"}</span>
             {sold && <span className="badge bg-ink-900/90 text-white">Sold</span>}

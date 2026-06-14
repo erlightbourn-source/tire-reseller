@@ -4,15 +4,17 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
 import SearchFilters from "@/components/SearchFilters";
+import RecentlyViewed from "@/components/RecentlyViewed";
 import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
-async function getListings(sp) {
+async function getListings(sp, blockedIds = []) {
   const { q, brand, condition, size, maxPrice, sort, state, season, runFlat } = sp;
 
-  const AND = [{ status: "active" }];
+  const AND = [{ status: "active" }, { hidden: false }];
+  if (blockedIds.length) AND.push({ sellerId: { notIn: blockedIds } });
   if (state && isStateAbbr(state)) AND.push({ state: state.toUpperCase() });
   if (brand) AND.push({ brand });
   if (condition) AND.push({ condition });
@@ -38,8 +40,12 @@ async function getListings(sp) {
   let listings = await prisma.listing.findMany({
     where: { AND },
     orderBy,
-    include: { photos: { orderBy: { sort: "asc" }, take: 1 } },
+    include: { photos: { orderBy: { sort: "asc" }, take: 1 }, seller: { select: { pro: true } } },
   });
+
+  // Pro sellers get priority placement (after featured). Stable re-sort.
+  const pro = (l) => (l.seller?.pro ? 1 : 0);
+  listings.sort((a, b) => (b.featured - a.featured) || (pro(b) - pro(a)));
 
   // Radius filter (haversine) — applied in JS since SQLite has no geo functions.
   const lat = Number(sp.lat), lng = Number(sp.lng), radius = Number(sp.radius);
@@ -47,22 +53,27 @@ async function getListings(sp) {
     listings = listings
       .map((l) => ({ l, d: milesBetween(lat, lng, l.lat, l.lng) }))
       .filter((x) => x.d <= radius)
-      .sort((a, b) => (b.l.featured - a.l.featured) || (a.d - b.d))
+      .sort((a, b) => (b.l.featured - a.l.featured) || (pro(b.l) - pro(a.l)) || (a.d - b.d))
       .map((x) => x.l);
   }
   return listings;
 }
 
 export default async function BrowsePage({ searchParams }) {
-  const [listings, brandRows, user] = await Promise.all([
-    getListings(searchParams),
+  const user = await getCurrentUser();
+  let blockedIds = [];
+  if (user) {
+    const blocks = await prisma.block.findMany({ where: { blockerId: user.id }, select: { blockedId: true } });
+    blockedIds = blocks.map((b) => b.blockedId);
+  }
+  const [listings, brandRows] = await Promise.all([
+    getListings(searchParams, blockedIds),
     prisma.listing.findMany({
-      where: { status: "active" },
+      where: { status: "active", hidden: false },
       select: { brand: true },
       distinct: ["brand"],
       orderBy: { brand: "asc" },
     }),
-    getCurrentUser(),
   ]);
   const brands = brandRows.map((b) => b.brand);
 
@@ -115,6 +126,8 @@ export default async function BrowsePage({ searchParams }) {
       <Suspense>
         <SearchFilters brands={brands} />
       </Suspense>
+
+      <RecentlyViewed />
 
       {listings.length === 0 ? (
         <div className="card grid place-items-center px-6 py-16 text-center">

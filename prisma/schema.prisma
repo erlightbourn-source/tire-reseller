@@ -18,6 +18,7 @@ model User {
 
   // Account type. Buyers browse free; sellers can list tires.
   role               String   @default("buyer") // buyer | seller
+  pro                Boolean  @default(false)   // Pro seller upgrade
 
   // Seller billing. The first year of selling is free for every seller;
   // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
@@ -35,6 +36,9 @@ model User {
   savedSearches   SavedSearch[]
   reviewsReceived Review[] @relation("ReviewsReceived")
   reviewsWritten  Review[] @relation("ReviewsWritten")
+  reports         Report[]
+  blocksMade      Block[]  @relation("Blocker")
+  blocksReceived  Block[]  @relation("Blocked")
 }
 
 model Listing {
@@ -63,6 +67,7 @@ model Listing {
   dotYear     Int?     // manufacture (DOT) year, e.g. 2022
 
   featured    Boolean  @default(false) // promoted listing
+  hidden      Boolean  @default(false) // auto-hidden after enough reports
   views       Int      @default(0)
 
   createdAt   DateTime @default(now())
@@ -72,6 +77,7 @@ model Listing {
   threads   Thread[]
   favorites Favorite[]
   viewEvents ListingView[]
+  reports    Report[]
 
   @@index([sellerId])
   @@index([brand])
@@ -176,4 +182,29 @@ model ListingView {
 
   @@index([listingId])
   @@index([createdAt])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  listingId  String
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  createdAt  DateTime @default(now())
+
+  @@unique([listingId, reporterId])
+  @@index([listingId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
 }

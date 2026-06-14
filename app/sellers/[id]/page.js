@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
 import Stars from "@/components/Stars";
 import ReviewForm from "@/components/ReviewForm";
+import BlockSeller from "@/components/BlockSeller";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,9 @@ export default async function SellerProfile({ params }) {
   const soldCount = await prisma.listing.count({ where: { sellerId: seller.id, status: "sold" } });
   const myReview = me ? reviews.find((r) => r.authorId === me.id) : null;
   const canReview = me && me.id !== seller.id;
+  const iBlock = me && me.id !== seller.id
+    ? !!(await prisma.block.findUnique({ where: { blockerId_blockedId: { blockerId: me.id, blockedId: seller.id } } }))
+    : false;
 
   return (
     <div className="space-y-6">
@@ -43,7 +47,10 @@ export default async function SellerProfile({ params }) {
           {initials(seller.name)}
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
+            {seller.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
+          </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
             <Stars value={avg} />
             <span className="font-semibold text-slate-200">{avg ? avg.toFixed(1) : "—"}</span>
@@ -54,6 +61,7 @@ export default async function SellerProfile({ params }) {
             {seller.listings.length} active · {soldCount} sold · Member since {new Date(seller.createdAt).getFullYear()}
           </p>
         </div>
+        {me && me.id !== seller.id && <BlockSeller sellerId={seller.id} initial={iBlock} />}
       </div>
 
       <div>

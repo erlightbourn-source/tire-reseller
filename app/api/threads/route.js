@@ -13,6 +13,17 @@ export async function POST(req) {
   if (listing.sellerId === user.id)
     return NextResponse.json({ error: "You can't message yourself about your own listing." }, { status: 400 });
 
+  // Block check (either direction)
+  const block = await prisma.block.findFirst({
+    where: {
+      OR: [
+        { blockerId: user.id, blockedId: listing.sellerId },
+        { blockerId: listing.sellerId, blockedId: user.id },
+      ],
+    },
+  });
+  if (block) return NextResponse.json({ error: "You can't message this seller." }, { status: 403 });
+
   const thread = await prisma.thread.upsert({
     where: { listingId_buyerId: { listingId, buyerId: user.id } },
     update: {},

@@ -87,13 +87,20 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">{isSeller ? "Seller" : "Account"}</p>
-          <h1 className="font-display text-2xl font-extrabold text-white">Dashboard</h1>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
+            Dashboard
+            {user.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
+          </h1>
         </div>
-        {isSeller ? (
-          <Link href="/sell" className="btn-primary">+ New listing</Link>
-        ) : (
-          <Link href="/subscribe" className="btn-accent">Become a seller</Link>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {isSeller && user.pro && <Link href="/sell/bulk" className="btn-secondary">📥 Bulk add</Link>}
+          {isSeller && !user.pro && <Link href="/pro" className="btn-secondary">✨ Go Pro</Link>}
+          {isSeller ? (
+            <Link href="/sell" className="btn-primary">+ New listing</Link>
+          ) : (
+            <Link href="/subscribe" className="btn-accent">Become a seller</Link>
+          )}
+        </div>
       </div>
 
       {/* Account / billing banner */}
