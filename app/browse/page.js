@@ -6,6 +6,7 @@ import MarketplaceFilters from "@/components/MarketplaceFilters";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
+import { parseTread } from "@/lib/tire";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ async function getListings(sp, blockedIds = []) {
   if (season) AND.push({ season });
   if (runFlat === "1") AND.push({ runFlat: true });
   if (maxPrice) AND.push({ priceCents: { lte: Math.round(Number(maxPrice) * 100) } });
+  if (sp.minYear) AND.push({ dotYear: { gte: Number(sp.minYear) } });
+  if (sp.qty) AND.push({ quantity: { gte: Number(sp.qty) } });
   if (q) {
     AND.push({
       OR: [
@@ -67,6 +70,15 @@ async function getListings(sp, blockedIds = []) {
       .filter((x) => x.d <= radius)
       .sort((a, b) => (b.l.featured - a.l.featured) || (pro(b.l) - pro(a.l)) || (a.d - b.d))
       .map((x) => ({ ...x.l, _distance: x.d }));
+  }
+
+  // Minimum tread depth (32nds) — tread is a free-text string, so filter in JS.
+  if (sp.minTread) {
+    const min = Number(sp.minTread);
+    listings = listings.filter((l) => {
+      const n = parseTread(l.treadDepth)?.n;
+      return n != null && n >= min;
+    });
   }
   return listings;
 }

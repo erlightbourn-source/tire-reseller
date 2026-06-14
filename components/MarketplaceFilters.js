@@ -6,7 +6,7 @@ import { stateName } from "@/lib/states";
 import { seasonLabel } from "@/lib/tire";
 
 // Keys that count as "active filters" for chips + the result count.
-const CHIP_KEYS = ["q", "brand", "condition", "size", "maxPrice", "season", "runFlat", "near"];
+const CHIP_KEYS = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "season", "runFlat", "near"];
 
 export default function MarketplaceFilters({ brands, children }) {
   const router = useRouter();
@@ -39,6 +39,9 @@ export default function MarketplaceFilters({ brands, children }) {
   if (params.get("condition")) chips.push({ key: "condition", label: params.get("condition") === "new" ? "New" : "Used", clear: { condition: "" } });
   if (params.get("size")) chips.push({ key: "size", label: params.get("size"), clear: { size: "" } });
   if (params.get("maxPrice")) chips.push({ key: "maxPrice", label: `Under $${params.get("maxPrice")}`, clear: { maxPrice: "" } });
+  if (params.get("minTread")) chips.push({ key: "minTread", label: `${params.get("minTread")}/32"+ tread`, clear: { minTread: "" } });
+  if (params.get("minYear")) chips.push({ key: "minYear", label: `${params.get("minYear")}+ DOT`, clear: { minYear: "" } });
+  if (params.get("qty")) chips.push({ key: "qty", label: `${params.get("qty")}+ tires`, clear: { qty: "" } });
   if (params.get("season")) chips.push({ key: "season", label: seasonLabel(params.get("season")), clear: { season: "" } });
   if (params.get("runFlat") === "1") chips.push({ key: "runFlat", label: "Run-flat", clear: { runFlat: "" } });
   if (nearActive) chips.push({ key: "near", label: `Within ${params.get("radius")} mi`, clear: { lat: "", lng: "", radius: "", near: "" } });
@@ -213,6 +216,33 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
         <input className="input" type="number" min="0" placeholder="Any" defaultValue={sel("maxPrice")}
           onBlur={(e) => apply({ maxPrice: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), apply({ maxPrice: e.currentTarget.value }))} />
+      </Field>
+
+      <Field label="Min tread depth">
+        <select className="input" value={sel("minTread")} onChange={(e) => apply({ minTread: e.target.value })}>
+          <option value="">Any tread</option>
+          <option value="4">4/32" or more</option>
+          <option value="6">6/32" or more</option>
+          <option value="8">8/32" or more</option>
+        </select>
+      </Field>
+
+      <Field label="Min DOT year">
+        <select className="input" value={sel("minYear")} onChange={(e) => apply({ minYear: e.target.value })}>
+          <option value="">Any year</option>
+          <option value="2020">2020 or newer</option>
+          <option value="2021">2021 or newer</option>
+          <option value="2022">2022 or newer</option>
+          <option value="2023">2023 or newer</option>
+        </select>
+      </Field>
+
+      <Field label="Quantity">
+        <select className="input" value={sel("qty")} onChange={(e) => apply({ qty: e.target.value })}>
+          <option value="">Any quantity</option>
+          <option value="2">2 or more</option>
+          <option value="4">Full set (4+)</option>
+        </select>
       </Field>
 
       <Field label="Season">
