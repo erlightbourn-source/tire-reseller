@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { enforceRateLimit, cleanStr, ValidationError, LIMITS } from "@/lib/security";
 
 async function loadThread(threadId, userId) {
   const thread = await prisma.thread.findUnique({ where: { id: threadId } });
@@ -46,6 +47,10 @@ export async function POST(req, { params }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
+  // Throttle message spam.
+  const limited = enforceRateLimit(req, `msg:${user.id}`, { limit: 30, windowMs: 60_000 });
+  if (limited) return limited;
+
   const { thread, code } = await loadThread(params.threadId, user.id);
   if (code) return NextResponse.json({ error: "Not found." }, { status: code });
 
@@ -53,7 +58,11 @@ export async function POST(req, { params }) {
 
   if (kind === "offer") {
     const cents = Math.round(Number(offerCents));
-    if (!cents || cents <= 0) return NextResponse.json({ error: "Enter an offer amount." }, { status: 400 });
+    if (!cents || cents <= 0 || cents > 100_000_000)
+      return NextResponse.json({ error: "Enter a valid offer amount." }, { status: 400 });
+    let note;
+    try { note = cleanStr(body, LIMITS.message, { field: "Message" }); }
+    catch (e) { if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 }); throw e; }
     const msg = await prisma.message.create({
       data: {
         threadId: thread.id,
@@ -61,16 +70,18 @@ export async function POST(req, { params }) {
         kind: "offer",
         offerCents: cents,
         offerStatus: "pending",
-        body: (body && body.trim()) || `Offer: $${(cents / 100).toLocaleString()}`,
+        body: note || `Offer: $${(cents / 100).toLocaleString()}`,
       },
     });
     await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
     return NextResponse.json({ ok: true, id: msg.id });
   }
 
-  if (!body || !body.trim()) return NextResponse.json({ error: "Empty message." }, { status: 400 });
+  let text;
+  try { text = cleanStr(body, LIMITS.message, { required: true, field: "Message" }); }
+  catch (e) { if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 }); throw e; }
   const msg = await prisma.message.create({
-    data: { threadId: thread.id, senderId: user.id, body: body.trim() },
+    data: { threadId: thread.id, senderId: user.id, body: text },
   });
   await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
   return NextResponse.json({ ok: true, id: msg.id });

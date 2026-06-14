@@ -2,18 +2,38 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, createSession, freeYearFromNow } from "@/lib/auth";
 import { isStateAbbr } from "@/lib/states";
+import { enforceRateLimit, isEmail, cleanStr, ValidationError, LIMITS } from "@/lib/security";
 
 export async function POST(req) {
-  const { email, password, name, location, role, state } = await req.json();
+  // Limit account creation per IP to curb spam/abuse.
+  const limited = enforceRateLimit(req, "signup", { limit: 5, windowMs: 60_000 });
+  if (limited) return limited;
 
-  if (!email || !password || !name) {
-    return NextResponse.json({ error: "Name, email and password are required." }, { status: 400 });
+  const body = await req.json();
+  const { password, role, state } = body;
+
+  let email, name, location;
+  try {
+    name = cleanStr(body.name, LIMITS.name, { required: true, field: "Name" });
+    location = cleanStr(body.location, LIMITS.location, { field: "Location" });
+    email = cleanStr(body.email, LIMITS.email, { required: true, field: "Email" });
+  } catch (e) {
+    if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
+    throw e;
   }
-  if (password.length < 6) {
+
+  email = email.toLowerCase();
+  if (!isEmail(email)) {
+    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+  }
+  if (typeof password !== "string" || password.length < 6) {
     return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
   }
+  if (password.length > 200) {
+    return NextResponse.json({ error: "Password is too long." }, { status: 400 });
+  }
 
-  const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
   }
@@ -22,7 +42,7 @@ export async function POST(req) {
 
   const user = await prisma.user.create({
     data: {
-      email: email.toLowerCase(),
+      email,
       passwordHash: await hashPassword(password),
       name,
       location: location || null,

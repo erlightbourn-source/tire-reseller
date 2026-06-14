@@ -64,6 +64,7 @@ model Listing {
   loadIndex   String?  // e.g. "91"
   speedRating String?  // e.g. "Y"
   runFlat     Boolean  @default(false)
+  shipping    Boolean  @default(false) // seller offers shipping (vs local pickup only)
   dotYear     Int?     // manufacture (DOT) year, e.g. 2022
 
   featured    Boolean  @default(false) // promoted listing

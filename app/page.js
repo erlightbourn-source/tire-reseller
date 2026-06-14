@@ -7,6 +7,7 @@ import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
 import Logo from "@/components/Logo";
 import { BUYER_FAQ } from "@/lib/content";
+import { brandSlug } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function Home() {
   const user = await getCurrentUser();
   const homeState = userStateOf(user);
 
-  const [totalActive, grouped, recent] = await Promise.all([
+  const [totalActive, grouped, recent, brandRows] = await Promise.all([
     prisma.listing.count({ where: { status: "active", hidden: false } }),
     prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false }, _count: { _all: true } }),
     prisma.listing.findMany({
@@ -37,8 +38,15 @@ export default async function Home() {
       take: 4,
       include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     }),
+    prisma.listing.findMany({
+      where: { status: "active", hidden: false },
+      select: { brand: true },
+      distinct: ["brand"],
+      orderBy: { brand: "asc" },
+    }),
   ]);
   const stateCount = grouped.filter((g) => g.state).length;
+  const brands = brandRows.map((b) => b.brand);
 
   // Fall back to nationwide recent listings if the user's state has none yet.
   const showcase = recent.length
@@ -143,6 +151,24 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Shop by brand */}
+      {brands.length > 0 && (
+        <section>
+          <div className="mb-3">
+            <p className="eyebrow">Shop by brand</p>
+            <h2 className="font-display text-2xl font-extrabold text-white">Popular tire brands</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {brands.map((b) => (
+              <Link key={b} href={`/tires/${brandSlug(b)}`}
+                className="rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-medium text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10 hover:text-white">
+                {b}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">

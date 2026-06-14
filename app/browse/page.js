@@ -37,6 +37,7 @@ async function getListings(sp, blockedIds = []) {
   if (maxPrice) AND.push({ priceCents: { lte: Math.round(Number(maxPrice) * 100) } });
   if (sp.minYear) AND.push({ dotYear: { gte: Number(sp.minYear) } });
   if (sp.qty) AND.push({ quantity: { gte: Number(sp.qty) } });
+  if (sp.shipping === "1") AND.push({ shipping: true });
   if (q) {
     AND.push({
       OR: [
@@ -79,6 +80,23 @@ async function getListings(sp, blockedIds = []) {
       const n = parseTread(l.treadDepth)?.n;
       return n != null && n >= min;
     });
+  }
+
+  // Attach each seller's rating (for card display) and optionally filter by it.
+  const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
+  if (sellerIds.length) {
+    const grouped = await prisma.review.groupBy({
+      by: ["sellerId"],
+      where: { sellerId: { in: sellerIds } },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    const rmap = Object.fromEntries(grouped.map((r) => [r.sellerId, { avg: r._avg.rating || 0, count: r._count._all }]));
+    listings = listings.map((l) => ({ ...l, _rating: rmap[l.sellerId] || { avg: 0, count: 0 } }));
+    if (sp.minRating) {
+      const min = Number(sp.minRating);
+      listings = listings.filter((l) => (l._rating?.avg || 0) >= min);
+    }
   }
   return listings;
 }
@@ -160,7 +178,7 @@ export default async function BrowsePage({ searchParams }) {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {listings.map((l) => (
-              <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} />
+              <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} />
             ))}
           </div>
         )}

@@ -6,7 +6,7 @@ import { stateName } from "@/lib/states";
 import { seasonLabel } from "@/lib/tire";
 
 // Keys that count as "active filters" for chips + the result count.
-const CHIP_KEYS = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "season", "runFlat", "near"];
+const CHIP_KEYS = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "minRating", "shipping", "season", "runFlat", "near"];
 
 export default function MarketplaceFilters({ brands, children }) {
   const router = useRouter();
@@ -42,6 +42,8 @@ export default function MarketplaceFilters({ brands, children }) {
   if (params.get("minTread")) chips.push({ key: "minTread", label: `${params.get("minTread")}/32"+ tread`, clear: { minTread: "" } });
   if (params.get("minYear")) chips.push({ key: "minYear", label: `${params.get("minYear")}+ DOT`, clear: { minYear: "" } });
   if (params.get("qty")) chips.push({ key: "qty", label: `${params.get("qty")}+ tires`, clear: { qty: "" } });
+  if (params.get("minRating")) chips.push({ key: "minRating", label: `★ ${params.get("minRating")}+ seller`, clear: { minRating: "" } });
+  if (params.get("shipping") === "1") chips.push({ key: "shipping", label: "Ships", clear: { shipping: "" } });
   if (params.get("season")) chips.push({ key: "season", label: seasonLabel(params.get("season")), clear: { season: "" } });
   if (params.get("runFlat") === "1") chips.push({ key: "runFlat", label: "Run-flat", clear: { runFlat: "" } });
   if (nearActive) chips.push({ key: "near", label: `Within ${params.get("radius")} mi`, clear: { lat: "", lng: "", radius: "", near: "" } });
@@ -244,6 +246,20 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
           <option value="4">Full set (4+)</option>
         </select>
       </Field>
+
+      <Field label="Seller rating">
+        <select className="input" value={sel("minRating")} onChange={(e) => apply({ minRating: e.target.value })}>
+          <option value="">Any rating</option>
+          <option value="3">3★ or higher</option>
+          <option value="4">4★ or higher</option>
+          <option value="4.5">4.5★ or higher</option>
+        </select>
+      </Field>
+
+      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200">
+        <input type="checkbox" checked={params.get("shipping") === "1"} onChange={(e) => apply({ shipping: e.target.checked ? "1" : "" })} className="h-4 w-4 accent-brand-500" />
+        Ships (not pickup-only)
+      </label>
 
       <Field label="Season">
         <select className="input" value={sel("season")} onChange={(e) => apply({ season: e.target.value })}>

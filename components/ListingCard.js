@@ -4,7 +4,7 @@ import { seasonLabel, treadLabel, perTire, milesLabel, conditionMeta, tireAge } 
 import FavoriteButton from "@/components/FavoriteButton";
 import Badge from "@/components/Badge";
 
-export default function ListingCard({ listing, favorited = false, distance = null }) {
+export default function ListingCard({ listing, favorited = false, distance = null, rating = null }) {
   const photo = listing.photos?.[0]?.url;
   const sold = listing.status === "sold";
   const cond = conditionMeta(listing.condition);
@@ -61,7 +61,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
             {age && <><Dot /><Spec icon="cal">DOT {listing.dotYear}{age.aging ? " ⚠" : ""}</Spec></>}
           </div>
 
-          {(listing.season || listing.runFlat) && (
+          {(listing.season || listing.runFlat || listing.shipping) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {listing.season && (
                 <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-inset ring-white/10">
@@ -73,7 +73,20 @@ export default function ListingCard({ listing, favorited = false, distance = nul
                   Run-flat
                 </span>
               )}
+              {listing.shipping && (
+                <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
+                  Ships
+                </span>
+              )}
             </div>
+          )}
+
+          {rating?.count > 0 && (
+            <p className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
+              <svg viewBox="0 0 20 20" className="h-3 w-3 fill-accent-400" aria-hidden="true"><path d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6Z"/></svg>
+              <span className="font-semibold text-slate-300">{rating.avg.toFixed(1)}</span>
+              <span>seller rating ({rating.count})</span>
+            </p>
           )}
 
           <div className="mt-auto flex items-center justify-between gap-2 pt-3">

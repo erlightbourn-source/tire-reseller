@@ -209,6 +209,7 @@ async function main() {
         loadIndex: String(89 + (i % 10)),
         speedRating: SPEEDS[i % SPEEDS.length],
         runFlat: i % 4 === 0,
+        shipping: i % 3 === 0,
         dotYear: 2020 + (i % 5),
         featured: i === 0 || i === 3 || i === 9, // a few promoted listings
         description: `${c.model}. ${c.desc}`,

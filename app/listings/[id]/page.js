@@ -97,6 +97,7 @@ export default async function ListingDetail({ params }) {
     listing.season && ["Season", seasonLabel(listing.season)],
     (listing.loadIndex || listing.speedRating) && ["Load / Speed", `${listing.loadIndex || "—"}${listing.speedRating || ""}`],
     ["Run-flat", listing.runFlat ? "Yes" : "No"],
+    ["Delivery", listing.shipping ? "Local pickup or shipping" : "Local pickup only"],
     listing.dotYear && ["DOT year", `${listing.dotYear}${age ? ` · ${age.label}` : ""}`],
     ["Total price", formatPrice(listing.priceCents)],
     listing.quantity > 1 && ["Price per tire", formatPrice(perTire(listing.priceCents, listing.quantity))],
@@ -169,7 +170,7 @@ export default async function ListingDetail({ params }) {
 
             <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-300">
               <svg viewBox="0 0 16 16" className="h-4 w-4 fill-slate-400" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-              {listing.location} · Local pickup
+              {listing.location} · {listing.shipping ? "Local pickup or shipping" : "Local pickup"}
             </p>
           </div>
 

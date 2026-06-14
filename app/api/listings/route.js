@@ -3,16 +3,19 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
+import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 function tireAttrs(b) {
   const coords = geocodeCity(b.location) || {};
+  const dot = b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null;
   return {
     season: SEASONS.includes(b.season) ? b.season : null,
-    loadIndex: b.loadIndex ? String(b.loadIndex).trim() : null,
-    speedRating: b.speedRating ? String(b.speedRating).trim().toUpperCase() : null,
+    loadIndex: b.loadIndex ? String(b.loadIndex).trim().slice(0, 8) : null,
+    speedRating: b.speedRating ? String(b.speedRating).trim().toUpperCase().slice(0, 4) : null,
     runFlat: !!b.runFlat,
-    dotYear: b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null,
+    shipping: !!b.shipping,
+    dotYear: dot && dot >= 1990 && dot <= 2100 ? dot : null,
     lat: coords.lat ?? null,
     lng: coords.lng ?? null,
   };
@@ -36,31 +39,44 @@ export async function POST(req) {
     );
   }
 
+  const limited = enforceRateLimit(req, `listing:${user.id}`, { limit: 30, windowMs: 60_000 });
+  if (limited) return limited;
+
   const b = await req.json();
-  const errors = [];
-  if (!b.brand) errors.push("brand");
-  if (!b.size) errors.push("size");
-  if (!b.condition) errors.push("condition");
-  if (!b.location) errors.push("location");
-  if (b.price === undefined || b.price === "" || Number(b.price) <= 0) errors.push("price");
-  if (errors.length) {
-    return NextResponse.json({ error: `Missing/invalid fields: ${errors.join(", ")}` }, { status: 400 });
+  let brand, size, location, treadDepth, description;
+  try {
+    brand = cleanStr(b.brand, LIMITS.brand, { required: true, field: "Brand" });
+    size = cleanStr(b.size, LIMITS.size, { required: true, field: "Size" });
+    location = cleanStr(b.location, LIMITS.location, { required: true, field: "Location" });
+    treadDepth = cleanStr(b.treadDepth, LIMITS.treadDepth, { field: "Tread depth" });
+    description = cleanStr(b.description, LIMITS.description, { field: "Description" });
+  } catch (e) {
+    if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
+    throw e;
+  }
+  if (!b.condition) return NextResponse.json({ error: "Missing/invalid fields: condition" }, { status: 400 });
+  const price = Number(b.price);
+  if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+    return NextResponse.json({ error: "Enter a valid price." }, { status: 400 });
   }
 
-  const photos = Array.isArray(b.photos) ? b.photos.filter(Boolean) : [];
+  // Accept only image URLs we host (or data: previews); reject arbitrary remote URLs.
+  const photos = (Array.isArray(b.photos) ? b.photos : [])
+    .filter((u) => typeof u === "string" && (u.startsWith("/uploads/") || u.startsWith("data:image/")))
+    .slice(0, 6);
 
   const listing = await prisma.listing.create({
     data: {
       sellerId: user.id,
-      brand: b.brand,
-      size: b.size,
-      quantity: Math.max(1, parseInt(b.quantity) || 1),
+      brand,
+      size,
+      quantity: clampInt(b.quantity, { min: 1, max: 100, fallback: 1 }),
       condition: b.condition === "new" ? "new" : "used",
-      treadDepth: b.treadDepth || null,
-      priceCents: Math.round(Number(b.price) * 100),
-      location: b.location,
-      state: stateFromLocation(b.location),
-      description: b.description || null,
+      treadDepth,
+      priceCents: Math.round(price * 100),
+      location,
+      state: stateFromLocation(location),
+      description,
       ...tireAttrs(b),
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),

@@ -4,14 +4,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { describeSearch } from "@/lib/listingFilter";
 import { stateName } from "@/lib/states";
 
-const ALLOWED = ["q", "brand", "condition", "size", "maxPrice", "season", "runFlat", "state"];
+const ALLOWED = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "season", "runFlat", "minRating", "shipping", "state"];
 
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Log in to save searches." }, { status: 401 });
 
   const { query } = await req.json();
-  const sp = new URLSearchParams(query || "");
+  const sp = new URLSearchParams(String(query || "").slice(0, 600));
   const params = {};
   for (const k of ALLOWED) if (sp.get(k)) params[k] = sp.get(k);
   const cleanQuery = new URLSearchParams(params).toString();
