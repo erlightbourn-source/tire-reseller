@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
 import AdminButton from "@/components/AdminButton";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Moderation — TireTrader", robots: { index: false } };
+// Keep the generic site title so the route name isn't exposed before the
+// admin gate runs; never index.
+export const metadata = { robots: { index: false } };
 
 export default async function AdminPage() {
   const me = await getCurrentUser();
-  if (!isAdmin(me)) notFound();
+  if (!isAdmin(me)) redirect("/");
 
   const [flagged, users, audit] = await Promise.all([
     prisma.listing.findMany({
