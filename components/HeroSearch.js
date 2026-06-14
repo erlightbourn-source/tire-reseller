@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MAKES, modelsFor, trimsFor, yearsFor, sizeFor } from "@/lib/fitment";
+import { MAKES, modelsFor, trimsFor, yearsFor, fitmentFor } from "@/lib/fitment";
 
 const TABS = [
   { key: "size", label: "By tire size" },
@@ -77,9 +77,9 @@ function VehicleSearch({ router, homeState }) {
   const models = make ? modelsFor(make) : [];
   const trims = make && model ? trimsFor(make, model) : [];
   const years = make && model && trim ? yearsFor(make, model, trim) : [];
-  const size = make && model && trim && year ? sizeFor(make, model, trim, year) : null;
+  const fit = make && model && trim && year ? fitmentFor(make, model, trim, year) : null;
 
-  function go() {
+  function go(size) {
     if (!size) return;
     const sp = new URLSearchParams({ size, fits: `${year} ${make} ${model} ${trim}` });
     if (homeState) sp.set("state", homeState);
@@ -87,7 +87,7 @@ function VehicleSearch({ router, homeState }) {
   }
   return (
     <div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <select aria-label="Make" className="input" value={make}
           onChange={(e) => { setMake(e.target.value); setModel(""); setTrim(""); setYear(""); }}>
           <option value="">Make</option>
@@ -108,15 +108,27 @@ function VehicleSearch({ router, homeState }) {
           <option value="">Year</option>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <button onClick={go} disabled={!size} className="btn-primary">
-          {size ? `Find ${size}` : "Find tires"}
-        </button>
       </div>
-      {size && (
-        <p className="mt-2 text-sm text-slate-400">
-          Your {year} {make} {model} {trim} uses <span className="font-mono font-semibold text-brand-300">{size}</span>.
-        </p>
-      )}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {fit?.staggered ? (
+          <>
+            <button onClick={() => go(fit.front)} className="btn-primary">Front {fit.front}</button>
+            <button onClick={() => go(fit.rear)} className="btn-secondary">Rear {fit.rear}</button>
+            <span className="text-sm text-slate-400">Staggered — {fit.front} front / {fit.rear} rear.</span>
+          </>
+        ) : (
+          <>
+            <button onClick={() => go(fit?.front)} disabled={!fit} className="btn-primary">
+              {fit ? `Find ${fit.front}` : "Find tires"}
+            </button>
+            {fit && (
+              <span className="text-sm text-slate-400">
+                Your {year} {make} {model} {trim} uses <span className="font-mono font-semibold text-brand-300">{fit.front}</span>.
+              </span>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
