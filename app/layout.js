@@ -52,15 +52,35 @@ export default async function RootLayout({ children }) {
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">{children}</main>
 
         <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
-          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2.5">
-              <Logo className="h-7 w-7" />
-              <span className="font-display font-bold text-slate-200">TireTrader</span>
+          <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <Logo className="h-7 w-7" />
+                <span className="font-display font-bold text-slate-200">TireTrader</span>
+              </div>
+              <p className="mt-2 max-w-xs text-sm text-slate-500">
+                Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.
+              </p>
             </div>
-            <div className="flex items-center gap-4 text-sm text-slate-500">
-              <Link href="/app" className="font-medium text-slate-300 hover:text-white">📱 Get the app</Link>
-              <span className="hidden sm:inline">Buyers browse free · Sellers $10/mo</span>
-            </div>
+            <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3" aria-label="Footer">
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Buy</span>
+                <Link href="/browse" className="text-slate-300 hover:text-white">Browse tires</Link>
+                <Link href="/states" className="text-slate-300 hover:text-white">Browse by state</Link>
+                <Link href="/guide" className="text-slate-300 hover:text-white">Buying guide</Link>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Sell</span>
+                <Link href="/sell-tires" className="text-slate-300 hover:text-white">Sell tires</Link>
+                <Link href="/pro" className="text-slate-300 hover:text-white">Go Pro</Link>
+                <Link href="/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</Link>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">More</span>
+                <Link href="/app" className="text-slate-300 hover:text-white">📱 Get the app</Link>
+                <span className="text-slate-500">Sellers $10/mo · first year free</span>
+              </div>
+            </nav>
           </div>
         </footer>
       </body>

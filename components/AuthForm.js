@@ -9,7 +9,7 @@ export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
   const router = useRouter();
   const params = useSearchParams();
-  const [role, setRole] = useState("buyer");
+  const [role, setRole] = useState(params.get("role") === "seller" ? "seller" : "buyer");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
+import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -12,21 +13,41 @@ import ListingCard from "@/components/ListingCard";
 import ReportListing from "@/components/ReportListing";
 import ShareListing from "@/components/ShareListing";
 import TrackView from "@/components/TrackView";
+import Badge, { ProBadge } from "@/components/Badge";
 
 export const dynamic = "force-dynamic";
 
-const SEASON_LABEL = { summer: "Summer", winter: "Winter", "all-season": "All-season", "all-weather": "All-weather" };
-
-export default async function ListingDetail({ params }) {
-  const user = await getCurrentUser();
-  const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
+async function fetchListing(id) {
+  return prisma.listing.findUnique({
+    where: { id },
     include: {
       photos: { orderBy: { sort: "asc" } },
-      seller: { select: { id: true, name: true, location: true, createdAt: true } },
+      seller: { select: { id: true, name: true, location: true, createdAt: true, pro: true } },
       _count: { select: { threads: true } },
     },
   });
+}
+
+export async function generateMetadata({ params }) {
+  const l = await prisma.listing.findUnique({
+    where: { id: params.id },
+    select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
+  });
+  if (!l) return { title: "Listing not found — TireTrader" };
+  const cond = conditionMeta(l.condition).label;
+  const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireTrader`;
+  const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)} in ${l.location}. Message the seller directly on TireTrader.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/listings/${params.id}` },
+    openGraph: { title, description, type: "website", images: l.photos[0]?.url ? [l.photos[0].url] : [] },
+  };
+}
+
+export default async function ListingDetail({ params }) {
+  const user = await getCurrentUser();
+  const listing = await fetchListing(params.id);
   if (!listing) notFound();
 
   const isOwner = user?.id === listing.sellerId;
@@ -50,94 +71,129 @@ export default async function ListingDetail({ params }) {
   const avgRating = sellerRating._avg.rating || 0;
   const reviewCount = sellerRating._count._all;
 
-  // "More like this" — same size first, then same brand
   const candidates = await prisma.listing.findMany({
-    where: {
-      status: "active",
-      id: { not: listing.id },
-      OR: [{ size: listing.size }, { brand: listing.brand }],
-    },
-    include: { photos: { take: 1, orderBy: { sort: "asc" } } },
+    where: { status: "active", hidden: false, id: { not: listing.id }, OR: [{ size: listing.size }, { brand: listing.brand }] },
+    include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     take: 8,
   });
   const similar = candidates
     .sort((a, b) => (b.size === listing.size) - (a.size === listing.size) || b.featured - a.featured)
     .slice(0, 4);
 
-  const isNew = listing.condition === "new";
-  const ageYears = listing.dotYear ? new Date().getFullYear() - listing.dotYear : null;
+  const cond = conditionMeta(listing.condition);
+  const isUsed = listing.condition !== "new";
+  const age = tireAge(listing.dotYear);
+  const lifePct = treadLifePct(listing.treadDepth);
+  const sellerSince = new Date(listing.seller.createdAt).getFullYear();
+  const initials = listing.seller.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  // Full spec list for the table.
+  const specs = [
+    ["Brand", listing.brand],
+    ["Size", listing.size],
+    ["Quantity", `${listing.quantity} tire${listing.quantity > 1 ? "s" : ""}`],
+    ["Condition", cond.label],
+    ["Tread depth", treadLabel(listing.treadDepth) || "—"],
+    listing.season && ["Season", seasonLabel(listing.season)],
+    (listing.loadIndex || listing.speedRating) && ["Load / Speed", `${listing.loadIndex || "—"}${listing.speedRating || ""}`],
+    ["Run-flat", listing.runFlat ? "Yes" : "No"],
+    listing.dotYear && ["DOT year", `${listing.dotYear}${age ? ` · ${age.label}` : ""}`],
+    ["Total price", formatPrice(listing.priceCents)],
+    listing.quantity > 1 && ["Price per tire", formatPrice(perTire(listing.priceCents, listing.quantity))],
+  ].filter(Boolean);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${cond.label} ${listing.brand} ${listing.size} tires`,
+    brand: { "@type": "Brand", name: listing.brand },
+    category: "Tires",
+    ...(listing.photos[0]?.url ? { image: listing.photos.map((p) => p.url) } : {}),
+    ...(listing.description ? { description: listing.description } : {}),
+    offers: {
+      "@type": "Offer",
+      price: (listing.priceCents / 100).toFixed(2),
+      priceCurrency: "USD",
+      availability: listing.status === "sold" ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
+      itemCondition: listing.condition === "new" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
+      areaServed: listing.location,
+    },
+  };
 
   return (
-    <div className="space-y-4">
-      <nav className="flex items-center gap-1.5 text-sm text-slate-400">
+    <div className="space-y-5">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">
         <Link href="/browse" className="hover:text-brand-300">Marketplace</Link>
-        <span>/</span>
+        <span aria-hidden="true">/</span>
+        {listing.state && <><Link href={`/browse?state=${listing.state}`} className="hover:text-brand-300">{listing.location}</Link><span aria-hidden="true">/</span></>}
         <span className="truncate font-medium text-slate-200">{listing.brand} {listing.size}</span>
       </nav>
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <PhotoGallery photos={listing.photos} alt={`${listing.brand} ${listing.size}`} />
+          <PhotoGallery photos={listing.photos} alt={`${listing.brand} ${listing.size} tires`} />
         </div>
 
         <div className="space-y-4 lg:col-span-2">
+          {/* Buy box */}
           <div className="card p-5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                {listing.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}
-                <span className={isNew ? "badge-new" : "badge-used"}>{isNew ? "New" : "Used"}</span>
-                {listing.status === "sold" && <span className="badge bg-ink-900 text-white">Sold</span>}
+              <div className="flex flex-wrap items-center gap-2">
+                {listing.featured && <Badge tone="featured">★ Featured</Badge>}
+                {listing.seller.pro && <Badge tone="pro">PRO</Badge>}
+                <Badge tone={cond.tone}>{cond.label}</Badge>
+                {listing.status === "sold" && <Badge tone="sold">Sold</Badge>}
               </div>
               {!isOwner && <FavoriteButton listingId={listing.id} initial={favorited} />}
             </div>
+
             <h1 className="mt-3 font-display text-2xl font-extrabold text-white">{listing.brand}</h1>
             <p className="font-mono text-lg text-slate-400">{listing.size}</p>
+
             <p className="mt-3 font-display text-4xl font-extrabold text-white">
               {formatPrice(listing.priceCents)}
-              <span className="ml-2 align-middle text-sm font-medium text-slate-500">for {listing.quantity}</span>
+              <span className="ml-2 align-middle text-sm font-medium text-slate-400">for {listing.quantity}</span>
             </p>
+            {listing.quantity > 1 && (
+              <p className="text-sm text-slate-400">{formatPrice(perTire(listing.priceCents, listing.quantity))} per tire</p>
+            )}
 
             <dl className="mt-4 grid grid-cols-2 gap-2.5">
               <Spec label="Quantity" value={listing.quantity} />
-              <Spec label="Condition" value={isNew ? "New" : "Used"} />
-              <Spec label="Tread depth" value={listing.treadDepth || "—"} />
-              <Spec label="Per tire" value={formatPrice(Math.round(listing.priceCents / listing.quantity))} />
-              {listing.season && <Spec label="Season" value={SEASON_LABEL[listing.season] || listing.season} />}
-              {(listing.loadIndex || listing.speedRating) && (
-                <Spec label="Load / Speed" value={`${listing.loadIndex || "—"}${listing.speedRating || ""}`} />
-              )}
-              {listing.runFlat && <Spec label="Run-flat" value="Yes" />}
-              {listing.dotYear && <Spec label="Mfg. year" value={`${listing.dotYear}${ageYears != null ? ` · ${ageYears}y old` : ""}`} />}
+              <Spec label="Tread" value={treadLabel(listing.treadDepth) || "—"} hint={lifePct != null ? `~${lifePct}% life` : null} />
+              {listing.season && <Spec label="Season" value={seasonLabel(listing.season)} />}
+              {listing.dotYear && <Spec label="DOT year" value={listing.dotYear} hint={age?.label} warn={age?.aging} />}
             </dl>
 
-            <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">
-              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-slate-500"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-              {listing.location}
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-300">
+              <svg viewBox="0 0 16 16" className="h-4 w-4 fill-slate-400" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
+              {listing.location} · Local pickup
             </p>
           </div>
 
-          {listing.description && (
-            <div className="card p-5">
-              <h2 className="text-sm font-bold text-slate-200">Description</h2>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{listing.description}</p>
-            </div>
-          )}
-
-          <Link href={`/sellers/${listing.seller.id}`} className="card flex items-center gap-3 p-4 transition hover:border-white/20">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">
-              {listing.seller.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-white">{listing.seller.name}</p>
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <Stars value={avgRating} size="h-3 w-3" />
-                <span>{reviewCount ? `${avgRating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
+          {/* Seller trust card */}
+          <Link href={`/sellers/${listing.seller.id}`} className="card block p-4 transition hover:border-white/20">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-semibold text-white">{listing.seller.name}</p>
+                  {listing.seller.pro && <ProBadge />}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <Stars value={avgRating} size="h-3 w-3" />
+                  <span>{reviewCount ? `${avgRating.toFixed(1)} (${reviewCount} review${reviewCount > 1 ? "s" : ""})` : "No reviews yet"}</span>
+                </div>
               </div>
-              <p className="text-xs text-slate-500">
-                {listing.seller.location ? `${listing.seller.location} · ` : ""}Listed {timeAgo(listing.createdAt)}
-              </p>
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 stroke-slate-500" fill="none" aria-hidden="true"><path d="M7 5l5 5-5 5" strokeWidth="1.5"/></svg>
             </div>
-            <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-slate-500"><path d="M7 5l5 5-5 5" stroke="currentColor" strokeWidth="1.5" fill="none"/></svg>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+              <span>📅 Member since {sellerSince}</span>
+              {listing.seller.pro && <span>⚡ Usually responds within a day</span>}
+              <span>📍 {listing.seller.location || listing.location}</span>
+            </div>
           </Link>
 
           {isOwner ? (
@@ -148,7 +204,7 @@ export default async function ListingDetail({ params }) {
                 <Spec label="Conversations" value={listing._count.threads} />
               </div>
               <div className="flex gap-2">
-                <Link href={`/sell/${listing.id}/edit`} className="btn-secondary flex-1">Edit listing</Link>
+                <Link href={`/sell/${listing.id}/edit`} className="btn-secondary flex-1 justify-center">Edit listing</Link>
                 <DeleteListingButton id={listing.id} />
               </div>
             </div>
@@ -156,9 +212,69 @@ export default async function ListingDetail({ params }) {
             <MessageSeller listingId={listing.id} loggedIn={!!user} />
           )}
 
-          <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center justify-between gap-2">
             <ShareListing brand={listing.brand} size={listing.size} />
             {!isOwner && <ReportListing listingId={listing.id} loggedIn={!!user} />}
+          </div>
+        </div>
+      </div>
+
+      {/* Details: specs + description + condition + safety */}
+      <div className="grid gap-5 lg:grid-cols-5">
+        <div className="space-y-5 lg:col-span-3">
+          {listing.description && (
+            <div className="card p-5">
+              <h2 className="text-sm font-bold text-slate-200">Seller's description</h2>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{listing.description}</p>
+            </div>
+          )}
+
+          <div className="card overflow-hidden">
+            <h2 className="border-b border-white/10 bg-white/[0.02] px-5 py-3 text-sm font-bold text-slate-200">Tire specifications</h2>
+            <dl className="divide-y divide-white/5">
+              {specs.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm">
+                  <dt className="text-slate-400">{label}</dt>
+                  <dd className="font-semibold text-slate-100">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+
+        <div className="space-y-5 lg:col-span-2">
+          {/* Condition explainer */}
+          <div className="card p-5">
+            <div className="flex items-center gap-2">
+              <Badge tone={cond.tone}>{cond.label}</Badge>
+              <h2 className="text-sm font-bold text-slate-200">What this means</h2>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-slate-400">{cond.blurb}</p>
+            {lifePct != null && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span>Estimated tread life left</span>
+                  <span className="font-semibold text-slate-200">~{lifePct}%</span>
+                </div>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className={`h-full rounded-full ${lifePct >= 60 ? "bg-emerald-500" : lifePct >= 30 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${Math.max(4, lifePct)}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Safety / buyer protection */}
+          <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-5">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-amber-200">
+              <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>
+              Before you buy{isUsed ? " used tires" : ""}
+            </h2>
+            <ul className="mt-2 space-y-1.5 text-sm text-amber-100/80">
+              <li>• Inspect in person for cracks, bulges, and uneven wear.</li>
+              <li>• Confirm the DOT date — avoid tires over ~6 years old.</li>
+              <li>• Meet in a public place and pay only once satisfied.</li>
+            </ul>
+            <Link href="/guide" className="mt-3 inline-block text-sm font-semibold text-amber-200 underline-offset-2 hover:underline">Read the full buying guide →</Link>
           </div>
         </div>
       </div>
@@ -169,9 +285,7 @@ export default async function ListingDetail({ params }) {
         <div className="pt-2">
           <h2 className="mb-3 font-display text-lg font-bold text-white">More like this</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {similar.map((l) => (
-              <ListingCard key={l.id} listing={l} />
-            ))}
+            {similar.map((l) => <ListingCard key={l.id} listing={l} />)}
           </div>
         </div>
       )}
@@ -179,11 +293,14 @@ export default async function ListingDetail({ params }) {
   );
 }
 
-function Spec({ label, value }) {
+function Spec({ label, value, hint, warn }) {
   return (
     <div className="rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10">
       <dt className="text-xs text-slate-400">{label}</dt>
-      <dd className="font-semibold text-slate-100">{value}</dd>
+      <dd className="font-semibold text-slate-100">
+        {value}
+        {hint && <span className={`ml-1 text-xs font-medium ${warn ? "text-amber-300" : "text-slate-400"}`}>· {hint}</span>}
+      </dd>
     </div>
   );
 }
