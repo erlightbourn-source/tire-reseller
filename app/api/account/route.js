@@ -1,7 +1,44 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser, destroySession } from "@/lib/auth";
+import { getCurrentUser, destroySession, verifyPassword, hashPassword, revokeSessions, createSession } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
+
+// PATCH: change password or "log out everywhere" — both bump the user's
+// tokenVersion (revoking other sessions) and re-issue a fresh cookie here.
+export async function PATCH(req) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+
+  const limited = enforceRateLimit(req, `acct:${user.id}`, { limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
+
+  const { action, current, next } = await req.json();
+
+  if (action === "logout-all") {
+    const tv = await revokeSessions(user.id);
+    await createSession(user.id, tv);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "password") {
+    if (typeof next !== "string" || next.length < 6) {
+      return NextResponse.json({ error: "New password must be at least 6 characters." }, { status: 400 });
+    }
+    if (next.length > 200) return NextResponse.json({ error: "Password is too long." }, { status: 400 });
+    if (!(await verifyPassword(String(current || ""), user.passwordHash))) {
+      return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
+    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(next), tokenVersion: { increment: 1 } },
+    });
+    const fresh = await prisma.user.findUnique({ where: { id: user.id }, select: { tokenVersion: true } });
+    await createSession(user.id, fresh.tokenVersion);
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "Unknown action." }, { status: 400 });
+}
 
 // GET: export everything we hold about the signed-in user as a JSON download.
 export async function GET(req) {

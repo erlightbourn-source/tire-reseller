@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { hashResetToken, hashPassword, createSession } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/security";
+
+export async function POST(req) {
+  const limited = enforceRateLimit(req, "reset", { limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
+
+  const { token, password } = await req.json();
+  if (!token) return NextResponse.json({ error: "Missing reset token." }, { status: 400 });
+  if (typeof password !== "string" || password.length < 6) {
+    return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+  }
+  if (password.length > 200) return NextResponse.json({ error: "Password is too long." }, { status: 400 });
+
+  const hash = hashResetToken(token);
+  const user = await prisma.user.findFirst({
+    where: { resetTokenHash: hash, resetTokenExpiry: { gt: new Date() } },
+  });
+  if (!user) {
+    return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
+  }
+
+  // Set the new password, clear the token, and revoke all existing sessions.
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash: await hashPassword(password),
+      resetTokenHash: null,
+      resetTokenExpiry: null,
+      tokenVersion: { increment: 1 },
+    },
+    select: { id: true, tokenVersion: true },
+  });
+
+  // Log the user in on this device with a fresh session.
+  await createSession(updated.id, updated.tokenVersion);
+  return NextResponse.json({ ok: true });
+}

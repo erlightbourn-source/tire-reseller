@@ -31,6 +31,9 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+          Skip to content
+        </a>
         <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex items-center gap-2.5">
@@ -49,7 +52,7 @@ export default async function RootLayout({ children }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">{children}</main>
+        <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">{children}</main>
 
         <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
           <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">

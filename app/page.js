@@ -7,7 +7,7 @@ import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
 import Logo from "@/components/Logo";
 import { BUYER_FAQ } from "@/lib/content";
-import { brandSlug } from "@/lib/site";
+import { brandSlug, SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +58,31 @@ export default async function Home() {
         include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
       });
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "TireTrader",
+        url: SITE_URL,
+        description: "Marketplace to buy & sell new and used tires with trusted local resellers.",
+      },
+      {
+        "@type": "WebSite",
+        name: "TireTrader",
+        url: SITE_URL,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${SITE_URL}/browse?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="space-y-14">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white shadow-lift">
         <div className="mesh absolute inset-0" />

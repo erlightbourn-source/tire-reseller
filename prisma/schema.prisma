@@ -20,6 +20,12 @@ model User {
   role               String   @default("buyer") // buyer | seller
   pro                Boolean  @default(false)   // Pro seller upgrade
 
+  // Session invalidation: bumping this revokes all existing JWTs (logout-all,
+  // password change/reset). Password-reset token is stored hashed with expiry.
+  tokenVersion       Int      @default(0)
+  resetTokenHash     String?
+  resetTokenExpiry   DateTime?
+
   // Seller billing. The first year of selling is free for every seller;
   // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
   sellerFreeUntil        DateTime?

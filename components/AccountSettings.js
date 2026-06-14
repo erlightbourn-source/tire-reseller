@@ -9,6 +9,39 @@ export default function AccountSettings() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  // Change password
+  const [cur, setCur] = useState("");
+  const [next, setNext] = useState("");
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwErr, setPwErr] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  // Log out everywhere
+  const [loMsg, setLoMsg] = useState("");
+
+  async function changePassword(e) {
+    e.preventDefault();
+    setPwErr(""); setPwMsg(""); setPwBusy(true);
+    const res = await fetch("/api/account", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "password", current: cur, next }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setPwBusy(false);
+    if (!res.ok) { setPwErr(data.error || "Couldn't update password."); return; }
+    setCur(""); setNext(""); setPwMsg("Password updated. Other devices were signed out.");
+  }
+
+  async function logoutAll() {
+    setLoMsg("");
+    const res = await fetch("/api/account", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout-all" }),
+    });
+    if (res.ok) setLoMsg("Signed out of all other devices.");
+  }
+
   async function del() {
     setBusy(true);
     setErr("");
@@ -24,6 +57,32 @@ export default function AccountSettings() {
 
   return (
     <div className="space-y-4">
+      <div className="card p-5">
+        <h2 className="font-display font-bold text-white">Change password</h2>
+        <form onSubmit={changePassword} className="mt-3 grid gap-3 sm:max-w-sm">
+          <div>
+            <label className="label" htmlFor="cur-pw">Current password</label>
+            <input id="cur-pw" type="password" value={cur} onChange={(e) => setCur(e.target.value)} required className="input" placeholder="••••••••" />
+          </div>
+          <div>
+            <label className="label" htmlFor="new-pw">New password</label>
+            <input id="new-pw" type="password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={6} className="input" placeholder="At least 6 characters" />
+          </div>
+          {pwErr && <p className="text-sm text-red-300">{pwErr}</p>}
+          {pwMsg && <p className="text-sm text-emerald-300">{pwMsg}</p>}
+          <button disabled={pwBusy} className="btn-primary justify-self-start">{pwBusy ? "Saving…" : "Update password"}</button>
+        </form>
+      </div>
+
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 className="font-display font-bold text-white">Sessions</h2>
+          <p className="mt-1 text-sm text-slate-400">Sign out everywhere except this device.</p>
+          {loMsg && <p className="mt-1 text-sm text-emerald-300">{loMsg}</p>}
+        </div>
+        <button onClick={logoutAll} className="btn-secondary">Log out all devices</button>
+      </div>
+
       <div className="card p-5">
         <h2 className="font-display font-bold text-white">Your data</h2>
         <p className="mt-1 text-sm text-slate-400">

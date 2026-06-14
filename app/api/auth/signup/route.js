@@ -53,6 +53,6 @@ export async function POST(req) {
     },
   });
 
-  await createSession(user.id);
+  await createSession(user.id, user.tokenVersion);
   return NextResponse.json({ ok: true, userId: user.id, role: user.role });
 }

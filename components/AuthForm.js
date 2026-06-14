@@ -128,7 +128,10 @@ export default function AuthForm({ mode }) {
               <input name="email" type="email" required className="input" placeholder="you@example.com" />
             </div>
             <div>
-              <label className="label">Password</label>
+              <div className="flex items-center justify-between">
+                <label className="label">Password</label>
+                {!isSignup && <Link href="/forgot" className="mb-1.5 text-xs font-medium text-brand-300 hover:underline">Forgot password?</Link>}
+              </div>
               <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
             </div>
             {isSignup && (

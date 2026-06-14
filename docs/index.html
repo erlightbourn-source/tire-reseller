@@ -1165,7 +1165,7 @@ function Auth({ mode }) {
             </div>}
             {isSignup && <div><label className="label">Full name</label><input name="name" required className="input" placeholder="Jordan Tires" /></div>}
             <div><label className="label">Email</label><input name="email" type="email" required className="input" placeholder="you@example.com" /></div>
-            <div><label className="label">Password</label><input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" /></div>
+            <div><div className="flex items-center justify-between"><label className="label">Password</label>{!isSignup && <a href="#/forgot" className="mb-1.5 text-xs font-medium text-brand-300 hover:underline">Forgot password?</a>}</div><input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" /></div>
             {isSignup && <div className="grid grid-cols-2 gap-3">
               <div><label className="label">City <span className="font-normal text-slate-400">(optional)</span></label><input name="location" className="input" placeholder="Dallas" /></div>
               <div><label className="label">Your state</label><select name="state" className="input" defaultValue=""><option value="">Select…</option>{STATES.map(s=><option key={s.abbr} value={s.abbr}>{s.name}</option>)}</select></div>
@@ -1463,11 +1463,34 @@ function GuidePage() {
   );
 }
 
+function ForgotDemo() {
+  const { resetByEmail } = useApp();
+  const [email, setEmail] = useState(''); const [next, setNext] = useState(''); const [err, setErr] = useState('');
+  const submit = (e) => { e.preventDefault(); setErr(''); const r = resetByEmail(email, next); if(r.error){ setErr(r.error); } else { navigate('/'); } };
+  return (
+    <div className="mx-auto max-w-md">
+      <div className="mb-5 flex items-center gap-2.5"><Logo cls="h-9 w-9" /><span className="font-display text-xl font-extrabold text-white">Tire<span className="text-brand-400">Trader</span></span></div>
+      <div className="card p-6">
+        <h1 className="font-display text-2xl font-bold text-white">Reset your password</h1>
+        <p className="mt-1 text-xs text-slate-500">Demo: the full app emails a secure, expiring reset link. Here you can reset directly for a known email.</p>
+        <form onSubmit={submit} className="mt-4 space-y-3.5">
+          {err && <div className="rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-inset ring-red-400/30">{err}</div>}
+          <div><label className="label" htmlFor="fe">Email</label><input id="fe" type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="input" placeholder="you@example.com" /></div>
+          <div><label className="label" htmlFor="fn">New password</label><input id="fn" type="password" required minLength={6} value={next} onChange={e=>setNext(e.target.value)} className="input" placeholder="At least 6 characters" /></div>
+          <button className="btn-primary w-full">Reset password</button>
+          <p className="text-center text-sm text-slate-400">Remembered it? <a href="#/login" className="font-semibold text-brand-300 hover:underline">Log in</a></p>
+        </form>
+      </div>
+    </div>
+  );
+}
 function SettingsPage() {
-  const { me, exportData, deleteAccount } = useApp();
+  const { me, exportData, deleteAccount, changePassword } = useApp();
   const [confirming, setConfirming] = useState(false); const [text, setText] = useState('');
+  const [cur, setCur] = useState(''); const [next, setNext] = useState(''); const [pwMsg, setPwMsg] = useState(''); const [pwErr, setPwErr] = useState('');
   useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
   if(!me) return null;
+  const doChangePw = (e) => { e.preventDefault(); setPwErr(''); setPwMsg(''); const r=changePassword(cur,next); if(r.error){ setPwErr(r.error); } else { setCur(''); setNext(''); setPwMsg('Password updated.'); } };
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <div><p className="eyebrow">Account</p><h1 className="font-display text-2xl font-extrabold text-white">Settings</h1></div>
@@ -1477,6 +1500,7 @@ function SettingsPage() {
         <div><dt className="text-xs text-slate-400">Account type</dt><dd className="font-semibold text-slate-100">{me.role==='seller'?'Seller':'Buyer'}</dd></div>
         <div><dt className="text-xs text-slate-400">Member since</dt><dd className="font-semibold text-slate-100">{new Date(me.createdAt).toLocaleDateString()}</dd></div>
       </dl></div>
+      <div className="card p-5"><h2 className="font-display font-bold text-white">Change password</h2><form onSubmit={doChangePw} className="mt-3 grid gap-3 sm:max-w-sm"><div><label className="label" htmlFor="cpw">Current password</label><input id="cpw" type="password" value={cur} onChange={e=>setCur(e.target.value)} required className="input" placeholder="••••••••" /></div><div><label className="label" htmlFor="npw">New password</label><input id="npw" type="password" value={next} onChange={e=>setNext(e.target.value)} required minLength={6} className="input" placeholder="At least 6 characters" /></div>{pwErr && <p className="text-sm text-red-300">{pwErr}</p>}{pwMsg && <p className="text-sm text-emerald-300">{pwMsg}</p>}<button className="btn-primary justify-self-start">Update password</button></form></div>
       <div className="card p-5"><h2 className="font-display font-bold text-white">Your data</h2><p className="mt-1 text-sm text-slate-400">Download everything stored about your account as a JSON file.</p><button onClick={exportData} className="btn-secondary mt-3">⬇ Download my data</button></div>
       <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5"><h2 className="font-display font-bold text-red-200">Delete account</h2><p className="mt-1 text-sm text-red-100/80">Permanently removes your account and everything tied to it. This cannot be undone.</p>
         {!confirming ? <button onClick={()=>setConfirming(true)} className="btn-danger mt-3">Delete my account</button> : <div className="mt-3 space-y-2"><label htmlFor="cd" className="block text-sm text-red-100">Type <span className="font-mono font-bold">DELETE</span> to confirm:</label><input id="cd" value={text} onChange={e=>setText(e.target.value)} className="input max-w-xs" placeholder="DELETE" /><div className="flex gap-2"><button onClick={deleteAccount} disabled={text!=='DELETE'} className="btn-danger">Permanently delete</button><button onClick={()=>{setConfirming(false);setText('');}} className="btn-secondary">Cancel</button></div></div>}
@@ -1591,6 +1615,8 @@ function App() {
       d.users = d.users.filter(u=>u.id!==id);
       d.session = null;
     }); navigate('/'); },
+    changePassword: (current, next) => { const u = db.users.find(x=>x.id===db.session); if(!u) return {error:'Not logged in.'}; if(u.password!==current) return {error:'Current password is incorrect.'}; if(!next||next.length<6) return {error:'New password must be at least 6 characters.'}; update(d=>{ const x=d.users.find(y=>y.id===d.session); x.password=next; }); return {}; },
+    resetByEmail: (email, next) => { const e=(email||'').toLowerCase(); const u=db.users.find(x=>x.email===e); if(!u) return {error:'No account with that email.'}; if(!next||next.length<6) return {error:'Password must be at least 6 characters.'}; update(d=>{ const x=d.users.find(y=>y.email===e); x.password=next; d.session=x.id; }); return {}; },
     reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
   };
 
@@ -1625,6 +1651,7 @@ function App() {
   else if (seg[0] === 'pro') view = <ProPage />;
   else if (seg[0] === 'sell' && seg[1] === 'bulk') view = <BulkAddPage />;
   else if (seg[0] === 'sell') view = <Sell id={seg[1]} />;
+  else if (seg[0] === 'forgot') view = <ForgotDemo />;
   else if (seg[0] === 'settings') view = <SettingsPage />;
   else if (seg[0] === 'dashboard') view = <Dashboard />;
   else if (seg[0] === 'messages' && seg[1]) view = <Thread id={seg[1]} />;
