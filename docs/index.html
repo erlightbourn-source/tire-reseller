@@ -148,6 +148,10 @@ const CITY_COORDS = {
 function milesBetween(a,b,c,d){ if([a,b,c,d].some(v=>typeof v!=='number')) return Infinity; const R=3958.8,rad=x=>x*Math.PI/180; const dLa=rad(c-a),dLo=rad(d-b); const h=Math.sin(dLa/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 const SEASON_LABEL = { summer:'Summer', winter:'Winter', 'all-season':'All-season', 'all-weather':'All-weather' };
 const seasonLabel = (s) => SEASON_LABEL[s] || s || null;
+const OFFPLATFORM_RE = /(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}|[^\s@]+@[^\s@]+\.[a-z]{2,}|\b(venmo|zelle|cash ?app|paypal|wire transfer|western union|money ?gram|bitcoin|btc|crypto|gift ?card|whats ?app|telegram|signal|text me|call me|my number)\b/i;
+const isOffPlatform = (t) => OFFPLATFORM_RE.test(String(t||''));
+const SAFETY_WARNING = "Keep messages and payment on TireTrader. Be cautious of anyone asking you to text/email, pay by Zelle/Venmo/wire/gift card, or pay before inspecting the tires in person.";
+function SafetyTip() { return <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-100 ring-1 ring-inset ring-amber-400/20"><span aria-hidden="true">⚠</span><span><strong>Safety tip:</strong> {SAFETY_WARNING}</span></p>; }
 // Condition glossary — source of truth for badges + buyer guide.
 const CONDITIONS = {
   new:     { label:'New',     tone:'emerald', blurb:'Unused, full tread. Never mounted or only test-fitted.' },
@@ -1084,7 +1088,7 @@ function Detail({ id }) {
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="space-y-5 lg:col-span-3">
-          {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Seller's description</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{l.description}</p></div>}
+          {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Seller's description</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{l.description}</p>{isOffPlatform(l.description) && <div className="mt-3"><SafetyTip /></div>}</div>}
           <div className="card overflow-hidden"><h2 className="border-b border-white/10 bg-white/[0.02] px-5 py-3 text-sm font-bold text-slate-200">Tire specifications</h2><dl className="divide-y divide-white/5">{specs.map(([k,v])=><div key={k} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm"><dt className="text-slate-400">{k}</dt><dd className="font-semibold text-slate-100">{v}</dd></div>)}</dl></div>
         </div>
         <div className="space-y-5 lg:col-span-2">
@@ -1396,6 +1400,7 @@ function Thread({ id }) {
           ); })}
           <div ref={bottom} />
         </div>
+        {msgs.some(m => m.kind!=='offer' && isOffPlatform(m.body)) && <div className="border-t border-amber-400/20 bg-amber-500/10 px-3 py-2"><SafetyTip /></div>}
         {offerOpen && <div className="flex items-center gap-2 border-t border-white/10 bg-accent-500/5 p-3"><span className="text-sm text-slate-300">Offer $</span><input type="number" min="1" value={offer} onChange={e=>setOffer(e.target.value)} className="input max-w-[140px]" /><button onClick={()=>{ const c=Math.round(Number(offer)*100); if(c>0){ makeOffer(t.id,c); setOfferOpen(false); } }} className="btn-accent px-4">Send offer</button><button onClick={()=>setOfferOpen(false)} className="btn-ghost px-3">Cancel</button></div>}
         <form onSubmit={send} className="flex gap-2 border-t border-white/10 bg-white/[0.02] p-3"><button type="button" onClick={()=>setOfferOpen(o=>!o)} className="btn-secondary px-3" title="Make an offer"><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 1l2 2h3a2 2 0 0 1 2 2v3l2 2-2 2v3a2 2 0 0 1-2 2h-3l-2 2-2-2H5a2 2 0 0 1-2-2v-3l-2-2 2-2V5a2 2 0 0 1 2-2h3l2-2Zm-1 5v2H7v2h2v2h2v-2h2V8h-2V6H9Z"/></svg></button><input value={text} onChange={e=>setText(e.target.value)} placeholder="Type a message…" className="input" /><button className="btn-primary px-4">Send</button></form>
       </div>

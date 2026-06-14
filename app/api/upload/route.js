@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
+import { stripJpegMetadata } from "@/lib/image";
 
 // Photo upload. Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set (persistent,
 // works on serverless); otherwise writes to /public/uploads (fine for local dev,
@@ -61,11 +62,13 @@ export async function POST(req) {
     if (file.size > MAX_BYTES) {
       return NextResponse.json({ error: "Each image must be 8 MB or smaller." }, { status: 413 });
     }
-    const bytes = Buffer.from(await file.arrayBuffer());
+    let bytes = Buffer.from(await file.arrayBuffer());
     const ext = sniffExt(bytes);
     if (!ext) {
       return NextResponse.json({ error: "Only JPG, PNG, GIF, or WEBP images are allowed." }, { status: 415 });
     }
+    // Remove Exif/GPS metadata from JPEGs so uploads don't leak location.
+    if (ext === "jpg") bytes = stripJpegMetadata(bytes);
     const fname = `${user.id.slice(0, 6)}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
     try {
       urls.push(useBlob ? await storeBlob(bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));

@@ -22,7 +22,10 @@ tiers and none require a credit card.
 ## Steps
 
 1. **Neon** → neon.tech → sign up (GitHub) → New Project → copy the
-   `postgresql://…` connection string.
+   `postgresql://…` connection string. **Use the *pooled* connection string**
+   (the host containing `-pooler`) for `DATABASE_URL` — serverless functions open
+   many short-lived connections and will exhaust a direct Postgres connection
+   under load. Append `?pgbouncer=true&connection_limit=1` if not already present.
 
 2. **Prisma provider is automatic.** The `build` script runs
    `scripts/db-provider.mjs`, which sets the datasource provider to `postgresql`

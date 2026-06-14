@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, destroySession, verifyPassword, hashPassword, revokeSessions, createSession } from "@/lib/auth";
-import { enforceRateLimit } from "@/lib/security";
+import { enforceRateLimit, clientIp } from "@/lib/security";
+import { isPasswordPwned } from "@/lib/breach";
+import { logAudit } from "@/lib/audit";
 
 // PATCH: change password or "log out everywhere" — both bump the user's
 // tokenVersion (revoking other sessions) and re-issue a fresh cookie here.
@@ -17,6 +19,7 @@ export async function PATCH(req) {
   if (action === "logout-all") {
     const tv = await revokeSessions(user.id);
     await createSession(user.id, tv);
+    await logAudit("logout_all", { userId: user.id, ip: clientIp(req) });
     return NextResponse.json({ ok: true });
   }
 
@@ -28,12 +31,19 @@ export async function PATCH(req) {
     if (!(await verifyPassword(String(current || ""), user.passwordHash))) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
+    if (await isPasswordPwned(next)) {
+      return NextResponse.json(
+        { error: "That password has appeared in a data breach. Please choose a different one." },
+        { status: 400 }
+      );
+    }
     await prisma.user.update({
       where: { id: user.id },
       data: { passwordHash: await hashPassword(next), tokenVersion: { increment: 1 } },
     });
     const fresh = await prisma.user.findUnique({ where: { id: user.id }, select: { tokenVersion: true } });
     await createSession(user.id, fresh.tokenVersion);
+    await logAudit("password_change", { userId: user.id, ip: clientIp(req) });
     return NextResponse.json({ ok: true });
   }
 
@@ -90,8 +100,10 @@ export async function GET(req) {
   });
 }
 
-// DELETE: permanently remove the account. Cascades to listings, threads,
-// messages, favorites, saved searches, reviews, reports, blocks (schema FKs).
+// DELETE: soft-delete with re-authentication. Requires the account password,
+// flags the account (deletedAt), revokes sessions, and hides the seller's active
+// listings. The account is recoverable for 7 days by logging back in; a purge
+// job removes it after grace (see DEPLOY.md).
 export async function DELETE(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
@@ -99,7 +111,18 @@ export async function DELETE(req) {
   const limited = await enforceRateLimit(req, `del:${user.id}`, { limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
-  await prisma.user.delete({ where: { id: user.id } });
+  const { password } = await req.json().catch(() => ({}));
+  if (!(await verifyPassword(String(password || ""), user.passwordHash))) {
+    return NextResponse.json({ error: "Password is incorrect." }, { status: 400 });
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { deletedAt: new Date(), tokenVersion: { increment: 1 } },
+  });
+  // Remove the seller's listings from public view while soft-deleted.
+  await prisma.listing.updateMany({ where: { sellerId: user.id, hidden: false }, data: { hidden: true } });
   destroySession();
+  await logAudit("account_delete", { userId: user.id, ip: clientIp(req) });
   return NextResponse.json({ ok: true });
 }

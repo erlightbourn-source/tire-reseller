@@ -29,8 +29,9 @@ export async function GET() {
   });
   const pendingOffers = offerMsgs.filter((m) => Date.now() - new Date(m.createdAt).getTime() <= OFFER_TTL_MS).length;
 
-  // New listings matching my saved searches since I last viewed each
-  const searches = await prisma.savedSearch.findMany({ where: { userId: user.id } });
+  // New listings matching my saved searches since I last viewed each.
+  // Capped so a user with many saved searches can't make polling expensive.
+  const searches = await prisma.savedSearch.findMany({ where: { userId: user.id }, take: 25 });
   let newMatches = 0;
   for (const s of searches) {
     const params = Object.fromEntries(new URLSearchParams(s.query));

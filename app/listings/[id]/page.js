@@ -14,6 +14,7 @@ import ReportListing from "@/components/ReportListing";
 import ShareListing from "@/components/ShareListing";
 import TrackView from "@/components/TrackView";
 import Badge, { ProBadge } from "@/components/Badge";
+import { detectOffPlatform, SAFETY_WARNING } from "@/lib/safety";
 
 export const dynamic = "force-dynamic";
 
@@ -227,6 +228,12 @@ export default async function ListingDetail({ params }) {
             <div className="card p-5">
               <h2 className="text-sm font-bold text-slate-200">Seller's description</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{listing.description}</p>
+              {detectOffPlatform(listing.description).flagged && (
+                <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-100 ring-1 ring-inset ring-amber-400/20">
+                  <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-amber-300" aria-hidden="true"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>
+                  <span><strong>Safety tip:</strong> {SAFETY_WARNING}</span>
+                </p>
+              )}
             </div>
           )}
 

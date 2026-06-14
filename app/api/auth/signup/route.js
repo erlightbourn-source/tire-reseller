@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, createSession, freeYearFromNow } from "@/lib/auth";
 import { isStateAbbr } from "@/lib/states";
-import { enforceRateLimit, isEmail, cleanStr, ValidationError, LIMITS } from "@/lib/security";
+import { enforceRateLimit, isEmail, cleanStr, ValidationError, LIMITS, clientIp } from "@/lib/security";
+import { isPasswordPwned } from "@/lib/breach";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req) {
   // Limit account creation per IP to curb spam/abuse.
@@ -32,6 +34,12 @@ export async function POST(req) {
   if (password.length > 200) {
     return NextResponse.json({ error: "Password is too long." }, { status: 400 });
   }
+  if (await isPasswordPwned(password)) {
+    return NextResponse.json(
+      { error: "That password has appeared in a data breach. Please choose a different one." },
+      { status: 400 }
+    );
+  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -54,5 +62,6 @@ export async function POST(req) {
   });
 
   await createSession(user.id, user.tokenVersion);
+  await logAudit("signup", { userId: user.id, ip: clientIp(req), meta: { role: user.role } });
   return NextResponse.json({ ok: true, userId: user.id, role: user.role });
 }

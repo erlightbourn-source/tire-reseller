@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { detectOffPlatform, SAFETY_WARNING } from "@/lib/safety";
 
 const money = (c) => "$" + (c / 100).toLocaleString("en-US");
 const OFFER_TTL_MS = 48 * 60 * 60 * 1000;
@@ -79,6 +80,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
   }
 
   let lastDay = null;
+  const risky = messages.some((m) => m.kind !== "offer" && detectOffPlatform(m.body).flagged);
 
   return (
     <div className="card flex h-[62vh] flex-col overflow-hidden">
@@ -146,6 +148,13 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
         })}
         <div ref={bottomRef} />
       </div>
+
+      {risky && (
+        <div className="flex items-start gap-2 border-t border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-amber-300" aria-hidden="true"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>
+          <span><strong>Safety tip:</strong> {SAFETY_WARNING}</span>
+        </div>
+      )}
 
       {offerOpen && (
         <div className="flex items-center gap-2 border-t border-white/10 bg-accent-500/5 p-3">

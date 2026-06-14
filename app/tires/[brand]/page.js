@@ -7,7 +7,8 @@ import ListingCard from "@/components/ListingCard";
 import Faq from "@/components/Faq";
 import { BUYER_FAQ } from "@/lib/content";
 
-export const dynamic = "force-dynamic";
+// Brand hubs aren't personalized — cache (ISR) for 5 min to cut DB load at scale.
+export const revalidate = 300;
 
 // Resolve a URL slug back to the brand's canonical casing from active listings.
 async function resolveBrand(slug) {

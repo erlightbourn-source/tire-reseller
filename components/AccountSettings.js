@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 export default function AccountSettings() {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
-  const [text, setText] = useState("");
+  const [delPw, setDelPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -45,14 +45,19 @@ export default function AccountSettings() {
   async function del() {
     setBusy(true);
     setErr("");
-    const res = await fetch("/api/account", { method: "DELETE" });
+    const res = await fetch("/api/account", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: delPw }),
+    });
     if (res.ok) {
       router.push("/");
       router.refresh();
       return;
     }
+    const data = await res.json().catch(() => ({}));
     setBusy(false);
-    setErr("Couldn't delete the account. Please try again.");
+    setErr(data.error || "Couldn't delete the account. Please try again.");
   }
 
   return (
@@ -99,21 +104,21 @@ export default function AccountSettings() {
       <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
         <h2 className="font-display font-bold text-red-200">Delete account</h2>
         <p className="mt-1 text-sm text-red-100/80">
-          This permanently removes your account and everything tied to it — listings, messages, favorites,
-          saved searches, and reviews. This cannot be undone.
+          This removes your account and hides your listings. You have <strong>7 days</strong> to recover it
+          by logging back in; after that it's permanently deleted.
         </p>
         {!confirming ? (
           <button onClick={() => setConfirming(true)} className="btn-danger mt-3">Delete my account</button>
         ) : (
           <div className="mt-3 space-y-2">
-            <label htmlFor="confirm-del" className="block text-sm text-red-100">Type <span className="font-mono font-bold">DELETE</span> to confirm:</label>
-            <input id="confirm-del" value={text} onChange={(e) => setText(e.target.value)} className="input max-w-xs" placeholder="DELETE" />
+            <label htmlFor="confirm-del" className="block text-sm text-red-100">Enter your password to confirm:</label>
+            <input id="confirm-del" type="password" value={delPw} onChange={(e) => setDelPw(e.target.value)} className="input max-w-xs" placeholder="••••••••" autoComplete="current-password" />
             {err && <p className="text-sm text-red-300">{err}</p>}
             <div className="flex gap-2">
-              <button onClick={del} disabled={text !== "DELETE" || busy} className="btn-danger">
-                {busy ? "Deleting…" : "Permanently delete"}
+              <button onClick={del} disabled={!delPw || busy} className="btn-danger">
+                {busy ? "Deleting…" : "Delete account"}
               </button>
-              <button onClick={() => { setConfirming(false); setText(""); }} className="btn-secondary">Cancel</button>
+              <button onClick={() => { setConfirming(false); setDelPw(""); setErr(""); }} className="btn-secondary">Cancel</button>
             </div>
           </div>
         )}

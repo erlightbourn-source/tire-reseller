@@ -25,6 +25,7 @@ model User {
   tokenVersion       Int      @default(0)
   resetTokenHash     String?
   resetTokenExpiry   DateTime?
+  deletedAt          DateTime? // soft-delete: account scheduled for removal (7-day grace)
 
   // Seller billing. The first year of selling is free for every seller;
   // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
@@ -94,6 +95,20 @@ model Listing {
   @@index([state])
   @@index([season])
   @@index([featured])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  // nullable so logs survive account deletion
+  action    String   // login | signup | password_change | password_reset | account_delete | logout_all
+  ip        String?
+  meta      String?  // optional JSON detail
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Photo {
