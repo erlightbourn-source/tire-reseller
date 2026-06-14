@@ -8,7 +8,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Log in to leave a review." }, { status: 401 });
 
-  const limited = enforceRateLimit(req, `review:${user.id}`, { limit: 15, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, `review:${user.id}`, { limit: 15, windowMs: 60_000 });
   if (limited) return limited;
 
   const { sellerId, rating, body } = await req.json();

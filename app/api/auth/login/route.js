@@ -5,7 +5,7 @@ import { enforceRateLimit, isEmail } from "@/lib/security";
 
 export async function POST(req) {
   // Throttle credential stuffing / brute force: 8 attempts per IP per minute.
-  const limited = enforceRateLimit(req, "login", { limit: 8, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "login", { limit: 8, windowMs: 60_000 });
   if (limited) return limited;
 
   const { email, password } = await req.json();

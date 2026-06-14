@@ -6,7 +6,7 @@ import { enforceRateLimit, isEmail, cleanStr, ValidationError, LIMITS } from "@/
 
 export async function POST(req) {
   // Limit account creation per IP to curb spam/abuse.
-  const limited = enforceRateLimit(req, "signup", { limit: 5, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "signup", { limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
   const body = await req.json();

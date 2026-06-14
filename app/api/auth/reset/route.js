@@ -4,7 +4,7 @@ import { hashResetToken, hashPassword, createSession } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
 
 export async function POST(req) {
-  const limited = enforceRateLimit(req, "reset", { limit: 10, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "reset", { limit: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const { token, password } = await req.json();

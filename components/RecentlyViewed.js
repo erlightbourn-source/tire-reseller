@@ -32,7 +32,7 @@ export default function RecentlyViewed({ exclude }) {
             <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-ink-900 ring-1 ring-white/10">
               {l.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={l.photo} alt="" className="h-full w-full object-cover" />
+                <img src={l.photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
                 <div className="grid h-full w-full place-items-center text-2xl text-slate-600">◎</div>
               )}

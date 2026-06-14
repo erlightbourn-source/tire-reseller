@@ -24,13 +24,10 @@ tiers and none require a credit card.
 1. **Neon** → neon.tech → sign up (GitHub) → New Project → copy the
    `postgresql://…` connection string.
 
-2. **Switch Prisma to Postgres** (one line) in `prisma/schema.prisma`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"   // was "sqlite"
-     url      = env("DATABASE_URL")
-   }
-   ```
+2. **Prisma provider is automatic.** The `build` script runs
+   `scripts/db-provider.mjs`, which sets the datasource provider to `postgresql`
+   when `DATABASE_URL` is a `postgres://` URL (and `sqlite` otherwise). No manual
+   schema edit needed — just set `DATABASE_URL` to your Neon string in the host.
 
 3. **Resend** (optional) → resend.com → API Keys → Create → copy `re_…`.
 
@@ -53,9 +50,17 @@ tiers and none require a credit card.
 
 6. **Deploy** — push to `main`; Vercel builds automatically. Done.
 
+### Rate limiting on serverless
+The built-in rate limiter is in-memory, which does **not** work across Vercel's
+serverless instances. For real throttling in production, create a free **Upstash
+Redis** database and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`;
+the limiter uses it automatically (and falls back to in-memory locally / if unset).
+
+| Service | Free tier | Env vars |
+|---|---|---|
+| **Upstash** (Redis) | 10k cmds/day, no card | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
+
 ## Notes
-- Keep local dev on SQLite: leave `provider = "sqlite"` and
-  `DATABASE_URL="file:./dev.db"` in your local `.env`; only flip the provider for
-  the production build (or keep a separate branch/env).
+- Local dev stays on SQLite automatically (`DATABASE_URL="file:./dev.db"`).
 - Never commit real secrets — `.env` is git-ignored; set values in Vercel.
 - Don't paste secrets into chat; the app reads everything from `process.env`.

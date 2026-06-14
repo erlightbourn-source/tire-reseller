@@ -187,7 +187,7 @@ export default async function DashboardPage() {
                 <Link href={`/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
                   {l.photos[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={l.photos[0].url} alt="" className="h-full w-full object-cover" />
+                    <img src={l.photos[0].url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   ) : (
                     <div className="grid h-full w-full place-items-center text-2xl">🛞</div>
                   )}

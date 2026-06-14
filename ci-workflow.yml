@@ -1,0 +1,37 @@
+# GitHub Actions CI for TireTrader.
+#
+# NOTE: this can't be pushed from here (the git token lacks GitHub's `workflow`
+# scope). To enable CI, do ONE of:
+#   A) On github.com: Actions tab → "New workflow" → "set up a workflow yourself"
+#      → paste the contents below → commit as .github/workflows/ci.yml
+#   B) Locally:  gh auth refresh -s workflow
+#      then:  mkdir -p .github/workflows && cp ci-workflow.yml .github/workflows/ci.yml
+#      then:  git add .github/workflows/ci.yml && git commit -m "Add CI" && git push
+#
+# Once it's at .github/workflows/ci.yml, this reference file can be deleted.
+# ---------------------------------------------------------------------------
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Build-time only — not real secrets. Runtime values come from the host.
+      APP_SECRET: ci-build-secret-not-used-at-runtime-0123456789
+      DATABASE_URL: "file:./ci.db"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma db push --skip-generate
+      - run: npm test
+      - run: npm run build

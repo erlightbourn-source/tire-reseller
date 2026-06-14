@@ -8,7 +8,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in to message sellers." }, { status: 401 });
 
-  const limited = enforceRateLimit(req, `thread:${user.id}`, { limit: 20, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, `thread:${user.id}`, { limit: 20, windowMs: 60_000 });
   if (limited) return limited;
 
   const raw = await req.json();

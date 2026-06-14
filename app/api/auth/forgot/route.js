@@ -7,7 +7,7 @@ import { enforceRateLimit, isEmail } from "@/lib/security";
 const TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(req) {
-  const limited = enforceRateLimit(req, "forgot", { limit: 5, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "forgot", { limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
   const { email } = await req.json();

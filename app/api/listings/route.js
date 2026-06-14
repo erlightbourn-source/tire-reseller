@@ -39,7 +39,7 @@ export async function POST(req) {
     );
   }
 
-  const limited = enforceRateLimit(req, `listing:${user.id}`, { limit: 30, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, `listing:${user.id}`, { limit: 30, windowMs: 60_000 });
   if (limited) return limited;
 
   const b = await req.json();

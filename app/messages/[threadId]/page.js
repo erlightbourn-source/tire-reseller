@@ -33,7 +33,7 @@ export default async function ThreadPage({ params }) {
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt="" className="h-full w-full object-cover" />
+            <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
           ) : (
             <div className="grid h-full w-full place-items-center text-xl">🛞</div>
           )}

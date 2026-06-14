@@ -48,7 +48,7 @@ export async function POST(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
   // Throttle message spam.
-  const limited = enforceRateLimit(req, `msg:${user.id}`, { limit: 30, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, `msg:${user.id}`, { limit: 30, windowMs: 60_000 });
   if (limited) return limited;
 
   const { thread, code } = await loadThread(params.threadId, user.id);
