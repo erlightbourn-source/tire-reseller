@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
-import { cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
+import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -63,9 +63,7 @@ export async function PATCH(req, { params }) {
   // Replace photos if provided — only host-served or data-URI images.
   if (Array.isArray(b.photos)) {
     await prisma.photo.deleteMany({ where: { listingId: listing.id } });
-    const photos = b.photos
-      .filter((u) => typeof u === "string" && (u.startsWith("/uploads/") || u.startsWith("data:image/")))
-      .slice(0, 6);
+    const photos = b.photos.filter(isAllowedPhotoUrl).slice(0, 6);
     data.photos = { create: photos.map((url, i) => ({ url, sort: i })) };
   }
 

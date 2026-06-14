@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
-import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
+import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 function tireAttrs(b) {
@@ -60,10 +60,8 @@ export async function POST(req) {
     return NextResponse.json({ error: "Enter a valid price." }, { status: 400 });
   }
 
-  // Accept only image URLs we host (or data: previews); reject arbitrary remote URLs.
-  const photos = (Array.isArray(b.photos) ? b.photos : [])
-    .filter((u) => typeof u === "string" && (u.startsWith("/uploads/") || u.startsWith("data:image/")))
-    .slice(0, 6);
+  // Accept only host-served / data / Vercel Blob image URLs; reject arbitrary remote URLs.
+  const photos = (Array.isArray(b.photos) ? b.photos : []).filter(isAllowedPhotoUrl).slice(0, 6);
 
   const listing = await prisma.listing.create({
     data: {

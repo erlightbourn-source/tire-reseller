@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanStr, clampInt, isEmail, ValidationError, rateLimit } from "../lib/validation.js";
+import { cleanStr, clampInt, isEmail, ValidationError, rateLimit, isAllowedPhotoUrl } from "../lib/validation.js";
 
 test("cleanStr trims and returns the value", () => {
   assert.equal(cleanStr("  hi  ", 10), "hi");
@@ -34,6 +34,15 @@ test("clampInt clamps, rounds, and falls back", () => {
   assert.equal(clampInt(99, { min: 1, max: 10 }), 10);
   assert.equal(clampInt("x", { min: 1, max: 10, fallback: 4 }), 4);
   assert.equal(clampInt(4.6, { min: 1, max: 10 }), 5);
+});
+
+test("isAllowedPhotoUrl accepts uploads/data/blob and rejects remote", () => {
+  assert.ok(isAllowedPhotoUrl("/uploads/abc.jpg"));
+  assert.ok(isAllowedPhotoUrl("data:image/png;base64,xxxx"));
+  assert.ok(isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
+  assert.ok(!isAllowedPhotoUrl("https://evil.example/x.jpg"));
+  assert.ok(!isAllowedPhotoUrl("javascript:alert(1)"));
+  assert.ok(!isAllowedPhotoUrl(42));
 });
 
 test("rateLimit allows up to the limit then blocks", () => {
