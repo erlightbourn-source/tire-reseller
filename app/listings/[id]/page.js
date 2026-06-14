@@ -8,6 +8,7 @@ import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
 import FavoriteButton from "@/components/FavoriteButton";
 import Stars from "@/components/Stars";
+import ListingCard from "@/components/ListingCard";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,20 @@ export default async function ListingDetail({ params }) {
   });
   const avgRating = sellerRating._avg.rating || 0;
   const reviewCount = sellerRating._count._all;
+
+  // "More like this" — same size first, then same brand
+  const candidates = await prisma.listing.findMany({
+    where: {
+      status: "active",
+      id: { not: listing.id },
+      OR: [{ size: listing.size }, { brand: listing.brand }],
+    },
+    include: { photos: { take: 1, orderBy: { sort: "asc" } } },
+    take: 8,
+  });
+  const similar = candidates
+    .sort((a, b) => (b.size === listing.size) - (a.size === listing.size) || b.featured - a.featured)
+    .slice(0, 4);
 
   const isNew = listing.condition === "new";
   const ageYears = listing.dotYear ? new Date().getFullYear() - listing.dotYear : null;
@@ -139,6 +154,17 @@ export default async function ListingDetail({ params }) {
           )}
         </div>
       </div>
+
+      {similar.length > 0 && (
+        <div className="pt-2">
+          <h2 className="mb-3 font-display text-lg font-bold text-white">More like this</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {similar.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

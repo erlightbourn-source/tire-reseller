@@ -2,6 +2,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const money = (c) => "$" + (c / 100).toLocaleString("en-US");
+const OFFER_TTL_MS = 48 * 60 * 60 * 1000;
+function offerExpiry(m) {
+  const left = OFFER_TTL_MS - (Date.now() - new Date(m.createdAt).getTime());
+  if (left <= 0) return { expired: true, label: "Expired" };
+  const h = Math.floor(left / 3.6e6);
+  return { expired: false, label: h >= 1 ? `Expires in ${h}h` : "Expires soon" };
+}
 
 export default function ChatWindow({ threadId, otherName, listingPrice }) {
   const [messages, setMessages] = useState([]);
@@ -58,12 +65,16 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
     load();
   }
 
-  async function respond(messageId, action) {
+  const [counterFor, setCounterFor] = useState(null);
+  const [counterAmt, setCounterAmt] = useState("");
+
+  async function respond(messageId, action, cents) {
     await fetch("/api/offers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messageId, action }),
+      body: JSON.stringify({ messageId, action, offerCents: cents }),
     });
+    setCounterFor(null);
     load();
   }
 
@@ -89,20 +100,38 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
               )}
               <div className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
                 {isOffer ? (
-                  <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus === "accepted" ? "border-emerald-400/40 bg-emerald-500/10" : m.offerStatus === "declined" ? "border-white/10 bg-white/5 opacity-70" : "border-accent-400/40 bg-accent-500/10"}`}>
+                  (() => {
+                    const exp = offerExpiry(m);
+                    const live = m.offerStatus === "pending" && !exp.expired;
+                    return (
+                  <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus === "accepted" ? "border-emerald-400/40 bg-emerald-500/10" : (m.offerStatus === "declined" || m.offerStatus === "countered" || exp.expired) ? "border-white/10 bg-white/5 opacity-70" : "border-accent-400/40 bg-accent-500/10"}`}>
                     <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">{m.mine ? "Your offer" : "Offer"}</p>
                     <p className="font-display text-2xl font-extrabold text-white">{money(m.offerCents)}</p>
                     {m.offerStatus === "accepted" && <p className="text-xs font-semibold text-emerald-300">✓ Accepted</p>}
                     {m.offerStatus === "declined" && <p className="text-xs text-slate-400">Declined</p>}
-                    {m.offerStatus === "pending" && !m.mine && (
-                      <div className="mt-2 flex gap-2">
+                    {m.offerStatus === "countered" && <p className="text-xs text-slate-400">Countered</p>}
+                    {live && <p className="text-[10px] text-slate-400">{exp.label}</p>}
+                    {m.offerStatus === "pending" && exp.expired && <p className="text-xs text-slate-400">Expired</p>}
+                    {live && !m.mine && counterFor !== m.id && (
+                      <div className="mt-2 flex flex-wrap gap-2">
                         <button onClick={() => respond(m.id, "accept")} className="btn bg-emerald-500 px-3 py-1 text-xs text-ink-950 hover:bg-emerald-400">Accept</button>
+                        <button onClick={() => { setCounterFor(m.id); setCounterAmt(Math.round(m.offerCents / 100)); }} className="btn bg-brand-600 px-3 py-1 text-xs text-white hover:bg-brand-500">Counter</button>
                         <button onClick={() => respond(m.id, "decline")} className="btn bg-white/10 px-3 py-1 text-xs text-slate-200 hover:bg-white/20">Decline</button>
                       </div>
                     )}
-                    {m.offerStatus === "pending" && m.mine && <p className="text-xs text-slate-400">Waiting for a response…</p>}
+                    {live && !m.mine && counterFor === m.id && (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className="text-xs text-slate-300">$</span>
+                        <input type="number" value={counterAmt} onChange={(e) => setCounterAmt(e.target.value)} className="input max-w-[100px] py-1 text-sm" />
+                        <button onClick={() => respond(m.id, "counter", Math.round(Number(counterAmt) * 100))} className="btn bg-brand-600 px-3 py-1 text-xs text-white">Send</button>
+                        <button onClick={() => setCounterFor(null)} className="btn-ghost px-2 py-1 text-xs">✕</button>
+                      </div>
+                    )}
+                    {live && m.mine && <p className="text-xs text-slate-400">Waiting for a response…</p>}
                     <div className="mt-1 text-[10px] text-slate-400">{new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</div>
                   </div>
+                    );
+                  })()
                 ) : (
                   <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-600 text-white" : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
                     {m.body}

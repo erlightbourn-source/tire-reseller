@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 function Avatar({ name }) {
   const initials = name
@@ -70,6 +71,8 @@ export default function NavUser({ user }) {
       ) : (
         <Link href="/subscribe" className="btn-accent">Become a seller</Link>
       )}
+
+      <NotificationBell />
 
       <div className="relative">
         <button

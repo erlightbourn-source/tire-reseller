@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TireTrader — Buy & Sell Tires (Live Demo)</title>
   <meta name="description" content="TireTrader — the marketplace built for tire resellers. Live front-end demo." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232545e6'/%3E%3Ccircle cx='24' cy='24' r='15' fill='%230d0f13'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%232a2f3c'/%3E%3C/svg%3E" />
+  <link rel="icon" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#070809" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TireTrader" />
+  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -306,6 +313,35 @@ function Logo({ cls = 'h-9 w-9', spin = false, bare = false }) {
 }
 
 /* ───────────────────────── Header ───────────────────────── */
+const OFFER_TTL_MS = 48*60*60*1000;
+function NotifBell() {
+  const { me, db, newCount } = useApp();
+  const [open, setOpen] = useState(false);
+  if (!me) return null;
+  const myThreads = db.threads.filter(t => t.buyerId===me.id || t.sellerId===me.id).map(t=>t.id);
+  const unread = db.messages.filter(m => myThreads.includes(m.threadId) && m.senderId!==me.id && !m.read).length;
+  const offers = db.messages.filter(m => m.kind==='offer' && m.offerStatus==='pending' && myThreads.includes(m.threadId) && m.senderId!==me.id && (Date.now()-m.createdAt)<=OFFER_TTL_MS).length;
+  const matches = (db.savedSearches||[]).filter(s=>s.userId===me.id).reduce((sum,s)=>sum+newCount(s),0);
+  const total = unread + offers + matches;
+  const items = [
+    unread>0 && { href:'#/messages', icon:'💬', label:`${unread} unread message${unread!==1?'s':''}` },
+    offers>0 && { href:'#/messages', icon:'🤝', label:`${offers} offer${offers!==1?'s':''} awaiting you` },
+    matches>0 && { href:'#/saved', icon:'🔔', label:`${matches} new match${matches!==1?'es':''} for saved searches` },
+  ].filter(Boolean);
+  return (
+    <div className="relative">
+      <button onClick={()=>setOpen(o=>!o)} onBlur={()=>setTimeout(()=>setOpen(false),180)} className="relative grid h-9 w-9 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5 hover:text-white" aria-label="Notifications">
+        <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 2a5 5 0 0 0-5 5v3l-1.5 2.5A1 1 0 0 0 4.3 14h11.4a1 1 0 0 0 .8-1.5L15 10V7a5 5 0 0 0-5-5Zm0 16a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 10 18Z"/></svg>
+        {total>0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{total>9?'9+':total}</span>}
+      </button>
+      {open && <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] py-1 backdrop-blur-xl shadow-2xl">
+        <div className="border-b border-white/10 px-3 py-2 text-sm font-semibold text-white">Notifications</div>
+        {items.length===0 ? <p className="px-3 py-4 text-center text-sm text-slate-400">You're all caught up 🎉</p>
+          : items.map((i,x)=><a key={x} href={i.href} className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><span>{i.icon}</span><span>{i.label}</span></a>)}
+      </div>}
+    </div>
+  );
+}
 function Header() {
   const { me } = useApp();
   const [open, setOpen] = useState(false);
@@ -323,6 +359,7 @@ function Header() {
             <a href="#/dashboard" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white md:block">Dashboard</a>
             {active ? <a href="#/sell" className="btn-primary"><span className="text-base leading-none">+</span><span className="hidden sm:inline">Sell tires</span></a>
                     : <a href="#/subscribe" className="btn-accent">Become a seller</a>}
+            <NotifBell />
             <div className="relative">
               <button onClick={() => setOpen(o => !o)} onBlur={() => setTimeout(() => setOpen(false), 160)} className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition hover:bg-white/10">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">{initials(me.name)}</span>
@@ -455,6 +492,12 @@ function Favorites() {
   );
 }
 
+function InstallApp() {
+  const [deferred, setDeferred] = useState(null); const [installed, setInstalled] = useState(false); const [ios, setIos] = useState(false);
+  useEffect(()=>{ const onP=e=>{ e.preventDefault(); setDeferred(e); }; const onI=()=>setInstalled(true); window.addEventListener('beforeinstallprompt',onP); window.addEventListener('appinstalled',onI); if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) setInstalled(true); return ()=>{ window.removeEventListener('beforeinstallprompt',onP); window.removeEventListener('appinstalled',onI); }; },[]);
+  if(installed) return <p className="text-sm font-semibold text-emerald-300">✓ Installed — open it from your home screen!</p>;
+  return (<div><button onClick={async()=>{ if(deferred){ deferred.prompt(); await deferred.userChoice; setDeferred(null); } else setIos(true); }} className="btn-accent"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2a1 1 0 0 1 1 1v8.6l2.3-2.3 1.4 1.4L10 15.4 5.3 10.7l1.4-1.4L9 11.6V3a1 1 0 0 1 1-1Zm-6 14h12v2H4v-2Z"/></svg>Install web app</button>{ios && <p className="mt-2 text-xs text-slate-400">On iPhone: tap <strong>Share</strong>, then <strong>“Add to Home Screen”</strong>.</p>}</div>);
+}
 function AppPage() {
   const [done, setDone] = useState(false); const [email, setEmail] = useState('');
   const feats = [['📸','Snap & list in seconds','Photograph a tire and post it before the buyer leaves the lot.'],['🔔','Instant message alerts','Push notifications the moment a buyer reaches out.'],['📍','Tires near you','Browse local inventory on the go with one tap.']];
@@ -468,8 +511,9 @@ function AppPage() {
           <span className="badge bg-white/10 text-brand-100 ring-1 ring-inset ring-white/15">Coming soon</span>
           <h1 className="mt-3 font-display text-3xl font-extrabold sm:text-4xl">TireTrader in your pocket</h1>
           <p className="mx-auto mt-3 max-w-xl text-slate-300">We're building native iOS &amp; Android apps so you can buy and sell tires anywhere. Want first dibs? Drop your email and we'll ping you at launch.</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3"><Badge store="apple" sub="Download on the" /><Badge store="google" sub="Get it on" /></div>
-          <p className="mt-2 text-xs text-slate-500">Badges are placeholders — the apps aren't published yet.</p>
+          <div className="mt-6 flex flex-col items-center gap-3"><InstallApp /><p className="text-xs text-slate-400">Available now as an installable web app — add it to your home screen.</p></div>
+          <div className="mt-6 flex flex-wrap justify-center gap-3 opacity-80"><Badge store="apple" sub="Download on the" /><Badge store="google" sub="Get it on" /></div>
+          <p className="mt-2 text-xs text-slate-500">Native store apps coming soon — badges are placeholders.</p>
           <div className="mx-auto mt-6 max-w-md text-left">
             {done ? <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">🎉 You're on the list — we'll email you at launch.</div>
               : <form onSubmit={e=>{e.preventDefault(); if(email.includes('@')) setDone(true);}} className="flex flex-col gap-2 sm:flex-row"><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="input" /><button className="btn-primary whitespace-nowrap px-5">Notify me</button></form>}
@@ -715,6 +759,13 @@ function Detail({ id }) {
           )}
         </div>
       </div>
+      {(() => {
+        const cand = db.listings.filter(x => x.status==='active' && x.id!==l.id && (x.size===l.size || x.brand===l.brand));
+        const similar = cand.sort((a,b)=>((b.size===l.size)-(a.size===l.size))||(b.featured-a.featured)).slice(0,4);
+        return similar.length>0 ? (
+          <div className="pt-2"><h2 className="mb-3 font-display text-lg font-bold text-white">More like this</h2><div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{similar.map(x=><Card key={x.id} l={x} />)}</div></div>
+        ) : null;
+      })()}
     </div>
   );
 }
@@ -963,10 +1014,13 @@ function Messages() {
 function lastTime(db, t) { const m = db.messages.filter(x=>x.threadId===t.id); return m.length ? m[m.length-1].createdAt : t.createdAt; }
 
 function Thread({ id }) {
-  const { me, db, otherOf, sendMessage, makeOffer, respondOffer } = useApp();
+  const { me, db, otherOf, sendMessage, makeOffer, respondOffer, markThreadRead } = useApp();
   const [text, setText] = useState('');
   const [offerOpen, setOfferOpen] = useState(false);
+  const [counterFor, setCounterFor] = useState(null); const [counterAmt, setCounterAmt] = useState('');
   const t = db.threads.find(x => x.id === id);
+  useEffect(() => { if (me && t) markThreadRead(t.id); }, [id, me]);
+  const offerExp = (m) => { const left = OFFER_TTL_MS-(Date.now()-m.createdAt); if(left<=0) return {expired:true,label:'Expired'}; const h=Math.floor(left/3.6e6); return {expired:false,label:h>=1?`Expires in ${h}h`:'Expires soon'}; };
   const [offer, setOffer] = useState(t ? Math.round((db.listings.find(x=>x.id===t.listingId)?.priceCents||0)/100) : '');
   const bottom = useRef(null);
   useEffect(() => { if (!me) navigate('/login'); }, [me]);
@@ -986,17 +1040,21 @@ function Thread({ id }) {
           {msgs.length===0 && <p className="mt-10 text-center text-sm text-slate-500">Start the conversation with {other.name}.</p>}
           {msgs.map(m => { const mine = m.senderId===me.id; const isOffer = m.kind==='offer'; return (
             <div key={m.id} className={`flex ${mine?'justify-end':'justify-start'}`}>
-              {isOffer ? (
-                <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus==='accepted'?'border-emerald-400/40 bg-emerald-500/10':m.offerStatus==='declined'?'border-white/10 bg-white/5 opacity-70':'border-accent-400/40 bg-accent-500/10'}`}>
+              {isOffer ? (()=>{ const exp=offerExp(m); const live=m.offerStatus==='pending'&&!exp.expired; return (
+                <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus==='accepted'?'border-emerald-400/40 bg-emerald-500/10':(m.offerStatus==='declined'||m.offerStatus==='countered'||exp.expired)?'border-white/10 bg-white/5 opacity-70':'border-accent-400/40 bg-accent-500/10'}`}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">{mine?'Your offer':'Offer'}</p>
                   <p className="font-display text-2xl font-extrabold text-white">{money(m.offerCents)}</p>
                   {m.offerStatus==='accepted' && <p className="text-xs font-semibold text-emerald-300">✓ Accepted</p>}
                   {m.offerStatus==='declined' && <p className="text-xs text-slate-400">Declined</p>}
-                  {m.offerStatus==='pending' && !mine && <div className="mt-2 flex gap-2"><button onClick={()=>respondOffer(m.id,'accept')} className="btn bg-emerald-500 px-3 py-1 text-xs text-ink-950 hover:bg-emerald-400">Accept</button><button onClick={()=>respondOffer(m.id,'decline')} className="btn bg-white/10 px-3 py-1 text-xs text-slate-200 hover:bg-white/20">Decline</button></div>}
-                  {m.offerStatus==='pending' && mine && <p className="text-xs text-slate-400">Waiting for a response…</p>}
+                  {m.offerStatus==='countered' && <p className="text-xs text-slate-400">Countered</p>}
+                  {live && <p className="text-[10px] text-slate-400">{exp.label}</p>}
+                  {m.offerStatus==='pending' && exp.expired && <p className="text-xs text-slate-400">Expired</p>}
+                  {live && !mine && counterFor!==m.id && <div className="mt-2 flex flex-wrap gap-2"><button onClick={()=>respondOffer(m.id,'accept')} className="btn bg-emerald-500 px-3 py-1 text-xs text-ink-950 hover:bg-emerald-400">Accept</button><button onClick={()=>{ setCounterFor(m.id); setCounterAmt(Math.round(m.offerCents/100)); }} className="btn bg-brand-600 px-3 py-1 text-xs text-white hover:bg-brand-500">Counter</button><button onClick={()=>respondOffer(m.id,'decline')} className="btn bg-white/10 px-3 py-1 text-xs text-slate-200 hover:bg-white/20">Decline</button></div>}
+                  {live && !mine && counterFor===m.id && <div className="mt-2 flex items-center gap-1.5"><span className="text-xs text-slate-300">$</span><input type="number" value={counterAmt} onChange={e=>setCounterAmt(e.target.value)} className="input max-w-[100px] py-1 text-sm" /><button onClick={()=>respondOffer(m.id,'counter',Math.round(Number(counterAmt)*100))} className="btn bg-brand-600 px-3 py-1 text-xs text-white">Send</button><button onClick={()=>setCounterFor(null)} className="btn-ghost px-2 py-1 text-xs">✕</button></div>}
+                  {live && mine && <p className="text-xs text-slate-400">Waiting for a response…</p>}
                   <div className="mt-1 text-[10px] text-slate-400">{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div>
                 </div>
-              ) : (
+              ); })() : (
                 <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-500'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>
               )}
             </div>
@@ -1067,6 +1125,7 @@ function App() {
     isFavorited: (lid) => !!(db.favorites||[]).find(x=>x.userId===db.session && x.listingId===lid),
     toggleFavorite: (lid) => { if(!db.session){ navigate('/login'); return; } update(d => { d.favorites = d.favorites||[]; const i = d.favorites.findIndex(x=>x.userId===d.session && x.listingId===lid); if(i>=0) d.favorites.splice(i,1); else d.favorites.push({ userId:d.session, listingId:lid }); }); },
     togglePromote: (lid) => update(d => { const l = d.listings.find(x=>x.id===lid); if(l) l.featured = !l.featured; }),
+    markThreadRead: (tid) => update(d => { d.messages.forEach(m => { if(m.threadId===tid && m.senderId!==d.session) m.read = true; }); }),
     sellerRating: (sid) => { const rs = (db.reviews||[]).filter(r=>r.sellerId===sid); return { avg: rs.length? rs.reduce((s,r)=>s+r.rating,0)/rs.length : 0, count: rs.length, list: rs.slice().sort((a,b)=>b.createdAt-a.createdAt) }; },
     myReview: (sid) => (db.reviews||[]).find(r=>r.sellerId===sid && r.authorId===db.session) || null,
     addReview: (sid, rating, body) => { if(!db.session) { navigate('/login'); return {error:'login'}; } update(d => { d.reviews = d.reviews||[]; const ex = d.reviews.find(r=>r.sellerId===sid && r.authorId===d.session); if(ex){ ex.rating=rating; ex.body=body||null; } else d.reviews.push({ id:cuid(), sellerId:sid, authorId:d.session, rating, body:body||null, createdAt:Date.now() }); }); return {}; },
@@ -1076,7 +1135,7 @@ function App() {
     seenSearch: (id) => update(d => { const s=(d.savedSearches||[]).find(x=>x.id===id); if(s) s.lastSeenAt=Date.now(); }),
     newCount: (s) => { const p=Object.fromEntries(new URLSearchParams(s.query)); return db.listings.filter(l=>l.status==='active' && matchSearch(l,p) && l.createdAt>s.lastSeenAt).length; },
     makeOffer: (tid, cents) => update(d => { d.messages.push({ id:cuid(), threadId:tid, senderId:d.session, kind:'offer', offerCents:cents, offerStatus:'pending', body:`Offer: $${(cents/100).toLocaleString()}`, createdAt:Date.now() }); const th=d.threads.find(t=>t.id===tid); if(th) th.updatedAt=Date.now(); }),
-    respondOffer: (mid, action) => update(d => { const m=d.messages.find(x=>x.id===mid); if(!m||m.kind!=='offer'||m.offerStatus!=='pending') return; const acc=action==='accept'; m.offerStatus=acc?'accepted':'declined'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, body: acc?`✅ Accepted your offer of $${(m.offerCents/100).toLocaleString()}. Let's arrange pickup!`:`Declined the offer of $${(m.offerCents/100).toLocaleString()}.`, createdAt:Date.now() }); if(acc){ const th=d.threads.find(t=>t.id===m.threadId); const l=th&&d.listings.find(x=>x.id===th.listingId); if(l) l.status='sold'; } }),
+    respondOffer: (mid, action, cents) => update(d => { const m=d.messages.find(x=>x.id===mid); if(!m||m.kind!=='offer'||m.offerStatus!=='pending') return; if(action==='counter'){ if(!cents||cents<=0) return; m.offerStatus='countered'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, kind:'offer', offerCents:cents, offerStatus:'pending', body:`Counter-offer: $${(cents/100).toLocaleString()}`, createdAt:Date.now() }); return; } const acc=action==='accept'; m.offerStatus=acc?'accepted':'declined'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, body: acc?`✅ Accepted your offer of $${(m.offerCents/100).toLocaleString()}. Let's arrange pickup!`:`Declined the offer of $${(m.offerCents/100).toLocaleString()}.`, createdAt:Date.now() }); if(acc){ const th=d.threads.find(t=>t.id===m.threadId); const l=th&&d.listings.find(x=>x.id===th.listingId); if(l) l.status='sold'; } }),
     reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
   };
 

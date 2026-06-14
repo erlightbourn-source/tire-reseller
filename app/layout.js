@@ -17,6 +17,13 @@ export const metadata = {
   title: "TireTrader — Buy & Sell Tires",
   description:
     "The marketplace built for tire resellers. Browse deals for free; sell for $10/month.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "TireTrader", statusBarStyle: "black-translucent" },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+};
+
+export const viewport = {
+  themeColor: "#070809",
 };
 
 export default async function RootLayout({ children }) {

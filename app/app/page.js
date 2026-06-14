@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import NotifyApp from "@/components/NotifyApp";
+import InstallApp from "@/components/InstallApp";
 
 export const metadata = { title: "TireTrader app — coming soon" };
 
@@ -37,11 +38,16 @@ export default function AppPage() {
             Want first dibs? Drop your email and we'll ping you at launch.
           </p>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <InstallApp />
+            <p className="text-xs text-slate-400">Available now as an installable web app — works offline-ish, no store needed.</p>
+          </div>
+
+          <div className="mt-6 flex flex-wrap justify-center gap-3 opacity-80">
             <StoreBadge store="apple" sub="Download on the" />
             <StoreBadge store="google" sub="Get it on" />
           </div>
-          <p className="mt-2 text-xs text-slate-500">Badges are placeholders — the apps aren't published yet.</p>
+          <p className="mt-2 text-xs text-slate-500">Native store apps coming soon — badges are placeholders.</p>
 
           <div className="mx-auto mt-6 max-w-md text-left">
             <NotifyApp />
