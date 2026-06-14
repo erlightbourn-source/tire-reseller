@@ -117,6 +117,7 @@ async function main() {
       location: "Dallas, TX",
       state: "TX",
       role: "seller",
+      admin: true, // demo moderator (for the /admin surface)
       sellerFreeUntil: freeUntil,
     },
   });

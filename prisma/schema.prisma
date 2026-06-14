@@ -19,6 +19,7 @@ model User {
   // Account type. Buyers browse free; sellers can list tires.
   role               String   @default("buyer") // buyer | seller
   pro                Boolean  @default(false)   // Pro seller upgrade
+  admin              Boolean  @default(false)   // platform moderator
 
   // Session invalidation: bumping this revokes all existing JWTs (logout-all,
   // password change/reset). Password-reset token is stored hashed with expiry.

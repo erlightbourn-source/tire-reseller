@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter, Sora } from "next/font/google";
 import Link from "next/link";
-import { getCurrentUser, canSell } from "@/lib/auth";
+import { getCurrentUser, canSell, isAdmin } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
 
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }) {
             <NavUser
               user={
                 user
-                  ? { id: user.id, name: user.name, role: user.role, canSell: canSell(user) }
+                  ? { id: user.id, name: user.name, role: user.role, canSell: canSell(user), admin: isAdmin(user) }
                   : null
               }
             />
@@ -81,7 +81,8 @@ export default async function RootLayout({ children }) {
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-500">More</span>
                 <Link href="/app" className="text-slate-300 hover:text-white">📱 Get the app</Link>
-                <span className="text-slate-500">Sellers $10/mo · first year free</span>
+                <Link href="/terms" className="text-slate-300 hover:text-white">Terms</Link>
+                <Link href="/privacy" className="text-slate-300 hover:text-white">Privacy</Link>
               </div>
             </nav>
           </div>
