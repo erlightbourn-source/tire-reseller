@@ -6,7 +6,8 @@ import MarketplaceFilters from "@/components/MarketplaceFilters";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
-import { parseTread } from "@/lib/tire";
+import { parseTread, perTire } from "@/lib/tire";
+import { priceContext } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,19 @@ async function getListings(sp, blockedIds = []) {
       const min = Number(sp.minRating);
       listings = listings.filter((l) => (l._rating?.avg || 0) >= min);
     }
+  }
+
+  // Price context per card: build a size → per-tire-prices map from all active
+  // listings, then tag each result vs. its size cohort.
+  if (listings.length) {
+    const all = await prisma.listing.findMany({
+      where: { status: "active", hidden: false },
+      select: { size: true, priceCents: true, quantity: true },
+      take: 5000,
+    });
+    const bySize = {};
+    for (const x of all) (bySize[x.size] ||= []).push(perTire(x.priceCents, x.quantity));
+    listings = listings.map((l) => ({ ...l, _fair: priceContext(perTire(l.priceCents, l.quantity), bySize[l.size] || []) }));
   }
   return listings;
 }
@@ -212,7 +226,7 @@ export default async function BrowsePage({ searchParams }) {
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {pageListings.map((l) => (
-                <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} />
+                <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} fair={l._fair ?? null} />
               ))}
             </div>
             {pageCount > 1 && (

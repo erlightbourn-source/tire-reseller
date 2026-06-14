@@ -4,7 +4,8 @@ import { seasonLabel, treadLabel, perTire, milesLabel, conditionMeta, tireAge } 
 import FavoriteButton from "@/components/FavoriteButton";
 import Badge from "@/components/Badge";
 
-export default function ListingCard({ listing, favorited = false, distance = null, rating = null }) {
+export default function ListingCard({ listing, favorited = false, distance = null, rating = null, fair = null }) {
+  const dealTone = fair && fair.tone !== "fair" ? fair.tone : null;
   const photo = listing.photos?.[0]?.url;
   const sold = listing.status === "sold";
   const cond = conditionMeta(listing.condition);
@@ -79,6 +80,12 @@ export default function ListingCard({ listing, favorited = false, distance = nul
                 </span>
               )}
             </div>
+          )}
+
+          {dealTone && (
+            <p className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${dealTone === "good" ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30" : "bg-amber-500/15 text-amber-300 ring-amber-400/30"}`}>
+              {dealTone === "good" ? `▼ ${Math.abs(fair.deltaPct)}% below avg` : `▲ ${fair.deltaPct}% above avg`}
+            </p>
           )}
 
           {rating?.count > 0 && (

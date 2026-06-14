@@ -63,6 +63,12 @@ the limiter uses it automatically (and falls back to in-memory locally / if unse
 |---|---|---|
 | **Upstash** (Redis) | 10k cmds/day, no card | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
 
+### Saved-search email alerts
+`/api/cron/alerts` emails users a digest of new listings matching their saved
+searches. `vercel.json` already schedules it daily; set `CRON_SECRET` (any random
+string) so the endpoint is callable only by the cron / your own bearer token.
+Emails require `RESEND_API_KEY` (otherwise the digest is logged to the console).
+
 ## Notes
 - Local dev stays on SQLite automatically (`DATABASE_URL="file:./dev.db"`).
 - Never commit real secrets — `.env` is git-ignored; set values in Vercel.
