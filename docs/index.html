@@ -115,6 +115,60 @@ const CITY_COORDS = {
 };
 function milesBetween(a,b,c,d){ if([a,b,c,d].some(v=>typeof v!=='number')) return Infinity; const R=3958.8,rad=x=>x*Math.PI/180; const dLa=rad(c-a),dLo=rad(d-b); const h=Math.sin(dLa/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 const SEASON_LABEL = { summer:'Summer', winter:'Winter', 'all-season':'All-season', 'all-weather':'All-weather' };
+const seasonLabel = (s) => SEASON_LABEL[s] || s || null;
+// Condition glossary — source of truth for badges + buyer guide.
+const CONDITIONS = {
+  new:     { label:'New',     tone:'emerald', blurb:'Unused, full tread. Never mounted or only test-fitted.' },
+  used:    { label:'Used',    tone:'amber',   blurb:'Previously driven with measurable remaining tread.' },
+  takeoff: { label:'Takeoff', tone:'sky',     blurb:'Pulled from a new vehicle with near-full tread — like-new at a discount.' },
+  damaged: { label:'Damaged', tone:'rose',    blurb:'Has a patch, plug, or cosmetic/structural flaw. Inspect before buying.' },
+};
+const conditionMeta = (c) => CONDITIONS[c] || (c==='new' ? CONDITIONS.new : CONDITIONS.used);
+const BADGE_TONES = {
+  emerald:'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30',
+  amber:'bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-400/30',
+  sky:'bg-sky-500/15 text-sky-300 ring-1 ring-inset ring-sky-400/30',
+  rose:'bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-400/30',
+  slate:'bg-white/5 text-slate-300 ring-1 ring-inset ring-white/10',
+  featured:'bg-accent-500 text-ink-950',
+  pro:'bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950',
+  sold:'bg-ink-900/90 text-white ring-1 ring-inset ring-white/10',
+};
+function Badge({ tone='slate', className='', children }) { return <span className={`badge ${BADGE_TONES[tone]||BADGE_TONES.slate} ${className}`}>{children}</span>; }
+function parseTread(t){ if(!t) return null; const s=String(t).trim().toLowerCase(); if(s==='new') return {label:'New (10/32")',n:10}; const m=s.match(/(\d+(?:\.\d+)?)\s*\/?\s*32/); if(m) return {label:`${m[1]}/32"`,n:Number(m[1])}; return {label:String(t),n:null}; }
+const treadLabel = (t) => parseTread(t)?.label || null;
+function treadLifePct(t){ const n=parseTread(t)?.n; if(n==null) return null; return Math.max(0,Math.min(100,Math.round(((n-2)/8)*100))); }
+const perTire = (cents,qty) => Math.round(cents/Math.max(1,qty||1));
+function milesLabel(m){ if(m==null||!isFinite(m)) return null; if(m<1) return 'Less than 1 mi away'; return `${Math.round(m)} mi away`; }
+function tireAge(y){ if(!y) return null; const a=new Date().getFullYear()-y; if(a<=0) return {years:0,label:'This year',aging:false}; return {years:a,label:`${a}y old`,aging:a>=6}; }
+const BUYER_FAQ = [
+  { q:'Is it safe to buy used tires?', a:'Yes, when you check the basics. Look for even tread wear of at least 4/32", a manufacture (DOT) date within the last six years, and no patches, bulges, or dry cracking. Every TireTrader listing shows tread depth, DOT year, and condition so you can vet before you message.' },
+  { q:'What does the DOT / manufacture year mean?', a:'Tires carry a DOT code stamping the week and year they were made. Rubber ages even unused, so most shops won’t install tires older than 6 years. We surface the DOT year on every listing and flag tires that are getting old.' },
+  { q:'How much tread should used tires have?', a:'New tires start around 10/32". The legal minimum is 2/32". For real remaining life, look for 6/32" or more. We show tread in 32nds and an estimated life-left percentage on each listing.' },
+  { q:'How do I know a seller is trustworthy?', a:'Sellers build a public profile with ratings and reviews from past buyers. Verified Pro sellers have an active subscription and a track record. You can message any seller directly, and report or block anyone who seems off.' },
+  { q:'How does payment and pickup work?', a:'TireTrader connects local buyers and sellers — you arrange payment and pickup directly, just like a local marketplace. Meet in a public place, inspect the tires in person, and pay once you’re satisfied.' },
+];
+const SELLER_BENEFITS = [
+  { title:'Move inventory faster', body:'Reach buyers actively searching by size, vehicle, and location — not scrolling a general feed.', icon:'⚡' },
+  { title:'No Marketplace chaos', body:'Structured tire listings with size, tread, and DOT fields. No lowball DMs about unrelated items.', icon:'🛡️' },
+  { title:'Built-in buyer messaging', body:'Negotiate and field offers without handing out your personal number.', icon:'💬' },
+  { title:'Seller dashboard & analytics', body:'Track views, conversations, and inventory value over time in one place.', icon:'📊' },
+  { title:'Verified Pro badge', body:'Stand out with a trusted seller badge and priority placement in search.', icon:'⭐' },
+  { title:'$10/month, cancel anytime', body:'No per-listing fees and no contracts. Your first year is free.', icon:'🏷️' },
+];
+const BUYER_CHECKLIST = [
+  ['Tread depth','Measure or read the listing — aim for 6/32" or more for meaningful life. 4/32" is the practical floor; 2/32" is legally worn out.'],
+  ['DOT / age','Find the DOT date code. Avoid tires older than 6 years even if the tread looks good — rubber hardens and cracks with age.'],
+  ['Even wear','Wear should be uniform across the tread. Feathering or one-sided wear hints at alignment or suspension issues on the previous car.'],
+  ['No damage','Check for bulges, sidewall cracks, exposed cords, and plug/patch repairs. A single proper patch can be fine; multiple repairs are a pass.'],
+  ['Matching set','For best handling, buy tires of the same brand, model, size, and similar tread depth — especially on AWD vehicles.'],
+  ['Inspect in person','Meet in a public place, look the tires over in daylight, and only pay once you’re satisfied.'],
+];
+function Faq({ items }) {
+  return <div className="divide-y divide-white/5">{items.map((it,i)=>(
+    <details key={i} className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-100"><span>{it.q}</span><svg viewBox="0 0 20 20" className="h-5 w-5 shrink-0 fill-slate-400 transition group-open:rotate-180"><path d="M5 7l5 5 5-5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg></summary><p className="mt-2 text-sm leading-relaxed text-slate-400">{it.a}</p></details>
+  ))}</div>;
+}
 function matchSearch(l, p){
   if(p.state && l.state!==String(p.state).toUpperCase()) return false;
   if(p.brand && l.brand!==p.brand) return false;
@@ -415,32 +469,35 @@ function PromoteBtn({ l }) {
   const { togglePromote } = useApp();
   return <button onClick={()=>togglePromote(l.id)} className={`btn px-3 py-1.5 ${l.featured?'bg-accent-500 text-ink-950 hover:bg-accent-400':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'}`} title="Promote to the top of search (demo: free)">★ {l.featured?'Featured':'Promote'}</button>;
 }
-function Card({ l }) {
+function Card({ l, distance=null }) {
   const { db } = useApp();
-  const isNew = l.condition === 'new';
   const sellerPro = db.users.find(u=>u.id===l.sellerId)?.pro;
+  const cond = conditionMeta(l.condition);
+  const tread = treadLabel(l.treadDepth);
+  const age = tireAge(l.dotYear);
+  const dist = milesLabel(distance);
   return (
-    <div className="card card-hover group relative block overflow-hidden">
+    <div className="card card-hover group relative flex flex-col overflow-hidden">
       <Heart lid={l.id} className="absolute right-2.5 top-2.5 z-10" />
-      <a href={`#/listings/${l.id}`} className="block">
+      <a href={`#/listings/${l.id}`} className="flex flex-1 flex-col" aria-label={`${l.brand} ${l.size} — ${fmt(l.priceCents)}`}>
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
-          <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size}`} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
+          <img src={tireSVG(l.brand, l.size, l.condition, l.photoIdx)} alt={`${l.brand} ${l.size} tires`} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]" />
           <div className="absolute inset-x-0 top-0 flex flex-wrap items-start gap-1.5 p-2.5">
-            {l.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}
-            {sellerPro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
-            <span className={isNew ? 'badge-new' : 'badge-used'}>{isNew ? 'New' : 'Used'}</span>
-            {l.status === 'sold' && <span className="badge bg-ink-900/90 text-white">Sold</span>}
+            {l.featured && <Badge tone="featured">★ Featured</Badge>}
+            {sellerPro && <Badge tone="pro">PRO</Badge>}
+            <Badge tone={cond.tone}>{cond.label}</Badge>
+            {l.status === 'sold' && <Badge tone="sold">Sold</Badge>}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent p-2.5"><span className="font-mono text-sm font-semibold text-white drop-shadow">{l.size}</span></div>
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/70 to-transparent p-2.5"><span className="font-mono text-sm font-semibold text-white drop-shadow">{l.size}</span>{dist && <span className="rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">{dist}</span>}</div>
         </div>
-        <div className="p-3.5">
+        <div className="flex flex-1 flex-col p-3.5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-display font-bold leading-tight text-white">{l.brand}</h3>
-            <span className="whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>
+            <div className="text-right"><span className="block whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>{l.quantity>1 && <span className="block text-[11px] text-slate-400">{fmt(perTire(l.priceCents,l.quantity))}/tire</span>}</div>
           </div>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-400"><span>Qty {l.quantity}</span>{l.treadDepth && <span className="text-slate-600">·</span>}{l.treadDepth && <span>{l.treadDepth} tread</span>}</div>
-          {(l.season || l.runFlat) && <div className="mt-2 flex flex-wrap gap-1">{l.season && <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-inset ring-white/10">{SEASON_LABEL[l.season]||l.season}</span>}{l.runFlat && <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">Run-flat</span>}</div>}
-          <p className="mt-2 truncate text-xs text-slate-500">📍 {l.location}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300"><span>Qty {l.quantity}</span>{tread && <><span className="text-slate-600">·</span><span>{tread}</span></>}{age && <><span className="text-slate-600">·</span><span>DOT {l.dotYear}{age.aging?' ⚠':''}</span></>}</div>
+          {(l.season || l.runFlat) && <div className="mt-2 flex flex-wrap gap-1">{l.season && <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-inset ring-white/10">{seasonLabel(l.season)}</span>}{l.runFlat && <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">Run-flat</span>}</div>}
+          <div className="mt-auto flex items-center justify-between gap-2 pt-3"><p className="flex min-w-0 items-center gap-1 text-xs text-slate-400"><span aria-hidden="true">📍</span><span className="truncate">{l.location}</span></p><span className="shrink-0 text-xs font-semibold text-brand-300 transition group-hover:text-brand-200">View →</span></div>
         </div>
       </a>
     </div>
@@ -664,12 +721,92 @@ function SavedSearches() {
   );
 }
 
-function Landing({ force }) {
+function HeroSearch({ homeState }) {
+  const [tab, setTab] = useState('size');
+  const tabs = [['size','By tire size'],['vehicle','By vehicle'],['near','Near me']];
+  return (
+    <div className="rounded-2xl border border-white/10 bg-ink-900/70 p-2 backdrop-blur">
+      <div role="tablist" aria-label="Find tires" className="flex gap-1 rounded-xl bg-black/20 p-1">
+        {tabs.map(([k,lbl])=><button key={k} role="tab" aria-selected={tab===k} onClick={()=>setTab(k)} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${tab===k?'bg-white text-ink-950 shadow':'text-slate-300 hover:text-white'}`}>{lbl}</button>)}
+      </div>
+      <div className="p-3">
+        {tab==='size' && <HeroSize homeState={homeState} />}
+        {tab==='vehicle' && <HeroVehicle homeState={homeState} />}
+        {tab==='near' && <HeroNear homeState={homeState} />}
+      </div>
+    </div>
+  );
+}
+function HeroSize({ homeState }) {
+  const [size, setSize] = useState('');
+  const go = (e) => { e.preventDefault(); const sp=new URLSearchParams(); if(size.trim()) sp.set('q',size.trim()); if(homeState) sp.set('state',homeState); navigate('/browse'+(sp.toString()?'?'+sp:'')); };
+  return <form onSubmit={go} className="flex flex-col gap-2 sm:flex-row"><div className="relative flex-1"><svg viewBox="0 0 20 20" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-slate-400"><path d="M9 3a6 6 0 1 0 3.7 10.7l3.3 3.3 1.4-1.4-3.3-3.3A6 6 0 0 0 9 3Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></svg><label htmlFor="hero-size" className="sr-only">Tire size or brand</label><input id="hero-size" value={size} onChange={e=>setSize(e.target.value)} placeholder="Enter a size like 225/45R17 or a brand" className="input pl-10 text-base" /></div><button className="btn-primary px-6 text-base">Search tires</button></form>;
+}
+function HeroVehicle({ homeState }) {
+  const [mk,setMk]=useState(''),[md,setMd]=useState(''),[yr,setYr]=useState('');
+  const models=mk?fitModels(mk):[], years=mk&&md?fitYears(mk,md):[], size=mk&&md&&yr?fitSize(mk,md,yr):null;
+  const go=()=>{ if(!size) return; const sp=new URLSearchParams({size,fits:`${yr} ${mk} ${md}`}); if(homeState) sp.set('state',homeState); navigate('/browse?'+sp); };
+  return <div><div className="grid gap-2 sm:grid-cols-4"><select aria-label="Make" className="input" value={mk} onChange={e=>{setMk(e.target.value);setMd('');setYr('');}}><option value="">Make</option>{FIT_MAKES.map(m=><option key={m} value={m}>{m}</option>)}</select><select aria-label="Model" className="input" value={md} disabled={!mk} onChange={e=>{setMd(e.target.value);setYr('');}}><option value="">Model</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select><select aria-label="Year" className="input" value={yr} disabled={!md} onChange={e=>setYr(e.target.value)}><option value="">Year</option>{years.map(y=><option key={y} value={y}>{y}</option>)}</select><button onClick={go} disabled={!size} className="btn-primary">{size?`Find ${size}`:'Find tires'}</button></div>{size && <p className="mt-2 text-sm text-slate-400">Your {yr} {mk} {md} uses <span className="font-mono font-semibold text-brand-300">{size}</span>.</p>}</div>;
+}
+function HeroNear({ homeState }) {
+  const [locating,setLocating]=useState(false); const [err,setErr]=useState('');
+  const go=()=>{ if(!navigator.geolocation){ setErr("Location isn't available on this device."); return; } setLocating(true); setErr(''); navigator.geolocation.getCurrentPosition(p=>{ const sp=new URLSearchParams({lat:p.coords.latitude.toFixed(4),lng:p.coords.longitude.toFixed(4),radius:'50',near:'me'}); navigate('/browse?'+sp); }, ()=>{ setLocating(false); setErr("Couldn't get your location. Try browsing by state."); }, {timeout:8000}); };
+  return <div className="flex flex-col gap-2 sm:flex-row sm:items-center"><button onClick={go} disabled={locating} className="btn-primary px-5"><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>{locating?'Locating…':'Use my location'}</button><span className="text-sm text-slate-400">or <a href={homeState?`#/browse?state=${homeState}`:'#/states'} className="font-semibold text-brand-300 hover:text-brand-200">{homeState?'browse your state':'pick your state on the map'}</a></span>{err && <p className="text-sm text-amber-300">{err}</p>}</div>;
+}
+
+function HomePage() {
+  const { db, me } = useApp();
+  const homeState = userStateOf(me);
+  const active = db.listings.filter(l => l.status === 'active' && !l.hidden);
+  const counts = {}; active.forEach(l => { if (l.state) counts[l.state] = (counts[l.state]||0)+1; });
+  const stateCount = Object.keys(counts).length;
+  const proOf = (l) => db.users.find(u=>u.id===l.sellerId)?.pro ? 1 : 0;
+  const sortRecent = (arr) => [...arr].sort((a,b)=>(b.featured-a.featured)||(proOf(b)-proOf(a))||(b.createdAt-a.createdAt));
+  let recent = sortRecent(homeState ? active.filter(l=>l.state===homeState) : active).slice(0,4);
+  const localHit = recent.length>0 && !!homeState;
+  if (recent.length===0) recent = sortRecent(active).slice(0,4);
+  const TRUST = [['📍','Local tire inventory','Browse new & used sets from resellers in your state.'],['💬','Message sellers directly','Ask questions and make offers without sharing your number.'],['🔔','Save searches','Get notified when matching tires are listed near you.'],['🛡️','Verified Pro sellers','Ratings, reviews, and trusted-seller badges you can vet.']];
+  return (
+    <div className="space-y-14">
+      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white">
+        <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" />
+        <div className="relative px-5 py-10 sm:px-10 sm:py-14">
+          <div className="max-w-2xl animate-fadeup">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{active.length} tire sets listed across {stateCount} states</span>
+            <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tire sets from <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">trusted local resellers</span>.</h1>
+            <p className="mt-4 max-w-xl text-lg text-slate-300">New and used tires from real sellers near you — searchable by size, vehicle, or location. Browsing is always free.</p>
+          </div>
+          <div className="mt-6 max-w-2xl"><HeroSearch homeState={homeState} /></div>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300"><a href={homeState?`#/browse?state=${homeState}`:'#/browse'} className="font-semibold text-white underline-offset-4 hover:underline">{homeState?`Browse ${stateName(homeState)} tires →`:'Browse all listings →'}</a><a href="#/states" className="hover:text-white">Open the map</a><a href="#/guide" className="hover:text-white">Used-tire buying guide</a></div>
+        </div>
+      </section>
+
+      <section><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{TRUST.map(([ic,t,b])=><div key={t} className="card p-5"><span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg">{ic}</span><p className="font-display font-bold text-white">{t}</p><p className="mt-1 text-sm text-slate-400">{b}</p></div>)}</div></section>
+
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-3"><div><p className="eyebrow">Fresh inventory</p><h2 className="font-display text-2xl font-extrabold text-white">{localHit?`New near you in ${stateName(homeState)}`:'Recently listed'}</h2></div><a href={homeState?`#/browse?state=${homeState}`:'#/browse'} className="btn-secondary shrink-0">View all</a></div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{recent.map(l=><Card key={l.id} l={l} />)}</div>
+      </section>
+
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-white">
+        <div className="tread absolute inset-0 opacity-20" />
+        <div className="relative flex flex-col items-start gap-5 px-6 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+          <div className="max-w-xl"><p className="text-sm font-semibold text-brand-100">For resellers</p><h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">Sell tire inventory for $10/month</h2><p className="mt-2 text-white/80">Move sets faster without the Facebook Marketplace chaos. List unlimited tires, message buyers, and track your sales. <span className="font-semibold text-white">First year free.</span></p></div>
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end"><a href="#/sell-tires" className="btn bg-white text-ink-950 hover:bg-slate-100">Start selling</a><span className="text-xs text-white/70">$10/month · cancel anytime</span></div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <div><p className="eyebrow">Buyer FAQ</p><h2 className="mt-1 font-display text-2xl font-extrabold text-white">Buying used tires, demystified</h2><p className="mt-2 text-sm text-slate-400">Everything you need to vet a set with confidence. Want the full checklist? <a href="#/guide" className="font-semibold text-brand-300 hover:text-brand-200">Read the buying guide</a>.</p><div className="mt-4 hidden lg:flex"><Logo cls="h-24 w-24 opacity-80" /></div></div>
+        <div className="card px-5 py-2"><Faq items={BUYER_FAQ} /></div>
+      </section>
+    </div>
+  );
+}
+
+function StatesPage() {
   const { db, me } = useApp();
   const selected = userStateOf(me);
-  // Logged-in members with a home state skip the map and go to their listings.
-  useEffect(() => { if (!force && me && selected) navigate('/browse?state=' + selected); }, [force, me, selected]);
-  if (!force && me && selected) return null;
   const activeListings = db.listings.filter(l => l.status === 'active');
   const counts = {}; activeListings.forEach(l => { if (l.state) counts[l.state] = (counts[l.state]||0)+1; });
   const statesWith = Object.keys(counts).length;
@@ -720,58 +857,85 @@ function Marketplace({ params }) {
   if (runFlat) list = list.filter(l => l.runFlat);
   if (maxPrice) list = list.filter(l => l.priceCents <= Math.round(Number(maxPrice) * 100));
   if (q) { const Q = q.toLowerCase(); list = list.filter(l => [l.brand,l.size,l.location,l.description].join(' ').toLowerCase().includes(Q)); }
-  if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(proOf(b.l)-proOf(a.l))||(a.d-b.d)).map(x=>x.l); }
+  if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(proOf(b.l)-proOf(a.l))||(a.d-b.d)).map(x=>({...x.l, _distance:x.d})); }
   else list = [...list].sort((a,b) => (b.featured-a.featured) || (proOf(b)-proOf(a)) || (sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt));
 
-  const scope = near ? `Within ${radius} mi of you` : st ? `Tires in ${stateName(st)}` : 'All listings';
+  const place = near ? 'near you' : st ? `in ${stateName(st)}` : 'nationwide';
+
+  const [drawer, setDrawer] = useState(false);
+  useEffect(()=>{ document.body.style.overflow = drawer?'hidden':''; return ()=>{ document.body.style.overflow=''; }; }, [drawer]);
+
+  // Removable chips from active local filter state.
+  const chips = [];
+  if (q) chips.push(['“'+q+'”', ()=>setQ('')]);
+  if (brand) chips.push([brand, ()=>setBrand('')]);
+  if (cond) chips.push([cond==='new'?'New':'Used', ()=>setCond('')]);
+  if (size) chips.push([size, ()=>setSize('')]);
+  if (maxPrice) chips.push(['Under $'+maxPrice, ()=>setMaxPrice('')]);
+  if (season) chips.push([seasonLabel(season), ()=>setSeason('')]);
+  if (runFlat) chips.push(['Run-flat', ()=>setRunFlat(false)]);
+  if (near) chips.push(['Within '+radius+' mi', ()=>setNear(null)]);
+  const activeCount = chips.length;
+  const clearAll = () => { setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setNear(null); };
+
+  const onSave = () => { const sp=new URLSearchParams(); if(st)sp.set('state',st); if(brand)sp.set('brand',brand); if(cond)sp.set('condition',cond); if(size)sp.set('size',size); if(maxPrice)sp.set('maxPrice',maxPrice); if(season)sp.set('season',season); if(runFlat)sp.set('runFlat','1'); if(q)sp.set('q',q); saveSearch(sp.toString()); setSavedSearch(true); };
+
+  const filterPanel = (desktop) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-2">
+        <button type="button" onClick={near?()=>setNear(null):useMyLocation} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center text-[11px] font-semibold ring-1 ring-inset transition ${near?'bg-brand-600 text-white ring-brand-400':'bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10'}`}><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>{locating?'…':near?'Near me ✓':'Near me'}</button>
+        <a href="#/states" className="flex flex-col items-center gap-1 rounded-xl bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10"><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>Change state</a>
+        <a href="#/states" className="flex flex-col items-center gap-1 rounded-xl bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10"><svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>By vehicle</a>
+      </div>
+      {near && <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Search radius</p><select className="input" value={radius} onChange={e=>setRadius(e.target.value)}><option value="25">25 miles</option><option value="50">50 miles</option><option value="100">100 miles</option><option value="250">250 miles</option></select></div>}
+      {desktop && <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Search</p><div className="relative"><label htmlFor="d-search" className="sr-only">Search tires</label><input id="d-search" value={q} onChange={e=>setQ(e.target.value)} placeholder="Size, brand, location…" className="input" /></div></div>}
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Sort by</p><select className="input" value={sort} onChange={e=>setSort(e.target.value)}><option value="">Newest first</option><option value="price_asc">Price: Low → High</option><option value="price_desc">Price: High → Low</option></select></div>
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Condition</p><div className="grid grid-cols-3 gap-1.5">{[['','All'],['new','New'],['used','Used']].map(([v,lbl])=><button key={v} type="button" onClick={()=>setCond(v)} className={`rounded-lg px-2 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${cond===v?'bg-brand-600 text-white ring-brand-400':'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'}`}>{lbl}</button>)}</div></div>
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Brand</p><select className="input" value={brand} onChange={e=>setBrand(e.target.value)}><option value="">All brands</option>{brands.map(b=><option key={b} value={b}>{b}</option>)}</select></div>
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Tire size</p><input className="input" placeholder="e.g. 225/45R17 or R17" value={size} onChange={e=>setSize(e.target.value)} /></div>
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Max price</p><input className="input" type="number" min="0" placeholder="Any" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} /></div>
+      <div><p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-slate-400">Season</p><select className="input" value={season} onChange={e=>setSeason(e.target.value)}><option value="">Any season</option><option value="all-season">All-season</option><option value="summer">Summer</option><option value="winter">Winter</option><option value="all-weather">All-weather</option></select></div>
+      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200"><input type="checkbox" checked={runFlat} onChange={e=>setRunFlat(e.target.checked)} className="h-4 w-4 accent-brand-500" />Run-flat only</label>
+      <button type="button" onClick={onSave} disabled={savedSearch} className="btn-secondary w-full justify-center"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>{savedSearch?'Search saved ✓':'Save this search'}</button>
+    </div>
+  );
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/states" className="hover:text-brand-300">Map</a><span>/</span><span className="font-medium text-slate-200">{near ? 'Near me' : st ? stateName(st) : 'All states'}</span></nav>
-          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{scope}</h1>
-          <p className="text-sm text-slate-400">{list.length} tire set{list.length!==1?'s':''}{filtered ? ' match your filters' : ' available'}</p>
+          <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb"><a href="#/" className="hover:text-brand-300">Home</a><span aria-hidden="true">/</span><a href="#/states" className="hover:text-brand-300">Map</a><span aria-hidden="true">/</span><span className="font-medium text-slate-200">{near ? 'Near me' : st ? stateName(st) : 'All states'}</span></nav>
+          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{list.length} tire set{list.length!==1?'s':''} {place}</h1>
+          <p className="text-sm text-slate-400">New &amp; used sets from local resellers — message sellers directly.</p>
         </div>
-        <a href="#/states" className="btn-secondary"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>{st ? 'Change state' : 'Open map'}</a>
+        <a href="#/states" className="btn-secondary shrink-0"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>{st ? 'Change state' : 'Open map'}</a>
       </div>
 
       {fits && size && <div className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30"><span>🚗</span>Showing <span className="font-mono font-semibold">{size}</span> — fits your <span className="font-semibold">{fits}</span>.</div>}
 
-      <div id="listings" className="card p-3 sm:p-4">
-        <form onSubmit={e=>e.preventDefault()} className="flex gap-2">
-          <div className="relative flex-1">
-            <svg viewBox="0 0 20 20" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-slate-400"><path d="M9 3a6 6 0 1 0 3.7 10.7l3.3 3.3 1.4-1.4-3.3-3.3A6 6 0 0 0 9 3Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" /></svg>
-            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search brand, size (225/45R17), or location…" className="input pl-10" />
-          </div>
-        </form>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-          <select className="input" value={brand} onChange={e=>setBrand(e.target.value)}><option value="">All brands</option>{brands.map(b=><option key={b} value={b}>{b}</option>)}</select>
-          <select className="input" value={cond} onChange={e=>setCond(e.target.value)}><option value="">New &amp; Used</option><option value="new">New</option><option value="used">Used</option></select>
-          <input className="input" placeholder="Size e.g. R17" value={size} onChange={e=>setSize(e.target.value)} />
-          <input className="input" placeholder="Max $" type="number" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} />
-          <select className="input" value={sort} onChange={e=>setSort(e.target.value)}><option value="">Sort: Newest</option><option value="price_asc">Price: Low → High</option><option value="price_desc">Price: High → Low</option></select>
+      {/* Mobile search + filter bar */}
+      <div className="sticky top-16 z-20 -mx-4 border-b border-white/10 bg-ink-950/85 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <div className="flex gap-2">
+          <div className="relative flex-1"><svg viewBox="0 0 20 20" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-slate-400"><path d="M9 3a6 6 0 1 0 3.7 10.7l3.3 3.3 1.4-1.4-3.3-3.3A6 6 0 0 0 9 3Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></svg><label htmlFor="m-search" className="sr-only">Search tires</label><input id="m-search" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search size or brand" className="input pl-10" /></div>
+          <button type="button" onClick={()=>setDrawer(true)} className="btn-secondary relative shrink-0" aria-label="Open filters"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M3 5h14v2H3V5Zm3 4h8v2H6V9Zm2 4h4v2H8v-2Z"/></svg>Filters{activeCount>0 && <span className="ml-1 rounded-full bg-brand-500 px-1.5 text-[10px] font-bold text-white">{activeCount}</span>}</button>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={near?()=>setNear(null):useMyLocation} className={`btn ${near?'bg-brand-600 text-white':'bg-white/5 text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10'} px-3 py-1.5`}><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>{locating?'Locating…':near?'Near me ✓':'Near me'}</button>
-          {near && <select className="input w-auto py-1.5" value={radius} onChange={e=>setRadius(e.target.value)}><option value="25">25 mi</option><option value="50">50 mi</option><option value="100">100 mi</option><option value="250">250 mi</option></select>}
-          <button type="button" onClick={()=>setMore(m=>!m)} className="btn-ghost px-3 py-1.5">{more?'Fewer filters':'More filters'}</button>
-          <button type="button" onClick={()=>{ const sp=new URLSearchParams(); if(st)sp.set('state',st); if(brand)sp.set('brand',brand); if(cond)sp.set('condition',cond); if(size)sp.set('size',size); if(maxPrice)sp.set('maxPrice',maxPrice); if(season)sp.set('season',season); if(runFlat)sp.set('runFlat','1'); if(q)sp.set('q',q); saveSearch(sp.toString()); setSavedSearch(true); }} disabled={savedSearch} className="btn-ghost px-3 py-1.5"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>{savedSearch?'Saved ✓':'Save search'}</button>
-        </div>
-        {more && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <select className="input" value={season} onChange={e=>setSeason(e.target.value)}><option value="">Any season</option><option value="all-season">All-season</option><option value="summer">Summer</option><option value="winter">Winter</option><option value="all-weather">All-weather</option></select>
-          <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-slate-200"><input type="checkbox" checked={runFlat} onChange={e=>setRunFlat(e.target.checked)} className="h-4 w-4 accent-brand-500" />Run-flat only</label>
-        </div>}
-        {filtered && <button onClick={()=>{setQ('');setBrand('');setCond('');setSize('');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setNear(null);}} className="mt-3 text-sm font-medium text-slate-400 hover:text-brand-300">✕ Clear all filters</button>}
       </div>
 
-      <RecentlyViewed />
+      {chips.length>0 && <div className="flex flex-wrap items-center gap-2">{chips.map(([lbl,clr],i)=><button key={i} onClick={clr} className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-brand-400/30 transition hover:bg-brand-500/25" aria-label={`Remove filter ${lbl}`}>{lbl}<svg viewBox="0 0 16 16" className="h-3 w-3 fill-current"><path d="M4.3 4.3a1 1 0 0 1 1.4 0L8 6.6l2.3-2.3a1 1 0 1 1 1.4 1.4L9.4 8l2.3 2.3a1 1 0 0 1-1.4 1.4L8 9.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L6.6 8 4.3 5.7a1 1 0 0 1 0-1.4Z"/></svg></button>)}<button onClick={clearAll} className="text-xs font-medium text-slate-400 underline-offset-2 hover:text-brand-300 hover:underline">Clear all</button></div>}
 
-      {list.length === 0 ? (
-        <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{list.map(l => <Card key={l.id} l={l} />)}</div>
-      )}
+      <div className="lg:grid lg:grid-cols-[260px_1fr] lg:gap-6">
+        <aside className="hidden lg:block"><div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">{filterPanel(true)}</div></aside>
+        <div className="min-w-0 space-y-4">
+          <RecentlyViewed />
+          {list.length === 0 ? (
+            <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{list.map(l => <Card key={l.id} l={l} distance={l._distance ?? null} />)}</div>
+          )}
+        </div>
+      </div>
+
+      {drawer && <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters"><div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={()=>setDrawer(false)} /><div className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm flex-col bg-ink-950 shadow-2xl"><div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><p className="font-display text-lg font-bold text-white">Filters</p><button onClick={()=>setDrawer(false)} className="btn-ghost px-3 py-1.5">Done</button></div><div className="flex-1 overflow-y-auto p-4">{filterPanel(false)}</div></div></div>}
     </div>
   );
 }
@@ -788,52 +952,69 @@ function Detail({ id }) {
   if (!l) return <Empty title="Listing not found" />;
   const seller = db.users.find(u => u.id === l.sellerId);
   const isOwner = me && me.id === l.sellerId;
-  const isNew = l.condition === 'new';
+  const cond = conditionMeta(l.condition);
+  const isUsed = l.condition !== 'new';
   const threadCount = db.threads.filter(t => t.listingId === l.id).length;
   const sr = sellerRating(l.sellerId);
+  const age = tireAge(l.dotYear);
+  const lifePct = treadLifePct(l.treadDepth);
+  const specs = [['Brand',l.brand],['Size',l.size],['Quantity',`${l.quantity} tire${l.quantity>1?'s':''}`],['Condition',cond.label],['Tread depth',treadLabel(l.treadDepth)||'—'], l.season&&['Season',seasonLabel(l.season)], (l.loadIndex||l.speedRating)&&['Load / Speed',`${l.loadIndex||'—'}${l.speedRating||''}`],['Run-flat',l.runFlat?'Yes':'No'], l.dotYear&&['DOT year',`${l.dotYear}${age?` · ${age.label}`:''}`],['Total price',fmt(l.priceCents)], l.quantity>1&&['Price per tire',fmt(perTire(l.priceCents,l.quantity))]].filter(Boolean);
   return (
-    <div className="space-y-4">
-      <nav className="flex items-center gap-1.5 text-sm text-slate-400"><a href="#/" className="hover:text-brand-300">Marketplace</a><span>/</span><span className="truncate font-medium text-slate-200">{l.brand} {l.size}</span></nav>
+    <div className="space-y-5">
+      <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb"><a href="#/browse" className="hover:text-brand-300">Marketplace</a><span aria-hidden="true">/</span>{l.state && <><a href={`#/browse?state=${l.state}`} className="hover:text-brand-300">{l.location}</a><span aria-hidden="true">/</span></>}<span className="truncate font-medium text-slate-200">{l.brand} {l.size}</span></nav>
       <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3"><div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-900"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div></div>
+        <div className="lg:col-span-3"><div className="aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink-900"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt={`${l.brand} ${l.size} tires`} className="h-full w-full object-cover" /></div></div>
         <div className="space-y-4 lg:col-span-2">
           <div className="card p-5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">{l.featured && <span className="badge bg-accent-500 text-ink-950">★ Featured</span>}<span className={isNew?'badge-new':'badge-used'}>{isNew?'New':'Used'}</span>{l.status==='sold' && <span className="badge bg-ink-900 text-white">Sold</span>}</div>
+              <div className="flex flex-wrap items-center gap-2">{l.featured && <Badge tone="featured">★ Featured</Badge>}{seller.pro && <Badge tone="pro">PRO</Badge>}<Badge tone={cond.tone}>{cond.label}</Badge>{l.status==='sold' && <Badge tone="sold">Sold</Badge>}</div>
               {!isOwner && <Heart lid={l.id} />}
             </div>
             <h1 className="mt-3 font-display text-2xl font-extrabold text-white">{l.brand}</h1>
             <p className="font-mono text-lg text-slate-400">{l.size}</p>
-            <p className="mt-3 font-display text-4xl font-extrabold text-white">{fmt(l.priceCents)}<span className="ml-2 align-middle text-sm font-medium text-slate-500">for {l.quantity}</span></p>
+            <p className="mt-3 font-display text-4xl font-extrabold text-white">{fmt(l.priceCents)}<span className="ml-2 align-middle text-sm font-medium text-slate-400">for {l.quantity}</span></p>
+            {l.quantity>1 && <p className="text-sm text-slate-400">{fmt(perTire(l.priceCents,l.quantity))} per tire</p>}
             <dl className="mt-4 grid grid-cols-2 gap-2.5">
-              <Spec k="Quantity" v={l.quantity} /><Spec k="Condition" v={isNew?'New':'Used'} /><Spec k="Tread depth" v={l.treadDepth||'—'} /><Spec k="Per tire" v={fmt(Math.round(l.priceCents/l.quantity))} />
-              {l.season && <Spec k="Season" v={SEASON_LABEL[l.season]||l.season} />}
-              {(l.loadIndex||l.speedRating) && <Spec k="Load / Speed" v={`${l.loadIndex||'—'}${l.speedRating||''}`} />}
-              {l.runFlat && <Spec k="Run-flat" v="Yes" />}
-              {l.dotYear && <Spec k="Mfg. year" v={`${l.dotYear} · ${new Date().getFullYear()-l.dotYear}y old`} />}
+              <Spec k="Quantity" v={l.quantity} /><Spec k="Tread" v={treadLabel(l.treadDepth)||'—'} h={lifePct!=null?`~${lifePct}% life`:null} />
+              {l.season && <Spec k="Season" v={seasonLabel(l.season)} />}
+              {l.dotYear && <Spec k="DOT year" v={l.dotYear} h={age?.label} warn={age?.aging} />}
             </dl>
-            <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-400">📍 {l.location}</p>
+            <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-300">📍 {l.location} · Local pickup</p>
           </div>
-          {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Description</h2><p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-400">{l.description}</p></div>}
-          <a href={`#/sellers/${seller.id}`} className="card flex items-center gap-3 p-4 transition hover:border-white/20">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials(seller.name)}</span>
-            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{seller.name}</p><div className="flex items-center gap-1.5 text-xs text-slate-400"><Stars value={sr.avg} size="h-3 w-3" /><span>{sr.count?`${sr.avg.toFixed(1)} (${sr.count})`:'No reviews yet'}</span></div><p className="text-xs text-slate-500">{seller.location} · Listed {timeAgo(l.createdAt)}</p></div>
-            <span className="text-slate-500">›</span>
+          <a href={`#/sellers/${seller.id}`} className="card block p-4 transition hover:border-white/20">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials(seller.name)}</span>
+              <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate font-semibold text-white">{seller.name}</p>{seller.pro && <Badge tone="pro"><svg viewBox="0 0 20 20" className="h-3 w-3 fill-current"><path d="M10 1l2.4 1.7 2.9-.2.9 2.8 2.4 1.7-.9 2.8.9 2.8-2.4 1.7-.9 2.8-2.9-.2L10 19l-2.4-1.7-2.9.2-.9-2.8L1.4 13l.9-2.8L1.4 7.4l2.4-1.7.9-2.8 2.9.2L10 1z"/></svg>Verified Pro</Badge>}</div><div className="flex items-center gap-1.5 text-xs text-slate-400"><Stars value={sr.avg} size="h-3 w-3" /><span>{sr.count?`${sr.avg.toFixed(1)} (${sr.count} review${sr.count>1?'s':''})`:'No reviews yet'}</span></div></div>
+              <span className="text-slate-500" aria-hidden="true">›</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400"><span>📅 Listed {timeAgo(l.createdAt)}</span>{seller.pro && <span>⚡ Usually responds within a day</span>}<span>📍 {seller.location||l.location}</span></div>
           </a>
           {isOwner ? (
             <div className="card p-5"><p className="mb-3 text-sm font-bold text-slate-200">Your listing</p><div className="mb-4 grid grid-cols-2 gap-2.5"><Spec k="Views" v={l.views} /><Spec k="Conversations" v={threadCount} /></div>
-              <div className="flex gap-2"><a href={`#/sell/${l.id}`} className="btn-secondary flex-1">Edit listing</a><DeleteBtn id={l.id} /></div></div>
+              <div className="flex gap-2"><a href={`#/sell/${l.id}`} className="btn-secondary flex-1 justify-center">Edit listing</a><DeleteBtn id={l.id} /></div></div>
           ) : me ? (
             <MessageSeller listing={l} />
           ) : (
             <div className="card p-5 text-center"><p className="text-sm text-slate-400">Log in to message the seller and make an offer.</p><a href="#/login" className="btn-primary mt-3 w-full">Log in to message</a></div>
           )}
-          <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center justify-between gap-2">
             <ShareBtn brand={l.brand} size={l.size} />
             {!isOwner && <ReportBtn lid={l.id} />}
           </div>
         </div>
       </div>
+
+      <div className="grid gap-5 lg:grid-cols-5">
+        <div className="space-y-5 lg:col-span-3">
+          {l.description && <div className="card p-5"><h2 className="text-sm font-bold text-slate-200">Seller's description</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{l.description}</p></div>}
+          <div className="card overflow-hidden"><h2 className="border-b border-white/10 bg-white/[0.02] px-5 py-3 text-sm font-bold text-slate-200">Tire specifications</h2><dl className="divide-y divide-white/5">{specs.map(([k,v])=><div key={k} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm"><dt className="text-slate-400">{k}</dt><dd className="font-semibold text-slate-100">{v}</dd></div>)}</dl></div>
+        </div>
+        <div className="space-y-5 lg:col-span-2">
+          <div className="card p-5"><div className="flex items-center gap-2"><Badge tone={cond.tone}>{cond.label}</Badge><h2 className="text-sm font-bold text-slate-200">What this means</h2></div><p className="mt-2 text-sm leading-relaxed text-slate-400">{cond.blurb}</p>{lifePct!=null && <div className="mt-3"><div className="flex items-center justify-between text-xs text-slate-400"><span>Estimated tread life left</span><span className="font-semibold text-slate-200">~{lifePct}%</span></div><div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${lifePct>=60?'bg-emerald-500':lifePct>=30?'bg-amber-500':'bg-rose-500'}`} style={{width:`${Math.max(4,lifePct)}%`}} /></div></div>}</div>
+          <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-5"><h2 className="flex items-center gap-2 text-sm font-bold text-amber-200"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>Before you buy{isUsed?' used tires':''}</h2><ul className="mt-2 space-y-1.5 text-sm text-amber-100/80"><li>• Inspect in person for cracks, bulges, and uneven wear.</li><li>• Confirm the DOT date — avoid tires over ~6 years old.</li><li>• Meet in a public place and pay only once satisfied.</li></ul><a href="#/guide" className="mt-3 inline-block text-sm font-semibold text-amber-200 underline-offset-2 hover:underline">Read the full buying guide →</a></div>
+        </div>
+      </div>
+
       {(() => {
         const cand = db.listings.filter(x => x.status==='active' && x.id!==l.id && (x.size===l.size || x.brand===l.brand));
         const similar = cand.sort((a,b)=>((b.size===l.size)-(a.size===l.size))||(b.featured-a.featured)).slice(0,4);
@@ -844,7 +1025,7 @@ function Detail({ id }) {
     </div>
   );
 }
-function Spec({ k, v }) { return <div className="rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10"><dt className="text-xs text-slate-400">{k}</dt><dd className="font-semibold text-slate-100">{v}</dd></div>; }
+function Spec({ k, v, h, warn }) { return <div className="rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10"><dt className="text-xs text-slate-400">{k}</dt><dd className="font-semibold text-slate-100">{v}{h && <span className={`ml-1 text-xs font-medium ${warn?'text-amber-300':'text-slate-400'}`}>· {h}</span>}</dd></div>; }
 function DeleteBtn({ id }) { const { update } = useApp(); return <button onClick={()=>{ if(confirm('Delete this listing?')){ update(d=>{ d.listings = d.listings.filter(l=>l.id!==id); }); navigate('/dashboard'); } }} className="btn-danger">Delete</button>; }
 
 function MessageSeller({ listing }) {
@@ -1143,6 +1324,66 @@ function Thread({ id }) {
   );
 }
 
+function SellTires() {
+  const { db, me } = useApp();
+  const selling = canSell(me);
+  const total = db.listings.filter(l=>l.status==='active' && !l.hidden).length;
+  const ctaHref = selling ? '#/sell' : me ? '#/subscribe' : '#/signup?role=seller';
+  const ctaLabel = selling ? 'Create a listing' : 'Start selling free';
+  const steps = [['Create your seller account','Sign up as a seller. Your first year of listing is completely free.'],['Post your tire sets','Add size, tread, DOT year, condition, and photos. Bulk-add if you’re a Pro.'],['Message buyers & sell','Field questions and offers in-app, then arrange local pickup.']];
+  return (
+    <div className="space-y-14 pb-20 lg:pb-0">
+      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white">
+        <div className="mesh absolute inset-0" /><div className="tread absolute inset-0 opacity-30" />
+        <div className="relative grid items-center gap-6 px-6 py-12 sm:px-10 lg:grid-cols-[1.5fr_1fr]">
+          <div className="animate-fadeup">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />For tire resellers</span>
+            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">Move tire inventory faster — without the <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">Marketplace chaos</span>.</h1>
+            <p className="mt-4 max-w-xl text-lg text-slate-300">List unlimited sets with real tire specs, reach buyers searching by size and vehicle, and close deals in built-in messaging. Your first year is free.</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3"><a href={ctaHref} className="btn-accent text-base">{ctaLabel}</a><span className="text-sm text-slate-300"><strong className="text-white">$10/month</strong> after year one · cancel anytime</span></div>
+          </div>
+          <div className="hidden justify-center lg:flex"><Logo cls="h-40 w-40" spin bare /></div>
+        </div>
+      </section>
+
+      <section><div className="mb-6 text-center"><p className="eyebrow">Why sell here</p><h2 className="mt-1 font-display text-2xl font-extrabold text-white sm:text-3xl">Built for tire inventory, not garage-sale clutter</h2></div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{SELLER_BENEFITS.map(b=><div key={b.title} className="card p-5"><span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg">{b.icon}</span><p className="font-display font-bold text-white">{b.title}</p><p className="mt-1 text-sm text-slate-400">{b.body}</p></div>)}</div>
+      </section>
+
+      <section className="card p-6 sm:p-8"><div className="mb-6 text-center"><p className="eyebrow">How it works</p><h2 className="mt-1 font-display text-2xl font-extrabold text-white">Listed in three steps</h2></div>
+        <ol className="grid gap-5 sm:grid-cols-3">{steps.map(([t,d],i)=><li key={t} className="rounded-2xl bg-white/[0.03] p-5 ring-1 ring-inset ring-white/10"><span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-brand-600 font-display font-bold text-white">{i+1}</span><p className="font-display font-bold text-white">{t}</p><p className="mt-1 text-sm text-slate-400">{d}</p></li>)}</ol>
+      </section>
+
+      <section className="mx-auto max-w-lg"><div className="card overflow-hidden text-center">
+        <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white"><div className="mesh absolute inset-0" /><div className="relative"><p className="text-sm font-medium text-brand-200">TireTrader Seller</p><p className="mt-1 font-display text-5xl font-extrabold">$0<span className="text-lg font-medium text-slate-400"> for year one</span></p><p className="mt-1 text-sm text-slate-400">then $10/month · cancel anytime</p></div></div>
+        <div className="p-6"><ul className="space-y-2 text-left text-sm text-slate-300">{['Unlimited listings, no per-listing fees','Built-in buyer messaging & offers','Seller dashboard with views & analytics','Verified Pro badge available'].map(t=><li key={t} className="flex gap-2"><svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-emerald-400"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>{t}</li>)}</ul><a href={ctaHref} className="btn-accent mt-6 w-full justify-center text-base">{ctaLabel}</a><p className="mt-2 text-xs text-slate-400">Buyers always browse free · {total} sets listed and counting</p></div>
+      </div></section>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-950/90 p-3 backdrop-blur-xl lg:hidden"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div className="text-sm"><p className="font-bold text-white">Sell tires — first year free</p><p className="text-xs text-slate-400">then $10/mo, cancel anytime</p></div><a href={ctaHref} className="btn-accent shrink-0">{ctaLabel}</a></div></div>
+    </div>
+  );
+}
+
+function GuidePage() {
+  const depths = [['10–12/32"','Brand new','emerald',100],['6–8/32"','Plenty of life left','emerald',70],['4–5/32"','Usable, plan ahead','amber',40],['3/32"','Replace soon','amber',20],['2/32"','Legally worn out','rose',8]];
+  const barColor = (t) => t==='emerald'?'bg-emerald-500':t==='amber'?'bg-amber-500':'bg-rose-500';
+  return (
+    <div className="mx-auto max-w-3xl space-y-12">
+      <header>
+        <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb"><a href="#/" className="hover:text-brand-300">Home</a><span aria-hidden="true">/</span><span className="font-medium text-slate-200">Buying guide</span></nav>
+        <p className="eyebrow mt-3">Buyer guide</p>
+        <h1 className="mt-1 font-display text-3xl font-extrabold text-white sm:text-4xl">What to check before buying used tires</h1>
+        <p className="mt-3 text-lg text-slate-300">Used tires can be a great deal — if you know what to look for. Here’s how to vet a set in five minutes so you drive away confident.</p>
+      </header>
+      <section><h2 className="font-display text-2xl font-extrabold text-white">The 6-point inspection</h2><ol className="mt-4 space-y-3">{BUYER_CHECKLIST.map(([t,b],i)=><li key={t} className="card flex gap-4 p-4"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 font-display font-bold text-white">{i+1}</span><div><p className="font-display font-bold text-white">{t}</p><p className="mt-0.5 text-sm leading-relaxed text-slate-400">{b}</p></div></li>)}</ol></section>
+      <section><h2 className="font-display text-2xl font-extrabold text-white">Tire condition glossary</h2><p className="mt-1 text-sm text-slate-400">What each condition label on a listing actually means.</p><div className="mt-4 grid gap-3 sm:grid-cols-2">{Object.entries(CONDITIONS).map(([k,c])=><div key={k} className="card p-4"><Badge tone={c.tone}>{c.label}</Badge><p className="mt-2 text-sm text-slate-300">{c.blurb}</p></div>)}</div></section>
+      <section className="card p-5 sm:p-6"><h2 className="font-display text-xl font-extrabold text-white">Tread depth, in plain numbers</h2><div className="mt-4 space-y-3 text-sm">{depths.map(([d,lbl,tone,pct])=><div key={d} className="flex items-center gap-3"><span className="w-20 shrink-0 font-mono font-semibold text-slate-200">{d}</span><div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${barColor(tone)}`} style={{width:`${pct}%`}} /></div><span className="w-36 shrink-0 text-right text-slate-400">{lbl}</span></div>)}</div></section>
+      <section><h2 className="font-display text-2xl font-extrabold text-white">Frequently asked questions</h2><div className="card mt-4 px-5 py-2"><Faq items={BUYER_FAQ} /></div></section>
+      <section className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-center text-white"><h2 className="font-display text-2xl font-extrabold">Ready to find your set?</h2><p className="mt-1 text-white/80">Browse new &amp; used tires from local resellers near you.</p><a href="#/browse" className="btn mt-4 bg-white text-ink-950 hover:bg-slate-100">Browse tires</a></section>
+    </div>
+  );
+}
+
 function Empty({ title }) { return <div className="mx-auto max-w-md py-16 text-center"><Logo cls="mx-auto h-14 w-14 opacity-60" /><h1 className="mt-3 font-display text-2xl font-bold text-white">{title}</h1><a href="#/" className="btn-primary mt-4">Back to marketplace</a></div>; }
 
 /* ───────────────────────── Footer + demo ribbon ───────────────────────── */
@@ -1150,10 +1391,13 @@ function Footer() {
   const { reset } = useApp();
   return (
     <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div>
-        <p className="text-sm text-slate-500"><a href="#/app" className="font-medium text-slate-300 hover:text-white">📱 Get the app</a> · Live front-end demo · <a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">source on GitHub</a></p>
-        <button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-sm font-medium text-slate-400 hover:text-brand-300">↺ Reset demo</button>
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
+        <div><div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div><p className="mt-2 max-w-xs text-sm text-slate-500">Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.</p></div>
+        <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3" aria-label="Footer">
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">Buy</span><a href="#/browse" className="text-slate-300 hover:text-white">Browse tires</a><a href="#/states" className="text-slate-300 hover:text-white">Browse by state</a><a href="#/guide" className="text-slate-300 hover:text-white">Buying guide</a></div>
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">Sell</span><a href="#/sell-tires" className="text-slate-300 hover:text-white">Sell tires</a><a href="#/pro" className="text-slate-300 hover:text-white">Go Pro</a><a href="#/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</a></div>
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">More</span><a href="#/app" className="text-slate-300 hover:text-white">📱 Get the app</a><a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">Source on GitHub</a><button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-left text-slate-400 hover:text-brand-300">↺ Reset demo</button></div>
+        </nav>
       </div>
     </footer>
   );
@@ -1236,8 +1480,10 @@ function App() {
   const [routePath, routeQuery] = route.split('?');
   const qp = new URLSearchParams(routeQuery || '');
   const seg = routePath.split('/').filter(Boolean);
-  if (routePath === '/' || seg.length === 0) view = <Landing />;
-  else if (seg[0] === 'states') view = <Landing force />;
+  if (routePath === '/' || seg.length === 0) view = <HomePage />;
+  else if (seg[0] === 'states') view = <StatesPage />;
+  else if (seg[0] === 'sell-tires') view = <SellTires />;
+  else if (seg[0] === 'guide') view = <GuidePage />;
   else if (seg[0] === 'browse') view = <Marketplace params={qp} />;
   else if (seg[0] === 'favorites') view = <Favorites />;
   else if (seg[0] === 'saved') view = <SavedSearches />;
