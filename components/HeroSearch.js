@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MAKES, modelsFor, yearsFor, sizeFor } from "@/lib/fitment";
+import { MAKES, modelsFor, trimsFor, yearsFor, sizeFor } from "@/lib/fitment";
 
 const TABS = [
   { key: "size", label: "By tire size" },
@@ -72,31 +72,38 @@ function SizeSearch({ router, homeState }) {
 function VehicleSearch({ router, homeState }) {
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
+  const [trim, setTrim] = useState("");
   const [year, setYear] = useState("");
   const models = make ? modelsFor(make) : [];
-  const years = make && model ? yearsFor(make, model) : [];
-  const size = make && model && year ? sizeFor(make, model, year) : null;
+  const trims = make && model ? trimsFor(make, model) : [];
+  const years = make && model && trim ? yearsFor(make, model, trim) : [];
+  const size = make && model && trim && year ? sizeFor(make, model, trim, year) : null;
 
   function go() {
     if (!size) return;
-    const sp = new URLSearchParams({ size, fits: `${year} ${make} ${model}` });
+    const sp = new URLSearchParams({ size, fits: `${year} ${make} ${model} ${trim}` });
     if (homeState) sp.set("state", homeState);
     router.push(`/browse?${sp}`);
   }
   return (
     <div>
-      <div className="grid gap-2 sm:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         <select aria-label="Make" className="input" value={make}
-          onChange={(e) => { setMake(e.target.value); setModel(""); setYear(""); }}>
+          onChange={(e) => { setMake(e.target.value); setModel(""); setTrim(""); setYear(""); }}>
           <option value="">Make</option>
           {MAKES.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
         <select aria-label="Model" className="input" value={model} disabled={!make}
-          onChange={(e) => { setModel(e.target.value); setYear(""); }}>
+          onChange={(e) => { setModel(e.target.value); setTrim(""); setYear(""); }}>
           <option value="">Model</option>
           {models.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
-        <select aria-label="Year" className="input" value={year} disabled={!model}
+        <select aria-label="Trim" className="input" value={trim} disabled={!model}
+          onChange={(e) => { setTrim(e.target.value); setYear(""); }}>
+          <option value="">Trim</option>
+          {trims.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select aria-label="Year" className="input" value={year} disabled={!trim}
           onChange={(e) => setYear(e.target.value)}>
           <option value="">Year</option>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
@@ -107,7 +114,7 @@ function VehicleSearch({ router, homeState }) {
       </div>
       {size && (
         <p className="mt-2 text-sm text-slate-400">
-          Your {year} {make} {model} uses <span className="font-mono font-semibold text-brand-300">{size}</span>.
+          Your {year} {make} {model} {trim} uses <span className="font-mono font-semibold text-brand-300">{size}</span>.
         </p>
       )}
     </div>
