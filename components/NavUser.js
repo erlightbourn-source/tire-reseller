@@ -91,6 +91,7 @@ export default function NavUser({ user }) {
             </div>
             <Link href="/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</Link>
             <Link href="/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</Link>
+            <Link href="/settings" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Settings</Link>
             <button onClick={logout} className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10">
               Log out
             </button>

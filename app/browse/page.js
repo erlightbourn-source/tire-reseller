@@ -119,10 +119,17 @@ export default async function BrowsePage({ searchParams }) {
   ]);
   const brands = brandRows.map((b) => b.brand);
 
+  // Paginate the (already filtered) result set for rendering.
+  const PAGE_SIZE = 24;
+  const count = listings.length;
+  const pageCount = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  const page = Math.min(pageCount, Math.max(1, parseInt(searchParams.page) || 1));
+  const pageListings = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   let favSet = new Set();
-  if (user && listings.length) {
+  if (user && pageListings.length) {
     const favs = await prisma.favorite.findMany({
-      where: { userId: user.id, listingId: { in: listings.map((l) => l.id) } },
+      where: { userId: user.id, listingId: { in: pageListings.map((l) => l.id) } },
       select: { listingId: true },
     });
     favSet = new Set(favs.map((f) => f.listingId));
@@ -133,7 +140,16 @@ export default async function BrowsePage({ searchParams }) {
   const radius = searchParams.radius;
 
   const place = near && radius ? "near you" : state ? `in ${stateName(state)}` : "nationwide";
-  const count = listings.length;
+
+  const pageHref = (p) => {
+    const qs = new URLSearchParams();
+    Object.entries(searchParams).forEach(([k, v]) => {
+      if (k !== "page" && v != null && v !== "") qs.set(k, String(v));
+    });
+    if (p > 1) qs.set("page", String(p));
+    const s = qs.toString();
+    return `/browse${s ? `?${s}` : ""}`;
+  };
 
   return (
     <div className="space-y-4">
@@ -176,11 +192,28 @@ export default async function BrowsePage({ searchParams }) {
             <Link href="/states" className="btn-secondary mt-4">Browse the map</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {listings.map((l) => (
-              <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {pageListings.map((l) => (
+                <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} />
+              ))}
+            </div>
+            {pageCount > 1 && (
+              <nav className="mt-6 flex items-center justify-between gap-3" aria-label="Pagination">
+                {page > 1 ? (
+                  <Link href={pageHref(page - 1)} className="btn-secondary" rel="prev">← Previous</Link>
+                ) : (
+                  <span className="btn-secondary pointer-events-none opacity-40" aria-disabled="true">← Previous</span>
+                )}
+                <span className="text-sm text-slate-400">Page {page} of {pageCount}</span>
+                {page < pageCount ? (
+                  <Link href={pageHref(page + 1)} className="btn-secondary" rel="next">Next →</Link>
+                ) : (
+                  <span className="btn-secondary pointer-events-none opacity-40" aria-disabled="true">Next →</span>
+                )}
+              </nav>
+            )}
+          </>
         )}
       </MarketplaceFilters>
     </div>

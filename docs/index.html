@@ -66,6 +66,9 @@
       .no-scrollbar::-webkit-scrollbar { display:none; } .no-scrollbar { scrollbar-width:none; }
     }
     html { color-scheme: dark; }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid #5c86f8; outline-offset: 2px; border-radius: 6px;
+    }
     body {
       background-color:#070809;
       background-image:
@@ -455,6 +458,7 @@ function Header() {
                 <div className="border-b border-white/10 px-3 py-2"><p className="text-sm font-semibold text-white">{me.name}</p><p className="text-xs text-slate-400">{me.role === 'seller' ? 'Seller' : 'Buyer'}</p></div>
                 <a href="#/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</a>
                 <a href="#/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</a>
+                <a href="#/settings" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Settings</a>
                 <LogoutBtn />
               </div>}
             </div>
@@ -918,6 +922,14 @@ function Marketplace({ params }) {
   const [drawer, setDrawer] = useState(false);
   useEffect(()=>{ document.body.style.overflow = drawer?'hidden':''; return ()=>{ document.body.style.overflow=''; }; }, [drawer]);
 
+  // Pagination (client-side over the filtered list).
+  const PAGE_SIZE = 24;
+  const [page, setPage] = useState(1);
+  useEffect(()=>{ setPage(1); }, [q,brand,cond,size,maxPrice,sort,season,runFlat,minTread,minYear,qty,minRating,shipping,near,radius,st]);
+  const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  const cp = Math.min(page, pageCount);
+  const pageItems = list.slice((cp-1)*PAGE_SIZE, cp*PAGE_SIZE);
+
   // Removable chips from active local filter state.
   const chips = [];
   if (q) chips.push(['“'+q+'”', ()=>setQ('')]);
@@ -993,7 +1005,10 @@ function Marketplace({ params }) {
           {list.length === 0 ? (
             <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{list.map(l => <Card key={l.id} l={l} distance={l._distance ?? null} />)}</div>
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{pageItems.map(l => <Card key={l.id} l={l} distance={l._distance ?? null} />)}</div>
+              {pageCount>1 && <nav className="mt-6 flex items-center justify-between gap-3" aria-label="Pagination"><button onClick={()=>setPage(cp-1)} disabled={cp<=1} className="btn-secondary">← Previous</button><span className="text-sm text-slate-400">Page {cp} of {pageCount}</span><button onClick={()=>setPage(cp+1)} disabled={cp>=pageCount} className="btn-secondary">Next →</button></nav>}
+            </>
           )}
         </div>
       </div>
@@ -1448,6 +1463,27 @@ function GuidePage() {
   );
 }
 
+function SettingsPage() {
+  const { me, exportData, deleteAccount } = useApp();
+  const [confirming, setConfirming] = useState(false); const [text, setText] = useState('');
+  useEffect(()=>{ if(!me) navigate('/login'); }, [me]);
+  if(!me) return null;
+  return (
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div><p className="eyebrow">Account</p><h1 className="font-display text-2xl font-extrabold text-white">Settings</h1></div>
+      <div className="card p-5"><dl className="grid gap-3 sm:grid-cols-2">
+        <div><dt className="text-xs text-slate-400">Name</dt><dd className="font-semibold text-slate-100">{me.name}</dd></div>
+        <div><dt className="text-xs text-slate-400">Email</dt><dd className="font-semibold text-slate-100">{me.email}</dd></div>
+        <div><dt className="text-xs text-slate-400">Account type</dt><dd className="font-semibold text-slate-100">{me.role==='seller'?'Seller':'Buyer'}</dd></div>
+        <div><dt className="text-xs text-slate-400">Member since</dt><dd className="font-semibold text-slate-100">{new Date(me.createdAt).toLocaleDateString()}</dd></div>
+      </dl></div>
+      <div className="card p-5"><h2 className="font-display font-bold text-white">Your data</h2><p className="mt-1 text-sm text-slate-400">Download everything stored about your account as a JSON file.</p><button onClick={exportData} className="btn-secondary mt-3">⬇ Download my data</button></div>
+      <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5"><h2 className="font-display font-bold text-red-200">Delete account</h2><p className="mt-1 text-sm text-red-100/80">Permanently removes your account and everything tied to it. This cannot be undone.</p>
+        {!confirming ? <button onClick={()=>setConfirming(true)} className="btn-danger mt-3">Delete my account</button> : <div className="mt-3 space-y-2"><label htmlFor="cd" className="block text-sm text-red-100">Type <span className="font-mono font-bold">DELETE</span> to confirm:</label><input id="cd" value={text} onChange={e=>setText(e.target.value)} className="input max-w-xs" placeholder="DELETE" /><div className="flex gap-2"><button onClick={deleteAccount} disabled={text!=='DELETE'} className="btn-danger">Permanently delete</button><button onClick={()=>{setConfirming(false);setText('');}} className="btn-secondary">Cancel</button></div></div>}
+      </div>
+    </div>
+  );
+}
 function Empty({ title }) { return <div className="mx-auto max-w-md py-16 text-center"><Logo cls="mx-auto h-14 w-14 opacity-60" /><h1 className="mt-3 font-display text-2xl font-bold text-white">{title}</h1><a href="#/" className="btn-primary mt-4">Back to marketplace</a></div>; }
 
 /* ───────────────────────── Footer + demo ribbon ───────────────────────── */
@@ -1526,6 +1562,35 @@ function App() {
     newCount: (s) => { const p=Object.fromEntries(new URLSearchParams(s.query)); return db.listings.filter(l=>l.status==='active' && matchSearch(l,p) && l.createdAt>s.lastSeenAt).length; },
     makeOffer: (tid, cents) => update(d => { d.messages.push({ id:cuid(), threadId:tid, senderId:d.session, kind:'offer', offerCents:cents, offerStatus:'pending', body:`Offer: $${(cents/100).toLocaleString()}`, createdAt:Date.now() }); const th=d.threads.find(t=>t.id===tid); if(th) th.updatedAt=Date.now(); }),
     respondOffer: (mid, action, cents) => update(d => { const m=d.messages.find(x=>x.id===mid); if(!m||m.kind!=='offer'||m.offerStatus!=='pending') return; if(action==='counter'){ if(!cents||cents<=0) return; m.offerStatus='countered'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, kind:'offer', offerCents:cents, offerStatus:'pending', body:`Counter-offer: $${(cents/100).toLocaleString()}`, createdAt:Date.now() }); return; } const acc=action==='accept'; m.offerStatus=acc?'accepted':'declined'; d.messages.push({ id:cuid(), threadId:m.threadId, senderId:d.session, body: acc?`✅ Accepted your offer of $${(m.offerCents/100).toLocaleString()}. Let's arrange pickup!`:`Declined the offer of $${(m.offerCents/100).toLocaleString()}.`, createdAt:Date.now() }); if(acc){ const th=d.threads.find(t=>t.id===m.threadId); const l=th&&d.listings.find(x=>x.id===th.listingId); if(l) l.status='sold'; } }),
+    exportData: () => {
+      const me = db.users.find(u=>u.id===db.session); if(!me) return;
+      const data = {
+        exportedAt: new Date().toISOString(),
+        profile: { id:me.id, email:me.email, name:me.name, location:me.location, state:me.state, role:me.role, pro:me.pro, createdAt:me.createdAt },
+        listings: db.listings.filter(l=>l.sellerId===me.id),
+        favorites: (db.favorites||[]).filter(f=>f.userId===me.id),
+        savedSearches: (db.savedSearches||[]).filter(s=>s.userId===me.id),
+        reviewsWritten: (db.reviews||[]).filter(r=>r.authorId===me.id),
+        reviewsReceived: (db.reviews||[]).filter(r=>r.sellerId===me.id),
+        sentMessages: (db.messages||[]).filter(m=>m.senderId===me.id),
+      };
+      const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = `tiretrader-data-${me.id.slice(0,8)}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    },
+    deleteAccount: () => { const id = db.session; if(!id) return; update(d => {
+      d.listings = d.listings.filter(l=>l.sellerId!==id);
+      const myThreads = (d.threads||[]).filter(t=>t.buyerId===id||t.sellerId===id).map(t=>t.id);
+      d.threads = (d.threads||[]).filter(t=>t.buyerId!==id&&t.sellerId!==id);
+      d.messages = (d.messages||[]).filter(m=>!myThreads.includes(m.threadId) && m.senderId!==id);
+      d.favorites = (d.favorites||[]).filter(f=>f.userId!==id);
+      d.savedSearches = (d.savedSearches||[]).filter(s=>s.userId!==id);
+      d.reviews = (d.reviews||[]).filter(r=>r.authorId!==id && r.sellerId!==id);
+      d.reports = (d.reports||[]).filter(r=>r.reporterId!==id);
+      d.blocks = (d.blocks||[]).filter(b=>b.blockerId!==id && b.blockedId!==id);
+      d.users = d.users.filter(u=>u.id!==id);
+      d.session = null;
+    }); navigate('/'); },
     reset: () => { const fresh = seedDB(); persist(fresh); navigate('/'); },
   };
 
@@ -1560,6 +1625,7 @@ function App() {
   else if (seg[0] === 'pro') view = <ProPage />;
   else if (seg[0] === 'sell' && seg[1] === 'bulk') view = <BulkAddPage />;
   else if (seg[0] === 'sell') view = <Sell id={seg[1]} />;
+  else if (seg[0] === 'settings') view = <SettingsPage />;
   else if (seg[0] === 'dashboard') view = <Dashboard />;
   else if (seg[0] === 'messages' && seg[1]) view = <Thread id={seg[1]} />;
   else if (seg[0] === 'messages') view = <Messages />;

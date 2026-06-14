@@ -6,6 +6,20 @@
   color-scheme: dark;
 }
 
+/* Visible keyboard-focus ring for all interactive elements (mouse clicks are
+   unaffected thanks to :focus-visible). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #5c86f8;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 body {
   @apply bg-ink-950 text-slate-200 antialiased;
   background-color: #070809;
