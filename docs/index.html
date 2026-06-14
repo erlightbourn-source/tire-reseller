@@ -206,6 +206,17 @@ function parseTread(t){ if(!t) return null; const s=String(t).trim().toLowerCase
 const treadLabel = (t) => parseTread(t)?.label || null;
 function treadLifePct(t){ const n=parseTread(t)?.n; if(n==null) return null; return Math.max(0,Math.min(100,Math.round(((n-2)/8)*100))); }
 const perTire = (cents,qty) => Math.round(cents/Math.max(1,qty||1));
+function priceContext(perTireCents, comps) {
+  const c = (comps||[]).filter(n=>Number.isFinite(n)&&n>0);
+  if (c.length<3 || !(perTireCents>0)) return null;
+  const avg = Math.round(c.reduce((s,n)=>s+n,0)/c.length);
+  const d = Math.round((perTireCents-avg)/avg*100);
+  let tone, label;
+  if (d<=-10) { tone='good'; label=Math.abs(d)+'% below the typical price'; }
+  else if (d>=15) { tone='high'; label=d+'% above the typical price'; }
+  else { tone='fair'; label='around the typical price'; }
+  return { avg, deltaPct:d, tone, label, count:c.length };
+}
 function milesLabel(m){ if(m==null||!isFinite(m)) return null; if(m<1) return 'Less than 1 mi away'; return `${Math.round(m)} mi away`; }
 function tireAge(y){ if(!y) return null; const a=new Date().getFullYear()-y; if(a<=0) return {years:0,label:'This year',aging:false}; return {years:a,label:`${a}y old`,aging:a>=6}; }
 const BUYER_FAQ = [
@@ -1038,7 +1049,7 @@ function Marketplace({ params }) {
         <div className="min-w-0 space-y-4">
           <RecentlyViewed />
           {list.length === 0 ? (
-            <div className="card grid place-items-center px-6 py-16 text-center"><Logo cls="h-14 w-14 opacity-60" /><p className="mt-4 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p><a href="#/states" className="btn-secondary mt-4">Browse the map</a></div>
+            <div className="card px-6 py-12 text-center"><div className="text-4xl">🛞</div><p className="mt-3 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="btn-primary">Clear filters</button><a href="#/states" className="btn-secondary">Open map</a></div>{brands.length>0 && <div className="mt-6"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Popular brands</p><div className="mt-2 flex flex-wrap justify-center gap-2">{brands.slice(0,10).map(b=><button key={b} onClick={()=>{ clearAll(); setBrand(b); }} className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">{b}</button>)}</div></div>}</div>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{pageItems.map(l => <Card key={l.id} l={l} distance={l._distance ?? null} />)}</div>
@@ -1071,6 +1082,7 @@ function Detail({ id }) {
   const sr = sellerRating(l.sellerId);
   const age = tireAge(l.dotYear);
   const lifePct = treadLifePct(l.treadDepth);
+  const fairPrice = priceContext(perTire(l.priceCents,l.quantity), db.listings.filter(x=>x.status==='active'&&!x.hidden&&x.size===l.size&&x.id!==l.id).map(x=>perTire(x.priceCents,x.quantity)));
   const specs = [['Brand',l.brand],['Size',l.size],['Quantity',`${l.quantity} tire${l.quantity>1?'s':''}`],['Condition',cond.label],['Tread depth',treadLabel(l.treadDepth)||'—'], l.season&&['Season',seasonLabel(l.season)], (l.loadIndex||l.speedRating)&&['Load / Speed',`${l.loadIndex||'—'}${l.speedRating||''}`],['Run-flat',l.runFlat?'Yes':'No'],['Delivery',l.shipping?'Local pickup or shipping':'Local pickup only'], l.dotYear&&['DOT year',`${l.dotYear}${age?` · ${age.label}`:''}`],['Total price',fmt(l.priceCents)], l.quantity>1&&['Price per tire',fmt(perTire(l.priceCents,l.quantity))]].filter(Boolean);
   return (
     <div className="space-y-5">
@@ -1087,6 +1099,7 @@ function Detail({ id }) {
             <p className="font-mono text-lg text-slate-400">{l.size}</p>
             <p className="mt-3 font-display text-4xl font-extrabold text-white">{fmt(l.priceCents)}<span className="ml-2 align-middle text-sm font-medium text-slate-400">for {l.quantity}</span></p>
             {l.quantity>1 && <p className="text-sm text-slate-400">{fmt(perTire(l.priceCents,l.quantity))} per tire</p>}
+            {fairPrice && l.status!=='sold' && <div className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${fairPrice.tone==='good'?'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30':fairPrice.tone==='high'?'bg-amber-500/15 text-amber-300 ring-amber-400/30':'bg-white/5 text-slate-300 ring-white/10'}`}><span aria-hidden="true">📊</span>{fairPrice.tone==='good'?'Good deal — ':''}{fairPrice.label}<span className="font-normal text-slate-400">· avg {fmt(fairPrice.avg)}/tire ({fairPrice.count} listings)</span></div>}
             <dl className="mt-4 grid grid-cols-2 gap-2.5">
               <Spec k="Quantity" v={l.quantity} /><Spec k="Tread" v={treadLabel(l.treadDepth)||'—'} h={lifePct!=null?`~${lifePct}% life`:null} />
               {l.season && <Spec k="Season" v={seasonLabel(l.season)} />}

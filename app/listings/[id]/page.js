@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
+import { priceContext } from "@/lib/pricing";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -80,6 +81,17 @@ export default async function ListingDetail({ params }) {
   const similar = candidates
     .sort((a, b) => (b.size === listing.size) - (a.size === listing.size) || b.featured - a.featured)
     .slice(0, 4);
+
+  // Fair-price context: compare per-tire price to other same-size listings.
+  const sizeComps = await prisma.listing.findMany({
+    where: { status: "active", hidden: false, size: listing.size, id: { not: listing.id }, seller: { deletedAt: null } },
+    select: { priceCents: true, quantity: true },
+    take: 100,
+  });
+  const fairPrice = priceContext(
+    perTire(listing.priceCents, listing.quantity),
+    sizeComps.map((c) => perTire(c.priceCents, c.quantity))
+  );
 
   const cond = conditionMeta(listing.condition);
   const isUsed = listing.condition !== "new";
@@ -160,6 +172,17 @@ export default async function ListingDetail({ params }) {
             </p>
             {listing.quantity > 1 && (
               <p className="text-sm text-slate-400">{formatPrice(perTire(listing.priceCents, listing.quantity))} per tire</p>
+            )}
+
+            {fairPrice && listing.status !== "sold" && (
+              <div className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
+                fairPrice.tone === "good" ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30"
+                : fairPrice.tone === "high" ? "bg-amber-500/15 text-amber-300 ring-amber-400/30"
+                : "bg-white/5 text-slate-300 ring-white/10"}`}>
+                <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 fill-current" aria-hidden="true"><path d="M3 3h2v12h12v2H3V3Zm12.7 2.3-3.2 3.2-2-2-3.5 3.5 1.4 1.4 2.1-2.1 2 2 4.6-4.6-1.4-1.4Z"/></svg>
+                {fairPrice.tone === "good" ? "Good deal — " : ""}{fairPrice.label}
+                <span className="font-normal text-slate-400">· avg {formatPrice(fairPrice.avg)}/tire ({fairPrice.count} listings)</span>
+              </div>
             )}
 
             <dl className="mt-4 grid grid-cols-2 gap-2.5">

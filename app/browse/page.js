@@ -183,13 +183,30 @@ export default async function BrowsePage({ searchParams }) {
       <MarketplaceFilters brands={brands}>
         <RecentlyViewed />
         {count === 0 ? (
-          <div className="card grid place-items-center px-6 py-16 text-center">
+          <div className="card px-6 py-12 text-center">
             <span className="text-4xl">🛞</span>
             <p className="mt-3 font-display text-lg font-bold text-slate-200">
               {state ? `No tires in ${stateName(state)} yet` : "No tires match your filters"}
             </p>
-            <p className="mt-1 text-sm text-slate-400">Try another state, a wider radius, or fewer filters.</p>
-            <Link href="/states" className="btn-secondary mt-4">Browse the map</Link>
+            <p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <Link href={state ? `/browse?state=${state}` : "/browse"} className="btn-primary">Clear filters</Link>
+              <Link href="/browse" className="btn-secondary">All states</Link>
+              <Link href="/states" className="btn-secondary">Open map</Link>
+            </div>
+            {brands.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Popular brands</p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                  {brands.slice(0, 10).map((b) => (
+                    <Link key={b} href={`/browse?brand=${encodeURIComponent(b)}`}
+                      className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
+                      {b}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
