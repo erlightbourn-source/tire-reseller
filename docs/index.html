@@ -15,70 +15,88 @@
   <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-            display: ['Sora', 'Inter', 'sans-serif'],
+            sans: ['Georgia', 'Times New Roman', 'serif'],
+            display: ['"Courier Prime"', '"Courier New"', 'ui-monospace', 'monospace'],
+            mono: ['"Courier Prime"', '"Courier New"', 'monospace'],
           },
           colors: {
-            ink: { 800: '#15171c', 900: '#0d0f13', 950: '#070809' },
-            brand: { 50:'#eff4ff',100:'#dbe6fe',200:'#bdd0fe',300:'#90b0fc',400:'#5c86f8',500:'#3b63f1',600:'#2545e6',700:'#1d33d3',800:'#1e2cab',900:'#1e2b87' },
-            accent: { 400:'#fbbf24',500:'#f59e0b',600:'#d97706' },
+            // Two-color brutalist palette: near-black + acid yellow.
+            ink: { 800: '#1a1a1a', 900: '#0f0f0f', 950: '#000000' },
+            brand: { 50:'#fbffcc',100:'#f6ff99',200:'#f1ff66',300:'#ecff33',400:'#e5ff00',500:'#e5ff00',600:'#c9e000',700:'#a8bd00',800:'#7d8c00',900:'#525c00' },
+            accent: { 400:'#e5ff00',500:'#e5ff00',600:'#c9e000' },
           },
           keyframes: {
             spinslow: { to: { transform: 'rotate(360deg)' } },
             fadeup: { '0%': { opacity:0, transform:'translateY(8px)' }, '100%': { opacity:1, transform:'translateY(0)' } },
+            glitch: { '0%,100%':{ transform:'translate(0)' }, '20%':{ transform:'translate(-2px,1px)' }, '40%':{ transform:'translate(2px,-1px)' }, '60%':{ transform:'translate(-1px,-1px)' }, '80%':{ transform:'translate(1px,1px)' } },
           },
-          animation: { spinslow: 'spinslow 18s linear infinite', fadeup: 'fadeup .4s ease-out both' },
+          animation: { spinslow: 'spinslow 18s linear infinite', fadeup: 'fadeup .4s ease-out both', glitch: 'glitch .18s steps(2) infinite' },
         },
       },
     };
   </script>
   <style type="text/tailwindcss">
+    /* ── BRUTALIST THEME: black + acid yellow, Courier + Georgia, raw edges ── */
     @layer base {
       body { @apply bg-ink-950 text-slate-200 font-sans antialiased; }
+      /* No rounded corners anywhere — raw, jagged edges. */
+      *, *::before, *::after { border-radius: 0 !important; }
+      h1,h2,h3,h4 { @apply font-display; letter-spacing: -0.02em; }
     }
     @layer components {
-      .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer; }
-      .btn-primary { @apply btn text-white; background-image: linear-gradient(180deg,#3b63f1,#2545e6); box-shadow: 0 8px 26px -8px rgba(37,69,230,.6), inset 0 1px 0 rgba(255,255,255,.15); }
-      .btn-primary:hover { background-image: linear-gradient(180deg,#4c72f5,#2c4ce8); @apply -translate-y-0.5; }
-      .btn-secondary { @apply btn bg-white/5 text-slate-100 ring-1 ring-inset ring-white/10 hover:bg-white/10 hover:ring-white/20; }
-      .btn-accent { @apply btn bg-accent-500 text-ink-950 hover:bg-accent-400; box-shadow: 0 8px 26px -8px rgba(245,158,11,.55); }
-      .btn-danger { @apply btn bg-red-500/90 text-white hover:bg-red-500; }
-      .input { @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-brand-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-brand-500/15; }
-      .input option { @apply bg-ink-800 text-slate-100; }
-      .label { @apply mb-1.5 block text-sm font-medium text-slate-300; }
-      .card { @apply rounded-2xl border border-white/10 bg-[#13161c]; box-shadow: 0 1px 0 0 rgba(255,255,255,.04) inset, 0 18px 40px -24px rgba(0,0,0,.8); }
-      .card-hover { @apply transition-all duration-200 hover:-translate-y-1 hover:border-white/20; }
-      .badge { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold; }
-      .badge-new { @apply badge bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30; }
-      .badge-used { @apply badge bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-400/30; }
-      .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-brand-300; }
+      .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wide font-display disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer; border:2px solid #000; transition:none; }
+      .btn-primary { @apply btn bg-brand-500 text-black; border-color:#000; box-shadow:5px 5px 0 #000; }
+      .btn-primary:hover { @apply bg-black text-brand-500; border-color:#e5ff00; box-shadow:5px 5px 0 #e5ff00; transform:translate(1px,1px); }
+      .btn-secondary { @apply btn bg-black text-brand-400; border-color:#e5ff00; box-shadow:4px 4px 0 #e5ff00; }
+      .btn-secondary:hover { @apply bg-brand-500 text-black; box-shadow:4px 4px 0 #000; border-color:#000; transform:translate(1px,1px); }
+      .btn-accent { @apply btn bg-brand-500 text-black; border-color:#000; box-shadow:5px 5px 0 #000; }
+      .btn-accent:hover { @apply bg-black text-brand-500; border-color:#e5ff00; box-shadow:5px 5px 0 #e5ff00; transform:translate(1px,1px); }
+      .btn-danger { @apply btn bg-[#ff2b2b] text-white; border-color:#000; box-shadow:4px 4px 0 #000; }
+      .btn-danger:hover { @apply bg-black text-[#ff2b2b]; border-color:#ff2b2b; box-shadow:4px 4px 0 #ff2b2b; }
+      .btn-ghost { @apply btn bg-transparent text-brand-400; border-color:transparent; box-shadow:none; }
+      .btn-ghost:hover { @apply bg-brand-500 text-black; }
+      .input { @apply w-full bg-black px-3.5 py-2.5 text-sm text-slate-100 font-mono outline-none placeholder:text-slate-600; border:2px solid #3a3a3a; transition:none; }
+      .input:focus { border-color:#e5ff00; box-shadow:3px 3px 0 #e5ff00; }
+      .input option { @apply bg-black text-slate-100; }
+      .label { @apply mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-300 font-display; }
+      .card { @apply bg-ink-900; border:2px solid #2a2a2a; box-shadow:6px 6px 0 #000; }
+      .card-hover { transition:none; }
+      .card-hover:hover { border-color:#e5ff00; box-shadow:8px 8px 0 #e5ff00; transform:translate(-2px,-2px); }
+      .badge { @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide font-display; border:2px solid currentColor; }
+      .badge-new { @apply badge bg-black text-brand-400; }
+      .badge-used { @apply badge bg-black text-slate-300; }
+      .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.25em] text-brand-400 font-display; }
     }
     @layer utilities {
-      .tread { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 14px); }
-      .mesh { background-image: radial-gradient(40rem 30rem at 80% -20%, rgba(91,134,248,.4), transparent 60%), radial-gradient(34rem 30rem at 0% 120%, rgba(245,158,11,.28), transparent 55%); }
+      .tread { background-image: repeating-linear-gradient(90deg, rgba(229,255,0,.14) 0 2px, transparent 2px 13px); }
+      /* "mesh" repurposed as a hard grid (no gradients) */
+      .mesh { background-image: repeating-linear-gradient(0deg, rgba(229,255,0,.10) 0 1px, transparent 1px 38px), repeating-linear-gradient(90deg, rgba(229,255,0,.10) 0 1px, transparent 1px 38px); }
       .no-scrollbar::-webkit-scrollbar { display:none; } .no-scrollbar { scrollbar-width:none; }
     }
     html { color-scheme: dark; }
     a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
-      outline: 2px solid #5c86f8; outline-offset: 2px; border-radius: 6px;
+      outline: 3px solid #e5ff00; outline-offset: 2px;
     }
+    /* Lo-fi, monochrome, grainy imagery */
+    main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
     body {
-      background-color:#070809;
+      background-color:#000000;
+      /* visible structural grid lines */
       background-image:
-        radial-gradient(48rem 42rem at 88% -8%, rgba(37,99,235,.18), transparent 60%),
-        radial-gradient(42rem 40rem at -8% 6%, rgba(245,158,11,.1), transparent 55%),
-        radial-gradient(60rem 50rem at 50% 120%, rgba(59,99,241,.08), transparent 60%);
+        repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 44px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 44px);
       background-attachment: fixed;
     }
-    body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.5;
-      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px); }
+    /* film grain overlay */
+    body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.85; mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E"); }
   </style>
 </head>
 <body>
@@ -192,14 +210,14 @@ const CONDITIONS = {
 };
 const conditionMeta = (c) => CONDITIONS[c] || (c==='new' ? CONDITIONS.new : CONDITIONS.used);
 const BADGE_TONES = {
-  emerald:'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30',
-  amber:'bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-400/30',
-  sky:'bg-sky-500/15 text-sky-300 ring-1 ring-inset ring-sky-400/30',
-  rose:'bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-400/30',
-  slate:'bg-white/5 text-slate-300 ring-1 ring-inset ring-white/10',
-  featured:'bg-accent-500 text-ink-950',
-  pro:'bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950',
-  sold:'bg-ink-900/90 text-white ring-1 ring-inset ring-white/10',
+  emerald:'bg-black text-brand-400',
+  amber:'bg-black text-slate-200',
+  sky:'bg-black text-brand-400',
+  rose:'bg-black text-[#ff5a5a]',
+  slate:'bg-black text-slate-400',
+  featured:'bg-brand-500 text-black',
+  pro:'bg-brand-500 text-black',
+  sold:'bg-white text-black',
 };
 function Badge({ tone='slate', className='', children }) { return <span className={`badge ${BADGE_TONES[tone]||BADGE_TONES.slate} ${className}`}>{children}</span>; }
 function parseTread(t){ if(!t) return null; const s=String(t).trim().toLowerCase(); if(s==='new') return {label:'New (10/32")',n:10}; const m=s.match(/(\d+(?:\.\d+)?)\s*\/?\s*32/); if(m) return {label:`${m[1]}/32"`,n:Number(m[1])}; return {label:String(t),n:null}; }
@@ -431,11 +449,10 @@ const freeEndsStr = (u) => u && u.sellerFreeUntil ? new Date(u.sellerFreeUntil).
 function Logo({ cls = 'h-9 w-9', spin = false, bare = false }) {
   const scale = bare ? 1.5 : 1;
   const spokes = []; for (let i = 0; i < 16; i++) { const a = (i/16)*Math.PI*2; spokes.push(<line key={i} x1={(Math.cos(a)*9.5).toFixed(2)} y1={(Math.sin(a)*9.5).toFixed(2)} x2={(Math.cos(a)*15).toFixed(2)} y2={(Math.sin(a)*15).toFixed(2)} stroke="#1f2430" strokeWidth="2.4" />); }
-  const lugs = []; for (let i = 0; i < 5; i++) { const a = (i/5)*Math.PI*2 - Math.PI/2; lugs.push(<circle key={i} cx={(Math.cos(a)*5.6).toFixed(2)} cy={(Math.sin(a)*5.6).toFixed(2)} r="1.2" fill="#5c86f8" />); }
+  const lugs = []; for (let i = 0; i < 5; i++) { const a = (i/5)*Math.PI*2 - Math.PI/2; lugs.push(<circle key={i} cx={(Math.cos(a)*5.6).toFixed(2)} cy={(Math.sin(a)*5.6).toFixed(2)} r="1.2" fill="#e5ff00" />); }
   return (
     <svg viewBox="0 0 48 48" className={cls} aria-hidden="true">
-      <defs><linearGradient id="ttRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#3b63f1" /><stop offset="1" stopColor="#1d33d3" /></linearGradient></defs>
-      {!bare && <rect width="48" height="48" rx="12" fill="url(#ttRim)" />}
+      {!bare && <rect width="48" height="48" rx="0" fill="#e5ff00" stroke="#000" strokeWidth="2" />}
       <g transform={`translate(24 24) scale(${scale})`}>
         <g className={spin ? 'animate-spinslow' : ''} style={spin ? { transformBox:'fill-box', transformOrigin:'center' } : undefined}>
           <circle r="15.5" fill="#0d0f13" /><circle r="15.5" fill="none" stroke="#000" strokeOpacity="0.4" strokeWidth="1.5" />
@@ -712,7 +729,7 @@ function ProPage() {
     <div className="mx-auto max-w-lg space-y-5">
       <div className="text-center"><p className="eyebrow">For serious sellers</p><h1 className="mt-1 font-display text-3xl font-extrabold text-white">TireTrader Pro</h1><p className="mt-2 text-slate-400">Sell more, faster — with priority placement and shop-grade tools.</p></div>
       <div className="card overflow-hidden">
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-white"><div className="tread absolute inset-0 opacity-20" /><div className="relative"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><p className="mt-2 font-display text-5xl font-extrabold">$25<span className="text-lg font-medium text-slate-300">/month</span></p><p className="mt-1 text-sm text-slate-300">On top of your seller plan. Cancel anytime.</p></div></div>
+        <div className="relative overflow-hidden bg-brand-500/10 px-6 py-8 text-white"><div className="tread absolute inset-0 opacity-20" /><div className="relative"><span className="badge bg-brand-500 text-black">PRO</span><p className="mt-2 font-display text-5xl font-extrabold">$25<span className="text-lg font-medium text-slate-300">/month</span></p><p className="mt-1 text-sm text-slate-300">On top of your seller plan. Cancel anytime.</p></div></div>
         <div className="p-6">
           <ul className="space-y-3">{perks.map(([i,t,s])=><li key={t} className="flex gap-3"><span className="text-xl">{i}</span><div><p className="text-sm font-semibold text-slate-100">{t}</p><p className="text-xs text-slate-400">{s}</p></div></li>)}</ul>
           <div className="mt-6">{eligible ? <button onClick={()=>{ setPro(!me.pro); navigate('/dashboard'); }} className={me.pro?'btn-secondary w-full':'btn-accent w-full'}>{me.pro?'Cancel Pro':'Upgrade to Pro — $25/mo'}</button> : <a href="#/subscribe" className="btn-accent w-full">Become a seller first</a>}</div>
@@ -731,11 +748,11 @@ function BulkAddPage() {
   const eligible = sellerStatus(me)==='free' || sellerStatus(me)==='paid';
   if(!eligible) { navigate('/subscribe'); return null; }
   if(!me.pro) return (
-    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-white"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><h1 className="mt-3 font-display text-xl font-bold">Bulk add is a Pro feature</h1></div><div className="p-6"><p className="text-slate-400">List a whole batch of tires in one paste. Upgrade to Pro to unlock it.</p><a href="#/pro" className="btn-accent mt-4">See TireTrader Pro</a></div></div></div>
+    <div className="mx-auto max-w-lg"><div className="card overflow-hidden text-center"><div className="relative overflow-hidden bg-brand-500/10 px-6 py-8 text-white"><span className="badge bg-brand-500 text-black">PRO</span><h1 className="mt-3 font-display text-xl font-bold">Bulk add is a Pro feature</h1></div><div className="p-6"><p className="text-slate-400">List a whole batch of tires in one paste. Upgrade to Pro to unlock it.</p><a href="#/pro" className="btn-accent mt-4">See TireTrader Pro</a></div></div></div>
   );
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-4 flex items-center gap-2"><span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span><h1 className="font-display text-2xl font-extrabold text-white">Bulk add listings</h1></div>
+      <div className="mb-4 flex items-center gap-2"><span className="badge bg-brand-500 text-black">PRO</span><h1 className="font-display text-2xl font-extrabold text-white">Bulk add listings</h1></div>
       <div className="card space-y-3 p-6">
         <p className="text-sm text-slate-400">One listing per line: <code className="rounded bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST</code></p>
         {result && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">Added {result.count} listing{result.count!==1?'s':''}.{result.errors?` Skipped ${result.errors} line(s).`:''}</div>}
@@ -766,7 +783,7 @@ function SellerProfile({ id }) {
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-xl font-bold text-white">{initialsOf(seller.name)}</span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2"><h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>{seller.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}</div>
+          <div className="flex items-center gap-2"><h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>{seller.pro && <span className="badge bg-brand-500 text-black">PRO</span>}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400"><Stars value={avg} /><span className="font-semibold text-slate-200">{avg?avg.toFixed(1):'—'}</span><span>({count} review{count!==1?'s':''})</span>{seller.location && <span>· 📍 {seller.location}</span>}</div>
           <p className="mt-1 text-xs text-slate-500">{active.length} active · {sold} sold · Member since 2026</p>
         </div>
@@ -871,7 +888,7 @@ function HomePage() {
         <div className="relative px-5 py-10 sm:px-10 sm:py-14">
           <div className="max-w-2xl animate-fadeup">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{active.length} tire sets listed across {stateCount} states</span>
-            <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tire sets from <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">trusted local resellers</span>.</h1>
+            <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tire sets from <span className="text-brand-500">trusted local resellers</span>.</h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">New and used tires from real sellers near you — searchable by size, vehicle, or location. Browsing is always free.</p>
           </div>
           <div className="mt-6 max-w-2xl"><HeroSearch homeState={homeState} /></div>
@@ -915,7 +932,7 @@ function StatesPage() {
         <div className="relative grid items-center gap-6 px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[1.4fr_1fr]">
           <div className="animate-fadeup">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />{activeListings.length} listings across {statesWith} states</span>
-            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tires <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">near you</span></h1>
+            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">Find tires <span className="text-brand-500">near you</span></h1>
             <p className="mt-4 max-w-xl text-slate-300">{me && selected ? <>Pick a state to browse. Your home state, <span className="font-semibold text-white">{stateName(selected)}</span>, is marked — choosing a new one updates your profile.</> : <>Pick your state to see new &amp; used tires for sale locally. Browsing is always free — sellers list for $10/month (first year on us).</>}</p>
             <div className="mt-6 flex flex-wrap gap-3">{selected && <a href={`#/browse?state=${selected}`} className="btn-accent">Browse {stateName(selected)} tires</a>}<a href="#/browse" className="btn-secondary bg-white/10 text-white ring-white/20 hover:bg-white/15">Browse all states</a></div>
           </div>
@@ -1340,7 +1357,7 @@ function Dashboard() {
   );
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">{isSeller ? 'Seller' : 'Account'}</p><h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">Dashboard{me.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}</h1></div><div className="flex flex-wrap gap-2">{isSeller && me.pro && <a href="#/sell/bulk" className="btn-secondary">📥 Bulk add</a>}{isSeller && !me.pro && <a href="#/pro" className="btn-secondary">✨ Go Pro</a>}{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="eyebrow">{isSeller ? 'Seller' : 'Account'}</p><h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">Dashboard{me.pro && <span className="badge bg-brand-500 text-black">PRO</span>}</h1></div><div className="flex flex-wrap gap-2">{isSeller && me.pro && <a href="#/sell/bulk" className="btn-secondary">📥 Bulk add</a>}{isSeller && !me.pro && <a href="#/pro" className="btn-secondary">✨ Go Pro</a>}{isSeller ? <a href="#/sell" className="btn-primary">+ New listing</a> : <a href="#/subscribe" className="btn-accent">Become a seller</a>}</div></div>
       <div className={`relative overflow-hidden rounded-2xl p-5 text-white ${banner.good ? 'bg-gradient-to-br from-brand-600 to-brand-800' : 'bg-gradient-to-br from-slate-700 to-ink-900'}`}>
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${banner.good?'bg-emerald-400':'bg-amber-400'}`} /><p className="font-display text-lg font-bold">{banner.title}</p></div><p className="mt-1 text-sm text-white/70">{banner.sub}</p></div>{!isSeller && <a href="#/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">{status==='expired'?'Subscribe — $10/mo':'Start free year'}</a>}</div>
@@ -1469,7 +1486,7 @@ function SellTires() {
         <div className="relative grid items-center gap-6 px-6 py-12 sm:px-10 lg:grid-cols-[1.5fr_1fr]">
           <div className="animate-fadeup">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15"><span className="h-1.5 w-1.5 rounded-full bg-accent-400" />For tire resellers</span>
-            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">Move tire inventory faster — without the <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">Marketplace chaos</span>.</h1>
+            <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">Move tire inventory faster — without the <span className="text-brand-500">Marketplace chaos</span>.</h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">List unlimited sets with real tire specs, reach buyers searching by size and vehicle, and close deals in built-in messaging. Your first year is free.</p>
             <div className="mt-6 flex flex-wrap items-center gap-3"><a href={ctaHref} className="btn-accent text-base">{ctaLabel}</a><span className="text-sm text-slate-300"><strong className="text-white">$10/month</strong> after year one · cancel anytime</span></div>
           </div>
