@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getCurrentUser, canSell, isAdmin } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
+import Analytics from "@/components/Analytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const sora = Sora({
@@ -31,6 +32,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
+        <Analytics />
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
           Skip to content
         </a>

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import ListingCard from "@/components/ListingCard";
 import MarketplaceFilters from "@/components/MarketplaceFilters";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import EmailAlertForm from "@/components/EmailAlertForm";
 import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
 import { parseTread, perTire } from "@/lib/tire";
@@ -165,6 +166,14 @@ export default async function BrowsePage({ searchParams }) {
     return `/browse${s ? `?${s}` : ""}`;
   };
 
+  const currentQuery = (() => {
+    const qs = new URLSearchParams();
+    Object.entries(searchParams).forEach(([k, v]) => {
+      if (k !== "page" && k !== "fits" && v != null && v !== "") qs.set(k, String(v));
+    });
+    return qs.toString();
+  })();
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -204,9 +213,13 @@ export default async function BrowsePage({ searchParams }) {
             </p>
             <p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Link href={state ? `/browse?state=${state}` : "/browse"} className="btn-primary">Clear filters</Link>
-              <Link href="/browse" className="btn-secondary">All states</Link>
+              <Link href={state ? `/browse?state=${state}` : "/browse"} className="btn-secondary">Clear filters</Link>
               <Link href="/states" className="btn-secondary">Open map</Link>
+            </div>
+            <div className="mx-auto mt-6 max-w-md rounded-xl bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
+              <p className="text-sm font-semibold text-slate-200">Get notified when these are listed</p>
+              <p className="mt-0.5 text-xs text-slate-400">No account needed — we'll email you when a match appears.</p>
+              <EmailAlertForm query={currentQuery} />
             </div>
             {brands.length > 0 && (
               <div className="mt-6">

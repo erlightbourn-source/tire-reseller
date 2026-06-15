@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/lib/track";
 
 export default function MessageSeller({ listingId, loggedIn }) {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function MessageSeller({ listingId, loggedIn }) {
     const data = await res.json();
     setBusy(false);
     if (!res.ok) return setErr(data.error || "Could not start conversation.");
+    track("Message seller");
     router.push(`/messages/${data.threadId}`);
   }
 

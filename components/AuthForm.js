@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { STATES } from "@/lib/states";
+import { track } from "@/lib/track";
 
 export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
@@ -31,6 +32,7 @@ export default function AuthForm({ mode }) {
       setErr(data.error || "Something went wrong.");
       return;
     }
+    if (isSignup) track("Signup", { role });
     // Sellers land on their dashboard; buyers on the marketplace.
     const dest =
       params.get("next") || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");

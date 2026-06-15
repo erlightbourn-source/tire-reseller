@@ -63,11 +63,18 @@ the limiter uses it automatically (and falls back to in-memory locally / if unse
 |---|---|---|
 | **Upstash** (Redis) | 10k cmds/day, no card | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
 
-### Saved-search email alerts
-`/api/cron/alerts` emails users a digest of new listings matching their saved
-searches. `vercel.json` already schedules it daily; set `CRON_SECRET` (any random
-string) so the endpoint is callable only by the cron / your own bearer token.
-Emails require `RESEND_API_KEY` (otherwise the digest is logged to the console).
+### Crons (scheduled in vercel.json, secured by CRON_SECRET)
+- `/api/cron/alerts` (daily) — emails logged-in users **and** no-account email-alert
+  subscribers a digest of new listings matching their saved searches.
+- `/api/cron/purge` (daily) — permanently removes accounts past the 7-day
+  soft-delete grace.
+Set `CRON_SECRET` (any random string) so the endpoints are callable only by the
+cron / your bearer token. Emails require `RESEND_API_KEY` (else digest logs to console).
+
+### Analytics (optional)
+Set `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` to your domain to load privacy-friendly,
+cookieless analytics (Plausible). Unset = no tracking. Custom events fire for
+search, signup, message-seller, and email-alert signups.
 
 ## Notes
 - Local dev stays on SQLite automatically (`DATABASE_URL="file:./dev.db"`).

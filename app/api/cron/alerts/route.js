@@ -65,5 +65,38 @@ export async function GET(req) {
     await prisma.savedSearch.updateMany({ where: { id: { in: checkedIds } }, data: { lastSeenAt: now } });
   }
 
-  return NextResponse.json({ ok: true, searchesChecked: checkedIds.length, usersEmailed: emailed });
+  // No-account email alerts (buyer demand capture).
+  const alerts = await prisma.emailAlert.findMany({ take: 2000 });
+  const alertIds = [];
+  let alertsEmailed = 0;
+  for (const a of alerts) {
+    alertIds.push(a.id);
+    const params = Object.fromEntries(new URLSearchParams(a.query));
+    const AND = [...buildListingWhere(params), { hidden: false }, { createdAt: { gt: a.lastSeenAt } }, { seller: { deletedAt: null } }];
+    const matches = await prisma.listing.findMany({
+      where: { AND },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { brand: true, size: true, priceCents: true, location: true },
+    });
+    if (matches.length === 0) continue;
+    const sub = matches.map((m) => ` • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)} (${m.location})`).join("\n");
+    await sendEmail({
+      to: a.email,
+      subject: `New tires matching "${a.label}"`,
+      text: `New listings matching your alert (${a.label}):\n\n${sub}\n\nBrowse: ${SITE_URL}/browse${a.query ? `?${a.query}` : ""}\n\nUnsubscribe: ${SITE_URL}/api/email-alerts/unsubscribe?token=${a.token}`,
+    });
+    alertsEmailed++;
+  }
+  if (alertIds.length) {
+    await prisma.emailAlert.updateMany({ where: { id: { in: alertIds } }, data: { lastSeenAt: now } });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    searchesChecked: checkedIds.length,
+    usersEmailed: emailed,
+    alertsChecked: alertIds.length,
+    alertsEmailed,
+  });
 }
