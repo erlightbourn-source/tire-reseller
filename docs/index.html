@@ -16,7 +16,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Play CDN pinned to an exact version (no floating @latest). NOTE:
+       the Play CDN serves content-negotiated bytes, so Subresource Integrity is
+       NOT viable here (it would block the script in real browsers) — unlike the
+       React/Babel scripts below, which are SRI-pinned. Fully removing this
+       supply-chain dependency means shipping a precompiled static CSS instead. -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
   <script>
     tailwind.config = {
       theme: {

@@ -256,6 +256,7 @@ model Report {
   @@unique([listingId, reporterId])
   @@index([listingId])
   @@index([reporterId]) // reporter-scoped lookups (rate-limit / credibility join)
+  @@index([createdAt])  // moderation queue ordering
 }
 
 model Block {

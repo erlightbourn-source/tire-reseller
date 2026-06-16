@@ -104,7 +104,9 @@ async function main() {
     if (f.startsWith("seed-")) fs.unlinkSync(path.join(UPLOAD_DIR, f));
   }
 
-  const pw = (p) => bcrypt.hashSync(p, 10);
+  // Must match lib/auth.js: SHA-256 pre-hash → bcrypt cost 12.
+  const crypto = require("crypto");
+  const pw = (p) => bcrypt.hashSync(crypto.createHash("sha256").update(String(p), "utf8").digest("base64"), 12);
   // Every seller is in their free first year (no charge until this date).
   const freeUntil = new Date(Date.now() + 365 * 864e5);
 

@@ -9,7 +9,7 @@ const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 // A valid bcrypt hash we compare against when the email doesn't exist, so the
 // request does the same ~bcrypt-cost work as a real lookup. Without this, a
 // missing email returns in microseconds and leaks account existence via timing.
-const DUMMY_HASH = "$2a$10$UEL5a3PKxBSiLOP1U/2yQO44y9Yn3PCKxrwDyLU6uJVsZ7Fs/i7me";
+const DUMMY_HASH = "$2a$12$lgd8yNdNWd77V9Tb7SF.h.O/2s041/TGa2g.npRmOf7zxpQEQVekS";
 
 export async function POST(req) {
   // Throttle credential stuffing / brute force: 8 attempts per IP per minute.

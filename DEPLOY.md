@@ -67,6 +67,11 @@ the limiter uses it automatically (and falls back to in-memory locally / if unse
 |---|---|---|
 | **Upstash** (Redis) | 10k cmds/day, no card | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` |
 
+> **Trusted proxy:** rate-limit/audit client IPs come from `x-vercel-forwarded-for`
+> → `x-real-ip` → `x-forwarded-for`. On Vercel these are edge-set and trustworthy.
+> On a self-hosted/non-Vercel deploy, run behind a proxy that **overwrites** these
+> inbound headers, or a client can spoof them to cycle rate-limit buckets.
+
 ### Crons (scheduled in vercel.json, secured by CRON_SECRET)
 - `/api/cron/alerts` (daily) — emails logged-in users **and** no-account email-alert
   subscribers a digest of new listings matching their saved searches.
