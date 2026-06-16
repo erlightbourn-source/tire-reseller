@@ -26,16 +26,16 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  // Also throttle per-account so a botnet spreading across IPs can't brute one
-  // account: 10 attempts per email per minute.
-  const acctLimited = await enforceRateLimit(req, "login-acct", { key: lowerEmail, limit: 10, windowMs: 60_000 });
-  if (acctLimited) return acctLimited;
-
   const user = await prisma.user.findUnique({ where: { email: lowerEmail } });
   // Constant-work: always run a bcrypt compare (dummy hash when no user) so the
   // response time doesn't reveal whether the email is registered.
   const ok = await verifyPassword(password, user ? user.passwordHash : DUMMY_HASH);
   if (!user || !ok) {
+    // Throttle per-account so a botnet spreading across IPs can't brute one
+    // account — but count ONLY failures, so spamming a victim's email can't lock
+    // the victim out (a correct password never increments this bucket).
+    const acctLimited = await enforceRateLimit(req, "login-acct", { key: lowerEmail, limit: 12, windowMs: 60_000 });
+    if (acctLimited) return acctLimited;
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 

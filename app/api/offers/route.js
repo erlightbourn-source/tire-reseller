@@ -30,8 +30,15 @@ export async function POST(req) {
 
   if (action === "counter") {
     const cents = Math.round(Number(offerCents));
-    if (!cents || cents <= 0) return NextResponse.json({ error: "Enter a counter amount." }, { status: 400 });
-    await prisma.message.update({ where: { id: msg.id }, data: { offerStatus: "countered" } });
+    if (!Number.isFinite(cents) || cents <= 0 || cents > 100_000_000)
+      return NextResponse.json({ error: "Enter a valid counter amount." }, { status: 400 });
+    // Atomic: only flip if still pending (lose the race → already answered).
+    const claimed = await prisma.message.updateMany({
+      where: { id: msg.id, offerStatus: "pending" },
+      data: { offerStatus: "countered" },
+    });
+    if (claimed.count === 0)
+      return NextResponse.json({ error: "This offer was already answered." }, { status: 409 });
     await prisma.message.create({
       data: {
         threadId: t.id,
@@ -47,10 +54,20 @@ export async function POST(req) {
   }
 
   const accepted = action === "accept";
-  await prisma.message.update({
-    where: { id: msg.id },
+  // Don't accept an offer on a listing that's no longer for sale.
+  if (accepted) {
+    const listing = await prisma.listing.findUnique({ where: { id: t.listingId }, select: { status: true } });
+    if (!listing || listing.status !== "active")
+      return NextResponse.json({ error: "This listing is no longer available." }, { status: 409 });
+  }
+  // Atomic state transition: only the FIRST concurrent request flips pending->X,
+  // so a burst of accepts can't double-accept or duplicate side effects.
+  const claim = await prisma.message.updateMany({
+    where: { id: msg.id, offerStatus: "pending" },
     data: { offerStatus: accepted ? "accepted" : "declined" },
   });
+  if (claim.count === 0)
+    return NextResponse.json({ error: "This offer was already answered." }, { status: 409 });
   await prisma.message.create({
     data: {
       threadId: t.id,
@@ -61,7 +78,8 @@ export async function POST(req) {
     },
   });
   if (accepted) {
-    await prisma.listing.update({ where: { id: t.listingId }, data: { status: "sold" } }).catch(() => {});
+    // Guard on status:active so a concurrent sale can't be overwritten.
+    await prisma.listing.updateMany({ where: { id: t.listingId, status: "active" }, data: { status: "sold" } });
   }
   await prisma.thread.update({ where: { id: t.id }, data: { updatedAt: new Date() } });
   return NextResponse.json({ ok: true });

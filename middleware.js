@@ -26,8 +26,11 @@ function buildCsp(nonce) {
     // and style injection is far lower risk than script injection.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
-    `script-src ${scriptSrc}`,
-    "connect-src 'self'",
+    // plausible.io is allowed for the optional, env-flagged analytics: the script
+    // host (loaded via next/script, trusted transitively by strict-dynamic) and
+    // the event beacon it POSTs to (connect-src). Harmless when analytics is off.
+    `script-src ${scriptSrc} https://plausible.io`,
+    "connect-src 'self' https://plausible.io",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

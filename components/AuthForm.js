@@ -33,9 +33,12 @@ export default function AuthForm({ mode }) {
       return;
     }
     if (isSignup) track("Signup", { role });
-    // Sellers land on their dashboard; buyers on the marketplace.
-    const dest =
-      params.get("next") || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");
+    // Sellers land on their dashboard; buyers on the marketplace. Only honor a
+    // same-origin relative `next` (reject `//evil.com`, `https://…`, etc.) so the
+    // post-login redirect can't be turned into an open-redirect phishing pivot.
+    const rawNext = params.get("next") || "";
+    const safeNext = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+    const dest = safeNext || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");
     router.push(dest);
     router.refresh();
   }

@@ -56,12 +56,24 @@ export async function POST(req, { params }) {
   const { thread, code } = await loadThread(threadId, user.id);
   if (code) return NextResponse.json({ error: "Not found." }, { status: code });
 
+  // Re-check blocks on every send: a block placed AFTER the thread existed must
+  // still stop further messaging (blocks were only checked at thread creation).
+  const other = thread.buyerId === user.id ? thread.sellerId : thread.buyerId;
+  const blocked = await prisma.block.findFirst({
+    where: { OR: [{ blockerId: user.id, blockedId: other }, { blockerId: other, blockedId: user.id }] },
+    select: { id: true },
+  });
+  if (blocked) return NextResponse.json({ error: "Messaging is unavailable in this conversation." }, { status: 403 });
+
   const { body, kind, offerCents } = await req.json();
 
   if (kind === "offer") {
     const cents = Math.round(Number(offerCents));
     if (!cents || cents <= 0 || cents > 100_000_000)
       return NextResponse.json({ error: "Enter a valid offer amount." }, { status: 400 });
+    const listing = await prisma.listing.findUnique({ where: { id: thread.listingId }, select: { status: true } });
+    if (!listing || listing.status !== "active")
+      return NextResponse.json({ error: "This listing is no longer available." }, { status: 409 });
     let note;
     try { note = cleanStr(body, LIMITS.message, { field: "Message" }); }
     catch (e) { if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 }); throw e; }
