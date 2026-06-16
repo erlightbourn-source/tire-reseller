@@ -27,7 +27,7 @@ export default function EmailAlertForm({ query = "", compact = false }) {
   }
 
   if (done) {
-    return <p className="text-sm font-medium text-emerald-300">✓ We'll email you when matching tires are listed.</p>;
+    return <p className="text-sm font-medium text-emerald-300">✓ Check your email to confirm — then we'll alert you when matching tires are listed.</p>;
   }
 
   return (

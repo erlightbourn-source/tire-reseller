@@ -68,8 +68,9 @@ export async function GET(req) {
     await prisma.savedSearch.updateMany({ where: { id: { in: checkedIds } }, data: { lastSeenAt: now } });
   }
 
-  // No-account email alerts (buyer demand capture).
-  const alerts = await prisma.emailAlert.findMany({ take: 2000 });
+  // No-account email alerts (buyer demand capture). Only CONFIRMED alerts get
+  // digests (double opt-in), so we never mail an address that didn't opt in.
+  const alerts = await prisma.emailAlert.findMany({ where: { confirmed: true }, take: 2000 });
   const alertIds = [];
   let alertsEmailed = 0;
   for (const a of alerts) {
@@ -84,10 +85,16 @@ export async function GET(req) {
     });
     if (matches.length === 0) continue;
     const sub = matches.map((m) => ` • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)} (${m.location})`).join("\n");
+    const unsubUrl = `${SITE_URL}/unsubscribe?token=${a.token}`;
     await sendEmail({
       to: a.email,
       subject: `New tires matching "${a.label}"`,
-      text: `New listings matching your alert (${a.label}):\n\n${sub}\n\nBrowse: ${SITE_URL}/browse${a.query ? `?${a.query}` : ""}\n\nUnsubscribe: ${SITE_URL}/api/email-alerts/unsubscribe?token=${a.token}`,
+      text: `New listings matching your alert (${a.label}):\n\n${sub}\n\nBrowse: ${SITE_URL}/browse${a.query ? `?${a.query}` : ""}\n\nUnsubscribe: ${unsubUrl}`,
+      // RFC 8058 one-click unsubscribe (POST to the API), plus the page link.
+      headers: {
+        "List-Unsubscribe": `<${SITE_URL}/api/email-alerts/unsubscribe?token=${a.token}>, <${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
     alertsEmailed++;
   }

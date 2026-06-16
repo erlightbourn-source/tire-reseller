@@ -34,13 +34,20 @@ export async function POST(req) {
   const existing = await prisma.emailAlert.findUnique({ where: { email_query: { email: addr, query: cleanQuery } } }).catch(() => null);
   if (existing) return NextResponse.json({ ok: true, duplicate: true });
 
-  const { token } = newResetToken();
-  await prisma.emailAlert.create({ data: { email: addr, query: cleanQuery, label, token } });
+  // Double opt-in: store UNCONFIRMED and send a confirmation request. The cron
+  // only mails confirmed alerts, so we never send digests to an address that
+  // didn't explicitly opt in.
+  const { token } = newResetToken();         // unsubscribe capability
+  const { token: confirmToken } = newResetToken(); // one-time confirm capability
+  await prisma.emailAlert.create({ data: { email: addr, query: cleanQuery, label, token, confirmToken } });
 
   await sendEmail({
     to: addr,
-    subject: "You're set for TireTrader alerts",
-    text: `We'll email you when new tires match: ${label}\n\nBrowse now: ${SITE_URL}/browse${cleanQuery ? `?${cleanQuery}` : ""}\n\nUnsubscribe anytime: ${SITE_URL}/api/email-alerts/unsubscribe?token=${token}`,
+    subject: "Confirm your TireTrader tire alerts",
+    text:
+      `Confirm you want alerts when new tires match: ${label}\n\n` +
+      `Confirm: ${SITE_URL}/api/email-alerts/confirm?token=${confirmToken}\n\n` +
+      `If you didn't request this, just ignore this email — you won't hear from us again.`,
   });
 
   return NextResponse.json({ ok: true });

@@ -48,8 +48,12 @@ tiers and none require a credit card.
    pointing at Neon):
    ```bash
    npx prisma db push
-   npx prisma db seed   # optional demo data
+   npx prisma db seed   # optional demo data (also backfills denormalized cols)
    ```
+   **Upgrading an existing DB** after a schema change that adds the denormalized
+   browse columns (`rimDiameter`, `treadDepth32`, `perTireCents`, `sellerPro`,
+   `ratingAvg`, …): run `npx prisma db push` then **`npm run backfill`** once to
+   populate them for existing rows. It's idempotent.
 
 6. **Deploy** — push to `main`; Vercel builds automatically. Done.
 

@@ -120,13 +120,17 @@ model Listing {
 }
 
 model EmailAlert {
-  id         String   @id @default(cuid())
-  email      String
-  query      String   // saved-search querystring
-  label      String
-  token      String   @unique // one-click unsubscribe
-  lastSeenAt DateTime @default(now())
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  email        String
+  query        String   // saved-search querystring
+  label        String
+  token        String   @unique // unsubscribe capability token
+  // Double opt-in: digests are only sent after the recipient confirms, so the
+  // anonymous endpoint can't be used to mail unsolicited alerts to third parties.
+  confirmed    Boolean  @default(false)
+  confirmToken String?  @unique
+  lastSeenAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@unique([email, query])
   @@index([email])
