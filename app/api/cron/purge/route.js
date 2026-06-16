@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { bearerMatches } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +9,7 @@ const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 // Permanently remove accounts whose 7-day soft-delete grace has elapsed.
 // Bearer-gated (CRON_SECRET); fails closed if unset.
 export async function GET(req) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!bearerMatches(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

@@ -231,6 +231,7 @@ model Report {
 
   @@unique([listingId, reporterId])
   @@index([listingId])
+  @@index([reporterId]) // reporter-scoped lookups (rate-limit / credibility join)
 }
 
 model Block {
@@ -243,4 +244,5 @@ model Block {
 
   @@unique([blockerId, blockedId])
   @@index([blockerId])
+  @@index([blockedId]) // reverse lookups (the bidirectional block check on message send)
 }

@@ -56,10 +56,14 @@ async function getListings(sp, blockedIds = []) {
   if (sort === "price_asc") orderBy = [{ featured: "desc" }, { priceCents: "asc" }];
   if (sort === "price_desc") orderBy = [{ featured: "desc" }, { priceCents: "desc" }];
 
+  // DoS backstop: the radius/tread/rating filters and pagination run in JS over
+  // this set, so bound the candidate fetch. 2000 is far beyond any realistic
+  // browse depth; if a catalog ever exceeds it, move pagination into the DB.
   let listings = await prisma.listing.findMany({
     where: { AND },
     orderBy,
     include: { photos: { orderBy: { sort: "asc" }, take: 1 }, seller: { select: { pro: true } } },
+    take: 2000,
   });
 
   // Pro sellers get priority placement (after featured). Stable re-sort.
@@ -68,7 +72,7 @@ async function getListings(sp, blockedIds = []) {
 
   // Radius filter (haversine) — applied in JS since SQLite has no geo functions.
   const lat = Number(sp.lat), lng = Number(sp.lng), radius = Number(sp.radius);
-  if (sp.lat && sp.lng && radius) {
+  if (Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(radius) && radius > 0) {
     listings = listings
       .map((l) => ({ l, d: milesBetween(lat, lng, l.lat, l.lng) }))
       .filter((x) => x.d <= radius)
@@ -79,10 +83,12 @@ async function getListings(sp, blockedIds = []) {
   // Minimum tread depth (32nds) — tread is a free-text string, so filter in JS.
   if (sp.minTread) {
     const min = Number(sp.minTread);
-    listings = listings.filter((l) => {
-      const n = parseTread(l.treadDepth)?.n;
-      return n != null && n >= min;
-    });
+    if (Number.isFinite(min)) {
+      listings = listings.filter((l) => {
+        const n = parseTread(l.treadDepth)?.n;
+        return n != null && n >= min;
+      });
+    }
   }
 
   // Attach each seller's rating (for card display) and optionally filter by it.
@@ -98,7 +104,7 @@ async function getListings(sp, blockedIds = []) {
     listings = listings.map((l) => ({ ...l, _rating: rmap[l.sellerId] || { avg: 0, count: 0 } }));
     if (sp.minRating) {
       const min = Number(sp.minRating);
-      listings = listings.filter((l) => (l._rating?.avg || 0) >= min);
+      if (Number.isFinite(min)) listings = listings.filter((l) => (l._rating?.avg || 0) >= min);
     }
   }
 

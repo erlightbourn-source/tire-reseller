@@ -4,6 +4,7 @@ import { buildListingWhere } from "@/lib/listingFilter";
 import { sendEmail } from "@/lib/email";
 import { formatPrice } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
+import { bearerMatches } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,7 @@ export const dynamic = "force-dynamic";
 // token: set CRON_SECRET — Vercel automatically sends it on cron invocations, and
 // you can trigger manually with the same token. Fails closed if unset.
 export async function GET(req) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!bearerMatches(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -49,6 +49,9 @@ export async function GET(req) {
 
   let emailed = 0;
   for (const [email, { name, items }] of byUser) {
+    // Strip control chars from the display name — cleanStr only trims the ends,
+    // so an interior newline would otherwise inject lines into this email body.
+    const safeName = String(name || "there").replace(/[\r\n\t]+/g, " ").trim().slice(0, 80);
     const lines = items.map((it) => {
       const sub = it.samples.map((m) => `   • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)} (${m.location})`).join("\n");
       return ` - ${it.label}: ${it.count} new\n${sub}`;
@@ -56,7 +59,7 @@ export async function GET(req) {
     await sendEmail({
       to: email,
       subject: "New tire matches on TireTrader",
-      text: `Hi ${name},\n\nNew listings matching your saved searches:\n\n${lines.join("\n\n")}\n\nBrowse them: ${SITE_URL}/browse\n\nManage alerts: ${SITE_URL}/saved`,
+      text: `Hi ${safeName},\n\nNew listings matching your saved searches:\n\n${lines.join("\n\n")}\n\nBrowse them: ${SITE_URL}/browse\n\nManage alerts: ${SITE_URL}/saved`,
     });
     emailed++;
   }

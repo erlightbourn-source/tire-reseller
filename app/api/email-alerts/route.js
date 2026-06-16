@@ -18,6 +18,12 @@ export async function POST(req) {
   const addr = String(email || "").toLowerCase();
   if (!isEmail(addr)) return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
 
+  // Per-address cap (3/hour) so the anonymous endpoint can't be used to bomb a
+  // third party's inbox with unsolicited "you're set for alerts" mail by rotating
+  // IPs. (A confirmation/double-opt-in flow is the fuller fix — tracked separately.)
+  const addrLimited = await enforceRateLimit(req, "emailalert-addr", { key: addr, limit: 3, windowMs: 60 * 60 * 1000 });
+  if (addrLimited) return addrLimited;
+
   // Normalize the query to the allowed filter keys.
   const sp = new URLSearchParams(String(query || "").slice(0, 600));
   const params = {};

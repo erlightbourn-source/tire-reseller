@@ -10,9 +10,16 @@ export default async function EditListingPage({ params }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  // Scope the query to just what the (client) form needs — don't serialize the
+  // listing's lat/lng or internal flags (views/hidden/featured) into the page.
   const listing = await prisma.listing.findUnique({
     where: { id },
-    include: { photos: { orderBy: { sort: "asc" } } },
+    select: {
+      id: true, sellerId: true, brand: true, size: true, quantity: true, condition: true,
+      treadDepth: true, priceCents: true, location: true, description: true, season: true,
+      loadIndex: true, speedRating: true, runFlat: true, shipping: true, dotYear: true, status: true,
+      photos: { orderBy: { sort: "asc" } },
+    },
   });
   if (!listing) notFound();
   if (listing.sellerId !== user.id) redirect("/dashboard");
