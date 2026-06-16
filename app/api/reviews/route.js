@@ -24,6 +24,20 @@ export async function POST(req) {
   const seller = await prisma.user.findUnique({ where: { id: sellerId } });
   if (!seller || seller.role !== "seller") return NextResponse.json({ error: "Seller not found." }, { status: 404 });
 
+  // Anti-brigading: only let buyers who have actually contacted this seller
+  // (started a message thread) leave a review — prevents drive-by rating attacks
+  // from throwaway accounts with no transaction history.
+  const contacted = await prisma.thread.findFirst({
+    where: { buyerId: user.id, sellerId },
+    select: { id: true },
+  });
+  if (!contacted) {
+    return NextResponse.json(
+      { error: "You can only review a seller you've messaged." },
+      { status: 403 }
+    );
+  }
+
   await prisma.review.upsert({
     where: { sellerId_authorId: { sellerId, authorId: user.id } },
     update: { rating: r, body: text },

@@ -35,3 +35,5 @@ jobs:
       - run: npx prisma db push --skip-generate
       - run: npm test
       - run: npm run build
+      # Fail the build on known high/critical dependency vulnerabilities.
+      - run: npm run audit:ci

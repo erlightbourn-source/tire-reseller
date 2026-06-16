@@ -33,7 +33,10 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(raw, sig, whSecret);
   } catch (err) {
-    return NextResponse.json({ error: `Webhook signature failed: ${err.message}` }, { status: 400 });
+    // Don't reflect the specific verification failure — it's a forgery/replay
+    // oracle. Log server-side, return a generic message.
+    console.error("[stripe] webhook signature verification failed:", err.message);
+    return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   switch (event.type) {

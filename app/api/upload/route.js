@@ -52,6 +52,14 @@ export async function POST(req) {
   const limited = await enforceRateLimit(req, `upload:${user.id}`, { limit: 40, windowMs: 60_000 });
   if (limited) return limited;
 
+  // Reject an oversized multipart body BEFORE parsing it into memory (App Router
+  // route handlers have no default body cap → memory-exhaustion DoS otherwise).
+  const MAX_BODY = MAX_BYTES * MAX_FILES + 1024 * 1024; // total payload ceiling
+  const declaredLen = Number(req.headers.get("content-length") || 0);
+  if (declaredLen > MAX_BODY) {
+    return NextResponse.json({ error: "Upload too large." }, { status: 413 });
+  }
+
   const form = await req.formData();
   const files = form.getAll("files").filter((f) => typeof f === "object" && f.size > 0);
   if (files.length === 0) return NextResponse.json({ error: "No files uploaded." }, { status: 400 });

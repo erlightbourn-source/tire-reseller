@@ -6,6 +6,11 @@ import { logAudit } from "@/lib/audit";
 
 const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
+// A valid bcrypt hash we compare against when the email doesn't exist, so the
+// request does the same ~bcrypt-cost work as a real lookup. Without this, a
+// missing email returns in microseconds and leaks account existence via timing.
+const DUMMY_HASH = "$2a$10$UEL5a3PKxBSiLOP1U/2yQO44y9Yn3PCKxrwDyLU6uJVsZ7Fs/i7me";
+
 export async function POST(req) {
   // Throttle credential stuffing / brute force: 8 attempts per IP per minute.
   const limited = await enforceRateLimit(req, "login", { limit: 8, windowMs: 60_000 });
@@ -15,13 +20,22 @@ export async function POST(req) {
   if (!email || !password || typeof password !== "string") {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
-  if (!isEmail(String(email).toLowerCase()) || password.length > 200) {
+  const lowerEmail = String(email).toLowerCase();
+  if (!isEmail(lowerEmail) || password.length > 200) {
     // Generic message — never reveal whether the email exists.
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  // Also throttle per-account so a botnet spreading across IPs can't brute one
+  // account: 10 attempts per email per minute.
+  const acctLimited = await enforceRateLimit(req, "login-acct", { key: lowerEmail, limit: 10, windowMs: 60_000 });
+  if (acctLimited) return acctLimited;
+
+  const user = await prisma.user.findUnique({ where: { email: lowerEmail } });
+  // Constant-work: always run a bcrypt compare (dummy hash when no user) so the
+  // response time doesn't reveal whether the email is registered.
+  const ok = await verifyPassword(password, user ? user.passwordHash : DUMMY_HASH);
+  if (!user || !ok) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
