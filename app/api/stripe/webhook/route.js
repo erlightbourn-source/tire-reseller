@@ -18,6 +18,9 @@ async function activateForCustomer(customerId, { status, priceId, currentPeriodE
       ...(status === "active" ? {} : { pro: false }),
     },
   });
+  if (status !== "active") {
+    await prisma.listing.updateMany({ where: { sellerId: user.id }, data: { sellerPro: false } });
+  }
 }
 
 export async function POST(req) {

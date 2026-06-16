@@ -62,6 +62,17 @@ export async function PATCH(req, { params }) {
   }
   if (b.shipping !== undefined) data.shipping = !!b.shipping;
 
+  // Keep the denormalized size/tread/per-tire columns in sync when any of their
+  // inputs change (merge new values with the existing row).
+  if (data.size !== undefined || data.treadDepth !== undefined || data.priceCents !== undefined || data.quantity !== undefined) {
+    Object.assign(data, deriveListingColumns({
+      size: data.size ?? listing.size,
+      treadDepth: data.treadDepth ?? listing.treadDepth,
+      priceCents: data.priceCents ?? listing.priceCents,
+      quantity: data.quantity ?? listing.quantity,
+    }));
+  }
+
   // Replace photos if provided — only host-served or data-URI images.
   if (Array.isArray(b.photos)) {
     await prisma.photo.deleteMany({ where: { listingId: listing.id } });

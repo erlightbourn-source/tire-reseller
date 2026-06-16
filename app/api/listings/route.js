@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
+import { deriveListingColumns } from "@/lib/tiresize";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
@@ -63,18 +64,22 @@ export async function POST(req) {
   // Accept only host-served / data / Vercel Blob image URLs; reject arbitrary remote URLs.
   const photos = (Array.isArray(b.photos) ? b.photos : []).filter(isAllowedPhotoUrl).slice(0, 6);
 
+  const quantity = clampInt(b.quantity, { min: 1, max: 100, fallback: 1 });
+  const priceCents = Math.round(price * 100);
   const listing = await prisma.listing.create({
     data: {
       sellerId: user.id,
       brand,
       size,
-      quantity: clampInt(b.quantity, { min: 1, max: 100, fallback: 1 }),
+      quantity,
       condition: b.condition === "new" ? "new" : "used",
       treadDepth,
-      priceCents: Math.round(price * 100),
+      priceCents,
       location,
       state: stateFromLocation(location),
       description,
+      sellerPro: !!user.pro,
+      ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
       ...tireAttrs(b),
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),

@@ -21,6 +21,11 @@ model User {
   pro                Boolean  @default(false)   // Pro seller upgrade
   admin              Boolean  @default(false)   // platform moderator
 
+  // Denormalized seller rating (maintained on review write + backfilled) so the
+  // browse min-rating filter is a DB clause, not an in-JS pass.
+  ratingAvg          Float    @default(0)
+  ratingCount        Int      @default(0)
+
   // Session invalidation: bumping this revokes all existing JWTs (logout-all,
   // password change/reset). Password-reset token is stored hashed with expiry.
   tokenVersion       Int      @default(0)
@@ -79,6 +84,16 @@ model Listing {
   hidden      Boolean  @default(false) // auto-hidden after enough reports
   views       Int      @default(0)
 
+  // Denormalized columns for indexed filtering/sorting (populated on write +
+  // backfilled). Avoids `LIKE '%size%'` scans, in-JS tread filtering, the
+  // per-request price-cohort scan, and enables DB-side ordering by seller-pro.
+  widthMm      Int?     // 245 from 245/40R19
+  aspectRatio  Int?     // 40
+  rimDiameter  Int?     // 19
+  treadDepth32 Float?   // parsed 32nds, e.g. 8 or 8.5
+  perTireCents Int?     // priceCents / quantity
+  sellerPro    Boolean  @default(false) // mirrors seller.pro for ranked placement
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -97,6 +112,11 @@ model Listing {
   @@index([season])
   @@index([featured])
   @@index([createdAt])
+  @@index([rimDiameter])
+  @@index([treadDepth32])
+  @@index([widthMm, aspectRatio, rimDiameter])
+  // Hot browse ordering: active, then featured/pro/recency.
+  @@index([status, featured, sellerPro, createdAt])
 }
 
 model EmailAlert {

@@ -43,5 +43,18 @@ export async function POST(req) {
     update: { rating: r, body: text },
     create: { sellerId, authorId: user.id, rating: r, body: text },
   });
+
+  // Maintain the seller's denormalized rating so the browse min-rating filter
+  // and card display read a column instead of recomputing an aggregate per page.
+  const agg = await prisma.review.aggregate({
+    where: { sellerId },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+  await prisma.user.update({
+    where: { id: sellerId },
+    data: { ratingAvg: agg._avg.rating || 0, ratingCount: agg._count._all },
+  });
+
   return NextResponse.json({ ok: true });
 }

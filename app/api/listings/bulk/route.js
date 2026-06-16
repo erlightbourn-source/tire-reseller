@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
+import { deriveListingColumns } from "@/lib/tiresize";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
 
 const MAX_LINES = 50;
@@ -37,18 +38,22 @@ export async function POST(req) {
         continue;
       }
       const coords = geocodeCity(location) || {};
+      const quantity = clampInt(qtyRaw, { min: 1, max: 100, fallback: 4 });
+      const priceCents = Math.round(price * 100);
       const l = await prisma.listing.create({
         data: {
           sellerId: user.id,
           brand,
           size,
-          quantity: clampInt(qtyRaw, { min: 1, max: 100, fallback: 4 }),
+          quantity,
           condition: condRaw === "new" ? "new" : "used",
-          priceCents: Math.round(price * 100),
+          priceCents,
           location,
           state: stateFromLocation(location),
           lat: coords.lat ?? null,
           lng: coords.lng ?? null,
+          sellerPro: !!user.pro,
+          ...deriveListingColumns({ size, treadDepth: null, priceCents, quantity }),
         },
       });
       created.push(l.id);

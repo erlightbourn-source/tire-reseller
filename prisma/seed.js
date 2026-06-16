@@ -293,6 +293,13 @@ async function main() {
     data: { threadId: thread.id, senderId: buyer.id, kind: "offer", offerCents: 85000, offerStatus: "pending", body: "Offer: $850", createdAt: new Date() },
   });
 
+  // Populate denormalized columns (size components, tread, per-tire price,
+  // sellerPro, seller ratings) used by the indexed browse queries. One source of
+  // truth shared with `npm run backfill`.
+  const { backfillDenorm } = await import("./backfill.mjs");
+  const bf = await backfillDenorm(prisma);
+  console.log(`   Backfilled denorm: ${bf.listings} listings, ${bf.ratedSellers} rated sellers`);
+
   console.log("\n✅ Seed complete.");
   console.log(`   Users: ${sellers.length + 1}  Listings: ${listings.length}`);
   console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (seller · free first year)");

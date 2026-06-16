@@ -7,8 +7,10 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import EmailAlertForm from "@/components/EmailAlertForm";
 import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
-import { parseTread, perTire } from "@/lib/tire";
-import { priceContext } from "@/lib/pricing";
+import { perTire } from "@/lib/tire";
+import { parseTireSize } from "@/lib/tiresize";
+import { buildListingWhere } from "@/lib/listingFilter";
+import { priceContextFromStats } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -26,101 +28,81 @@ export async function generateMetadata({ searchParams }) {
   };
 }
 
-async function getListings(sp, blockedIds = []) {
-  const { q, brand, condition, size, maxPrice, sort, state, season, runFlat } = sp;
-
-  const AND = [{ status: "active" }, { hidden: false }];
+// Returns one page of results: { items, total, page }. All filtering/sorting/
+// pagination happens in the DB (indexed columns + skip/take), except radius
+// search, which bounds candidates with a lat/lng box then refines in JS.
+async function getListings(sp, blockedIds = [], page = 1, pageSize = 24) {
+  const AND = buildListingWhere(sp); // size/tread/rating now indexed DB clauses
+  AND.push({ hidden: false });
   if (blockedIds.length) AND.push({ sellerId: { notIn: blockedIds } });
-  if (state && isStateAbbr(state)) AND.push({ state: state.toUpperCase() });
-  if (brand) AND.push({ brand });
-  if (condition) AND.push({ condition });
-  if (size) AND.push({ size: { contains: size } });
-  if (season) AND.push({ season });
-  if (runFlat === "1") AND.push({ runFlat: true });
-  if (maxPrice) AND.push({ priceCents: { lte: Math.round(Number(maxPrice) * 100) } });
-  if (sp.minYear) AND.push({ dotYear: { gte: Number(sp.minYear) } });
-  if (sp.qty) AND.push({ quantity: { gte: Number(sp.qty) } });
-  if (sp.shipping === "1") AND.push({ shipping: true });
-  if (q) {
+  if (sp.q) {
     AND.push({
       OR: [
-        { brand: { contains: q } },
-        { size: { contains: q } },
-        { location: { contains: q } },
-        { description: { contains: q } },
+        { brand: { contains: sp.q } },
+        { size: { contains: sp.q } },
+        { location: { contains: sp.q } },
+        { description: { contains: sp.q } },
       ],
     });
   }
+  const where = { AND };
 
-  let orderBy = [{ featured: "desc" }, { createdAt: "desc" }];
-  if (sort === "price_asc") orderBy = [{ featured: "desc" }, { priceCents: "asc" }];
-  if (sort === "price_desc") orderBy = [{ featured: "desc" }, { priceCents: "desc" }];
+  const orderBy =
+    sp.sort === "price_asc" ? [{ featured: "desc" }, { sellerPro: "desc" }, { priceCents: "asc" }] :
+    sp.sort === "price_desc" ? [{ featured: "desc" }, { sellerPro: "desc" }, { priceCents: "desc" }] :
+    [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }];
 
-  // DoS backstop: the radius/tread/rating filters and pagination run in JS over
-  // this set, so bound the candidate fetch. 2000 is far beyond any realistic
-  // browse depth; if a catalog ever exceeds it, move pagination into the DB.
-  let listings = await prisma.listing.findMany({
-    where: { AND },
-    orderBy,
-    include: { photos: { orderBy: { sort: "asc" }, take: 1 }, seller: { select: { pro: true } } },
-    take: 2000,
-  });
+  const include = {
+    photos: { orderBy: { sort: "asc" }, take: 1 },
+    seller: { select: { pro: true, ratingAvg: true, ratingCount: true } },
+  };
 
-  // Pro sellers get priority placement (after featured). Stable re-sort.
-  const pro = (l) => (l.seller?.pro ? 1 : 0);
-  listings.sort((a, b) => (b.featured - a.featured) || (pro(b) - pro(a)));
-
-  // Radius filter (haversine) — applied in JS since SQLite has no geo functions.
-  const lat = Number(sp.lat), lng = Number(sp.lng), radius = Number(sp.radius);
-  if (Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(radius) && radius > 0) {
-    listings = listings
-      .map((l) => ({ l, d: milesBetween(lat, lng, l.lat, l.lng) }))
-      .filter((x) => x.d <= radius)
-      .sort((a, b) => (b.l.featured - a.l.featured) || (pro(b.l) - pro(a.l)) || (a.d - b.d))
-      .map((x) => ({ ...x.l, _distance: x.d }));
-  }
-
-  // Minimum tread depth (32nds) — tread is a free-text string, so filter in JS.
-  if (sp.minTread) {
-    const min = Number(sp.minTread);
-    if (Number.isFinite(min)) {
-      listings = listings.filter((l) => {
-        const n = parseTread(l.treadDepth)?.n;
-        return n != null && n >= min;
+  // Attach per-card seller rating (denormalized) + fair-price context. The
+  // cohort average comes from ONE groupBy over just the page's sizes.
+  async function finalize(items, total, p) {
+    let out = items.map((l) => ({ ...l, _rating: { avg: l.seller?.ratingAvg || 0, count: l.seller?.ratingCount || 0 } }));
+    const sizes = [...new Set(out.map((l) => l.size))];
+    if (sizes.length) {
+      const cohorts = await prisma.listing.groupBy({
+        by: ["size"],
+        where: { status: "active", hidden: false, size: { in: sizes }, perTireCents: { not: null } },
+        _avg: { perTireCents: true },
+        _count: { _all: true },
+      });
+      const bySize = Object.fromEntries(cohorts.map((c) => [c.size, { avg: c._avg.perTireCents, count: c._count._all }]));
+      out = out.map((l) => {
+        const c = bySize[l.size];
+        return { ...l, _fair: c ? priceContextFromStats(perTire(l.priceCents, l.quantity), c.avg, c.count) : null };
       });
     }
+    return { items: out, total, page: p };
   }
 
-  // Attach each seller's rating (for card display) and optionally filter by it.
-  const sellerIds = [...new Set(listings.map((l) => l.sellerId))];
-  if (sellerIds.length) {
-    const grouped = await prisma.review.groupBy({
-      by: ["sellerId"],
-      where: { sellerId: { in: sellerIds } },
-      _avg: { rating: true },
-      _count: { _all: true },
-    });
-    const rmap = Object.fromEntries(grouped.map((r) => [r.sellerId, { avg: r._avg.rating || 0, count: r._count._all }]));
-    listings = listings.map((l) => ({ ...l, _rating: rmap[l.sellerId] || { avg: 0, count: 0 } }));
-    if (sp.minRating) {
-      const min = Number(sp.minRating);
-      if (Number.isFinite(min)) listings = listings.filter((l) => (l._rating?.avg || 0) >= min);
-    }
+  // Radius search: pre-filter with a lat/lng bounding box in SQL, then refine
+  // with exact haversine + sort + paginate in JS (SQLite has no geo functions).
+  const lat = Number(sp.lat), lng = Number(sp.lng), radius = Number(sp.radius);
+  if (sp.near && Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(radius) && radius > 0) {
+    const dLat = radius / 69; // ~69 mi per degree of latitude
+    const dLng = radius / (69 * Math.max(0.05, Math.cos((lat * Math.PI) / 180)));
+    AND.push({ lat: { gte: lat - dLat, lte: lat + dLat } });
+    AND.push({ lng: { gte: lng - dLng, lte: lng + dLng } });
+    const rows = (await prisma.listing.findMany({ where, orderBy, include, take: 2000 }))
+      .map((l) => ({ l, d: milesBetween(lat, lng, l.lat, l.lng) }))
+      .filter((x) => Number.isFinite(x.d) && x.d <= radius)
+      .sort((a, b) => (b.l.featured - a.l.featured) || ((b.l.sellerPro ? 1 : 0) - (a.l.sellerPro ? 1 : 0)) || (a.d - b.d))
+      .map((x) => ({ ...x.l, _distance: x.d }));
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(Math.max(1, page), pageCount);
+    return finalize(rows.slice((p - 1) * pageSize, p * pageSize), total, p);
   }
 
-  // Price context per card: build a size → per-tire-prices map from all active
-  // listings, then tag each result vs. its size cohort.
-  if (listings.length) {
-    const all = await prisma.listing.findMany({
-      where: { status: "active", hidden: false },
-      select: { size: true, priceCents: true, quantity: true },
-      take: 5000,
-    });
-    const bySize = {};
-    for (const x of all) (bySize[x.size] ||= []).push(perTire(x.priceCents, x.quantity));
-    listings = listings.map((l) => ({ ...l, _fair: priceContext(perTire(l.priceCents, l.quantity), bySize[l.size] || []) }));
-  }
-  return listings;
+  // Standard path: count + skip/take, all DB-side.
+  const total = await prisma.listing.count({ where });
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const p = Math.min(Math.max(1, page), pageCount);
+  const items = await prisma.listing.findMany({ where, orderBy, include, skip: (p - 1) * pageSize, take: pageSize });
+  return finalize(items, total, p);
 }
 
 export default async function BrowsePage({ searchParams }) {
@@ -131,8 +113,10 @@ export default async function BrowsePage({ searchParams }) {
     const blocks = await prisma.block.findMany({ where: { blockerId: user.id }, select: { blockedId: true } });
     blockedIds = blocks.map((b) => b.blockedId);
   }
-  const [listings, brandRows] = await Promise.all([
-    getListings(searchParams, blockedIds),
+  const PAGE_SIZE = 24;
+  const reqPage = Math.max(1, parseInt(searchParams.page) || 1);
+  const [{ items: pageListings, total: count, page }, brandRows] = await Promise.all([
+    getListings(searchParams, blockedIds, reqPage, PAGE_SIZE),
     prisma.listing.findMany({
       where: { status: "active", hidden: false },
       select: { brand: true },
@@ -141,13 +125,7 @@ export default async function BrowsePage({ searchParams }) {
     }),
   ]);
   const brands = brandRows.map((b) => b.brand);
-
-  // Paginate the (already filtered) result set for rendering.
-  const PAGE_SIZE = 24;
-  const count = listings.length;
   const pageCount = Math.max(1, Math.ceil(count / PAGE_SIZE));
-  const page = Math.min(pageCount, Math.max(1, parseInt(searchParams.page) || 1));
-  const pageListings = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   let favSet = new Set();
   if (user && pageListings.length) {
@@ -168,10 +146,10 @@ export default async function BrowsePage({ searchParams }) {
   // of our inventory. Results are the exact in-stock matches only — zero is a
   // valid, honest answer. We count tires on the same rim diameter so we can
   // OFFER them as an optional, clearly-labeled link (never as a substitute).
-  const rim = searchParams.size ? (String(searchParams.size).match(/R\s?(\d{2})/i) || [])[1] : null;
+  const rim = searchParams.size ? parseTireSize(searchParams.size).rim : null;
   let similarCount = 0;
   if (count === 0 && rim) {
-    const fAND = [{ status: "active" }, { hidden: false }, { size: { contains: `R${rim}` } }, { size: { not: searchParams.size } }];
+    const fAND = [{ status: "active" }, { hidden: false }, { rimDiameter: rim }, { size: { not: searchParams.size } }];
     if (blockedIds.length) fAND.push({ sellerId: { notIn: blockedIds } });
     if (state) fAND.push({ state });
     similarCount = await prisma.listing.count({ where: { AND: fAND } });
