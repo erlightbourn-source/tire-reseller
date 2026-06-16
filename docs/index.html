@@ -951,13 +951,13 @@ function Marketplace({ params }) {
   const [savedSearch, setSavedSearch] = useState(false);
   const stateParam = params.get('state'), fits = params.get('fits');
   const st = stateParam && isStateAbbr(stateParam) ? stateParam.toUpperCase() : null;
-  const [q, setQ] = useState(''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
+  const [q, setQ] = useState(params.get('q')||''); const [brand, setBrand] = useState(''); const [cond, setCond] = useState('');
   const [size, setSize] = useState(params.get('size')||''); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('');
   const [season, setSeason] = useState(''); const [runFlat, setRunFlat] = useState(false); const [more, setMore] = useState(false);
   const [minTread, setMinTread] = useState(''); const [minYear, setMinYear] = useState(''); const [qty, setQty] = useState('');
   const [minRating, setMinRating] = useState(''); const [shipping, setShipping] = useState(false);
   const [near, setNear] = useState(null); const [radius, setRadius] = useState('50'); const [locating, setLocating] = useState(false);
-  useEffect(()=>{ setQ('');setBrand('');setCond('');setSize(params.get('size')||'');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setMinTread('');setMinYear('');setQty('');setMinRating('');setShipping(false);setNear(null); }, [st, params.get('size')]);
+  useEffect(()=>{ setQ(params.get('q')||'');setBrand('');setCond('');setSize(params.get('size')||'');setMaxPrice('');setSort('');setSeason('');setRunFlat(false);setMinTread('');setMinYear('');setQty('');setMinRating('');setShipping(false);setNear(null); }, [st, params.get('size'), params.get('q')]);
   const filtered = q || brand || cond || size || maxPrice || sort || season || runFlat || minTread || minYear || qty || minRating || shipping || near;
   const ratingOf = (sid) => { const rs=(db.reviews||[]).filter(r=>r.sellerId===sid); return rs.length? rs.reduce((s,r)=>s+r.rating,0)/rs.length : 0; };
 
