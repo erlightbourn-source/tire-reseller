@@ -10,13 +10,14 @@ export const dynamic = "force-dynamic";
 // activate the subscription. This makes the gate work even if the local
 // webhook listener (stripe CLI) isn't running.
 export default async function SuccessPage({ searchParams }) {
+  const { session_id } = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  if (stripeConfigured() && searchParams.session_id) {
+  if (stripeConfigured() && session_id) {
     try {
       const stripe = getStripe();
-      const session = await stripe.checkout.sessions.retrieve(searchParams.session_id, {
+      const session = await stripe.checkout.sessions.retrieve(session_id, {
         expand: ["subscription"],
       });
       if (

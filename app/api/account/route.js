@@ -122,7 +122,7 @@ export async function DELETE(req) {
   });
   // Remove the seller's listings from public view while soft-deleted.
   await prisma.listing.updateMany({ where: { sellerId: user.id, hidden: false }, data: { hidden: true } });
-  destroySession();
+  await destroySession();
   await logAudit("account_delete", { userId: user.id, ip: clientIp(req) });
   return NextResponse.json({ ok: true });
 }

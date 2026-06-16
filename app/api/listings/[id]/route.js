@@ -18,7 +18,8 @@ async function requireOwner(id) {
 }
 
 export async function PATCH(req, { params }) {
-  const { error, listing } = await requireOwner(params.id);
+  const { id } = await params;
+  const { error, listing } = await requireOwner(id);
   if (error) return error;
 
   const b = await req.json();
@@ -73,7 +74,8 @@ export async function PATCH(req, { params }) {
 }
 
 export async function DELETE(_req, { params }) {
-  const { error, listing } = await requireOwner(params.id);
+  const { id } = await params;
+  const { error, listing } = await requireOwner(id);
   if (error) return error;
   await prisma.listing.delete({ where: { id: listing.id } });
   return NextResponse.json({ ok: true });

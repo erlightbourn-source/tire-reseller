@@ -32,8 +32,9 @@ async function fetchListing(id) {
 }
 
 export async function generateMetadata({ params }) {
+  const { id } = await params;
   const l = await prisma.listing.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
   });
   if (!l) return { title: "Listing not found — TireTrader" };
@@ -43,14 +44,15 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description,
-    alternates: { canonical: `/listings/${params.id}` },
+    alternates: { canonical: `/listings/${id}` },
     openGraph: { title, description, type: "website", images: l.photos[0]?.url ? [l.photos[0].url] : [] },
   };
 }
 
 export default async function ListingDetail({ params }) {
+  const { id } = await params;
   const user = await getCurrentUser();
-  const listing = await fetchListing(params.id);
+  const listing = await fetchListing(id);
   if (!listing) notFound();
 
   const isOwner = user?.id === listing.sellerId;

@@ -12,10 +12,11 @@ async function loadThread(threadId, userId) {
 
 // Poll endpoint: returns all messages in a thread (and marks others' as read).
 export async function GET(_req, { params }) {
+  const { threadId } = await params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const { thread, code } = await loadThread(params.threadId, user.id);
+  const { thread, code } = await loadThread(threadId, user.id);
   if (code) return NextResponse.json({ error: "Not found." }, { status: code });
 
   await prisma.message.updateMany({
@@ -44,6 +45,7 @@ export async function GET(_req, { params }) {
 
 // Send a message — text or an offer (kind:"offer", offerCents).
 export async function POST(req, { params }) {
+  const { threadId } = await params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
@@ -51,7 +53,7 @@ export async function POST(req, { params }) {
   const limited = await enforceRateLimit(req, `msg:${user.id}`, { limit: 30, windowMs: 60_000 });
   if (limited) return limited;
 
-  const { thread, code } = await loadThread(params.threadId, user.id);
+  const { thread, code } = await loadThread(threadId, user.id);
   if (code) return NextResponse.json({ error: "Not found." }, { status: code });
 
   const { body, kind, offerCents } = await req.json();

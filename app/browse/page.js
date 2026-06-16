@@ -13,6 +13,7 @@ import { priceContext } from "@/lib/pricing";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }) {
+  searchParams = await searchParams; // Next 15: searchParams is a Promise
   const state = searchParams.state && isStateAbbr(searchParams.state) ? searchParams.state.toUpperCase() : null;
   const where = state ? `in ${stateName(state)}` : "near you";
   const brand = searchParams.brand ? `${searchParams.brand} ` : "";
@@ -117,6 +118,7 @@ async function getListings(sp, blockedIds = []) {
 }
 
 export default async function BrowsePage({ searchParams }) {
+  searchParams = await searchParams; // Next 15: searchParams is a Promise
   const user = await getCurrentUser();
   let blockedIds = [];
   if (user) {

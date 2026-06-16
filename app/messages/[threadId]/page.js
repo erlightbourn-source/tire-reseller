@@ -8,11 +8,12 @@ import ChatWindow from "@/components/ChatWindow";
 export const dynamic = "force-dynamic";
 
 export default async function ThreadPage({ params }) {
+  const { threadId } = await params;
   const user = await getCurrentUser();
-  if (!user) redirect(`/login?next=/messages/${params.threadId}`);
+  if (!user) redirect(`/login?next=/messages/${threadId}`);
 
   const thread = await prisma.thread.findUnique({
-    where: { id: params.threadId },
+    where: { id: threadId },
     include: {
       listing: { include: { photos: { take: 1, orderBy: { sort: "asc" } } } },
       buyer: { select: { id: true, name: true } },

@@ -6,11 +6,12 @@ import ListingForm from "@/components/ListingForm";
 export const dynamic = "force-dynamic";
 
 export default async function EditListingPage({ params }) {
+  const { id } = await params;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { photos: { orderBy: { sort: "asc" } } },
   });
   if (!listing) notFound();

@@ -13,9 +13,10 @@ export const dynamic = "force-dynamic";
 const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
 export default async function SellerProfile({ params }) {
+  const { id } = await params;
   const me = await getCurrentUser();
   const seller = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       listings: {
         where: { status: "active" },
