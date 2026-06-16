@@ -983,6 +983,16 @@ function Marketplace({ params }) {
   if (near) { const r = Number(radius); list = list.map(l=>({l,d:milesBetween(near.lat,near.lng,l.lat,l.lng)})).filter(x=>x.d<=r).sort((a,b)=>(b.l.featured-a.l.featured)||(proOf(b.l)-proOf(a.l))||(a.d-b.d)).map(x=>({...x.l, _distance:x.d})); }
   else list = [...list].sort((a,b) => (b.featured-a.featured) || (proOf(b)-proOf(a)) || (sort==='price_asc' ? a.priceCents-b.priceCents : sort==='price_desc' ? b.priceCents-a.priceCents : b.createdAt-a.createdAt));
 
+  // When an exact tire size (e.g. from a vehicle search) has no matches, fall
+  // back to tires on the same rim diameter so a car selection still returns
+  // something useful instead of a dead-end empty page.
+  const rim = size ? ((size.match(/R\s?(\d{2})/i)||[])[1] || null) : null;
+  const fallback = (list.length === 0 && rim)
+    ? db.listings
+        .filter(l => l.status==='active' && !l.hidden && !blocked.includes(l.sellerId) && (!st || l.state===st) && new RegExp('R\\s?'+rim+'\\b','i').test(l.size))
+        .sort((a,b) => (b.featured-a.featured) || (proOf(b)-proOf(a)) || (b.createdAt-a.createdAt))
+    : [];
+
   const place = near ? 'near you' : st ? `in ${stateName(st)}` : 'nationwide';
 
   const [drawer, setDrawer] = useState(false);
@@ -1046,13 +1056,13 @@ function Marketplace({ params }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb"><a href="#/" className="hover:text-brand-300">Home</a><span aria-hidden="true">/</span><a href="#/states" className="hover:text-brand-300">Map</a><span aria-hidden="true">/</span><span className="font-medium text-slate-200">{near ? 'Near me' : st ? stateName(st) : 'All states'}</span></nav>
-          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{list.length} tire set{list.length!==1?'s':''} {place}</h1>
+          <h1 className="mt-1 font-display text-2xl font-extrabold text-white">{list.length>0 ? `${list.length} tire set${list.length!==1?'s':''} ${place}` : fallback.length>0 ? `${fallback.length} similar tire set${fallback.length!==1?'s':''} ${place}` : `0 tire sets ${place}`}</h1>
           <p className="text-sm text-slate-400">New &amp; used sets from local resellers — message sellers directly.</p>
         </div>
         <a href="#/states" className="btn-secondary shrink-0"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>{st ? 'Change state' : 'Open map'}</a>
       </div>
 
-      {fits && size && <div className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30"><span>🚗</span>Showing <span className="font-mono font-semibold">{size}</span> — fits your <span className="font-semibold">{fits}</span>.</div>}
+      {fits && size && <div className="flex flex-wrap items-center justify-between gap-2 bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30"><span><span aria-hidden="true">🚗</span> Showing <span className="font-mono font-semibold">{size}</span> — fits your <span className="font-semibold">{fits}</span>.</span><a href="#/browse" className="font-semibold text-brand-300 hover:underline">Change vehicle</a></div>}
 
       {/* Mobile search + filter bar */}
       <div className="sticky top-16 z-20 -mx-4 border-b border-white/10 bg-ink-950/85 px-4 py-3 backdrop-blur-xl lg:hidden">
@@ -1069,7 +1079,14 @@ function Marketplace({ params }) {
         <div className="min-w-0 space-y-4">
           <RecentlyViewed />
           {list.length === 0 ? (
+            fallback.length > 0 ? (
+              <>
+                <div className="card px-4 py-3"><p className="text-sm text-slate-200">No exact <span className="font-mono font-semibold text-brand-400">{size}</span> listings{st?` in ${stateName(st)}`:''} right now. Showing <span className="font-semibold text-white">R{rim}</span> tires that may fit your wheels — confirm the size before buying.</p></div>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{fallback.slice(0,24).map(l => <Card key={l.id} l={l} distance={null} />)}</div>
+              </>
+            ) : (
             <div className="card px-6 py-12 text-center"><div className="text-4xl">🛞</div><p className="mt-3 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="btn-primary">Clear filters</button><a href="#/states" className="btn-secondary">Open map</a></div>{brands.length>0 && <div className="mt-6"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Popular brands</p><div className="mt-2 flex flex-wrap justify-center gap-2">{brands.slice(0,10).map(b=><button key={b} onClick={()=>{ clearAll(); setBrand(b); }} className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">{b}</button>)}</div></div>}</div>
+            )
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{pageItems.map(l => <Card key={l.id} l={l} distance={l._distance ?? null} />)}</div>

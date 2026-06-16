@@ -156,6 +156,23 @@ export default async function BrowsePage({ searchParams }) {
 
   const place = near && radius ? "near you" : state ? `in ${stateName(state)}` : "nationwide";
 
+  // When an exact tire size (e.g. from a vehicle search) has no matches, fall
+  // back to tires on the same rim diameter so a car selection still returns
+  // something useful instead of a dead-end empty page.
+  const rim = searchParams.size ? (String(searchParams.size).match(/R\s?(\d{2})/i) || [])[1] : null;
+  let fallback = [];
+  if (count === 0 && rim) {
+    const fAND = [{ status: "active" }, { hidden: false }, { size: { contains: `R${rim}` } }];
+    if (blockedIds.length) fAND.push({ sellerId: { notIn: blockedIds } });
+    if (state) fAND.push({ state });
+    fallback = await prisma.listing.findMany({
+      where: { AND: fAND },
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      include: { photos: { orderBy: { sort: "asc" }, take: 1 }, seller: { select: { pro: true } } },
+      take: 24,
+    });
+  }
+
   const pageHref = (p) => {
     const qs = new URLSearchParams();
     Object.entries(searchParams).forEach(([k, v]) => {
@@ -186,7 +203,11 @@ export default async function BrowsePage({ searchParams }) {
             <span className="font-medium text-slate-200">{near && radius ? "Near me" : state ? stateName(state) : "All states"}</span>
           </nav>
           <h1 className="mt-1 font-display text-2xl font-extrabold text-white">
-            {count} tire set{count !== 1 ? "s" : ""} {place}
+            {count > 0
+              ? `${count} tire set${count !== 1 ? "s" : ""} ${place}`
+              : fallback.length > 0
+              ? `${fallback.length} similar tire set${fallback.length !== 1 ? "s" : ""} ${place}`
+              : `0 tire sets ${place}`}
           </h1>
           <p className="text-sm text-slate-400">New &amp; used sets from local resellers — message sellers directly.</p>
         </div>
@@ -197,15 +218,33 @@ export default async function BrowsePage({ searchParams }) {
       </div>
 
       {searchParams.fits && searchParams.size && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30">
-          <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>
-          Showing <span className="font-mono font-semibold">{searchParams.size}</span> — fits your <span className="font-semibold">{searchParams.fits}</span>.
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30">
+          <span className="flex items-center gap-2">
+            <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>
+            Showing <span className="font-mono font-semibold">{searchParams.size}</span> — fits your <span className="font-semibold">{searchParams.fits}</span>.
+          </span>
+          <Link href="/browse" className="font-semibold text-brand-300 hover:underline">Change vehicle</Link>
         </div>
       )}
 
       <MarketplaceFilters brands={brands}>
         <RecentlyViewed />
-        {count === 0 ? (
+        {count === 0 && fallback.length > 0 ? (
+          <>
+            <div className="card px-4 py-3">
+              <p className="text-sm text-slate-200">
+                No exact <span className="font-mono font-semibold text-brand-400">{searchParams.size}</span> listings
+                {state ? ` in ${stateName(state)}` : ""} right now. Showing <span className="font-semibold text-white">R{rim}</span>{" "}
+                tires that may fit your wheels — confirm the size before buying.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {fallback.map((l) => (
+                <ListingCard key={l.id} listing={l} favorited={false} distance={null} rating={null} fair={null} />
+              ))}
+            </div>
+          </>
+        ) : count === 0 ? (
           <div className="card px-6 py-12 text-center">
             <span className="text-4xl">🛞</span>
             <p className="mt-3 font-display text-lg font-bold text-slate-200">
