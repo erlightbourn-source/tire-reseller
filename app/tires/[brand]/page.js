@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { brandSlug } from "@/lib/site";
+import { jsonLdHtml } from "@/lib/jsonld";
 import { formatPrice } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
 import Faq from "@/components/Faq";
@@ -72,7 +73,7 @@ export default async function BrandPage({ params }) {
 
   return (
     <div className="space-y-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
 
       <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-brand-300">Home</Link>

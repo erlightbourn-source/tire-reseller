@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
 import { priceContext } from "@/lib/pricing";
+import { jsonLdHtml } from "@/lib/jsonld";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -136,7 +137,7 @@ export default async function ListingDetail({ params }) {
 
   return (
     <div className="space-y-5">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
 
       <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">
         <Link href="/browse" className="hover:text-brand-300">Marketplace</Link>

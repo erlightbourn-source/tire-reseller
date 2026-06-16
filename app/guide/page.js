@@ -3,6 +3,7 @@ import Faq from "@/components/Faq";
 import Badge from "@/components/Badge";
 import { BUYER_FAQ, BUYER_CHECKLIST } from "@/lib/content";
 import { CONDITIONS } from "@/lib/tire";
+import { jsonLdHtml } from "@/lib/jsonld";
 
 export const metadata = {
   title: "How to buy used tires safely — TireTrader buying guide",
@@ -25,7 +26,7 @@ const faqJsonLd = {
 export default function GuidePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-12">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(faqJsonLd) }} />
 
       <header>
         <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">

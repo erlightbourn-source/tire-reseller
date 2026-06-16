@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
+import { jsonLdHtml } from "@/lib/jsonld";
 import ListingCard from "@/components/ListingCard";
 import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
@@ -82,7 +83,7 @@ export default async function Home() {
 
   return (
     <div className="space-y-14">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white shadow-lift">
         <div className="mesh absolute inset-0" />

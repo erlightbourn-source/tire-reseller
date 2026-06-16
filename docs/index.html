@@ -185,7 +185,7 @@ const TERMS_SECTIONS = [
   ["Disclaimers","The service is provided \"as is\". To the extent allowed by law, TireTrader isn't liable for disputes between users or the quality/safety/legality of listings."],
 ];
 const PRIVACY_SECTIONS = [
-  ["What we collect","Account info you provide (name, email, optional city/state, password stored only as a secure hash), the content you create, basic technical data like IP (for rate-limiting/abuse), and approximate location only if you opt into \"near me\"."],
+  ["What we collect","This is an interactive demo with no server: anything you enter (name, email, password, listings, messages) is stored only in your own browser's local storage — unencrypted — and never sent anywhere. Don't enter a real password. Approximate location is used only if you opt into \"near me,\" and those coordinates never leave your device."],
   ["How we use it","To run the marketplace: show listings, deliver messages, power search and local results, prevent abuse, and send account email like password resets."],
   ["What we share","Your public profile and listings are visible to other users. We don't sell your personal data. A few providers (hosting, database, email, images) operate the service."],
   ["Cookies","One essential, httpOnly session cookie to keep you logged in. No advertising or third-party tracking cookies."],
@@ -1234,6 +1234,7 @@ function Auth({ mode }) {
         <div className="bg-[#13161c] p-7 sm:p-9">
           <h1 className="font-display text-2xl font-bold text-white">{isSignup ? 'Create your account' : 'Log in'}</h1>
           <p className="mt-1 text-sm text-slate-400">{isSignup ? 'Buyers browse for free. Become a seller anytime.' : 'Manage your listings and messages.'}</p>
+          <div className="mt-4 flex items-start gap-2 bg-brand-500/10 px-3 py-2.5 text-xs text-brand-100 ring-1 ring-inset ring-brand-400/30"><span aria-hidden="true">⚠️</span><span><span className="font-semibold">Demo only.</span> This page has no server — what you type is stored unencrypted in this browser. Please don't enter a real password.</span></div>
           {err && <div className="mt-4 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
           <form onSubmit={submit} className="mt-5 space-y-3.5">
             {isSignup && <div>

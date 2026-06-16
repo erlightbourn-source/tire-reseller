@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell } from "@/lib/auth";
-import { stripeConfigured } from "@/lib/stripe";
 
-// Upgrade to / cancel Pro. Billing is simulated in dev; in production we refuse
-// to grant Pro for free — it must go through Stripe (wire a checkout here).
+// Upgrade to / cancel Pro. In production, Pro is unlocked ONLY for users with a
+// verified active Stripe subscription (set by the signed webhook) — never granted
+// for free here. In dev (NODE_ENV !== "production") we simulate the upgrade so the
+// gated flow is testable without a Stripe account.
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
   if (!canSell(user)) return NextResponse.json({ error: "Become a seller first.", code: "become_seller" }, { status: 402 });
-  if (process.env.NODE_ENV === "production" && !stripeConfigured()) {
+  if (process.env.NODE_ENV === "production" && user.subscriptionStatus !== "active") {
     return NextResponse.json(
-      { error: "Pro upgrades require billing setup.", code: "billing_required" },
+      { error: "Subscribe to unlock Pro.", code: "use_checkout" },
       { status: 402 }
     );
   }

@@ -1,24 +1,9 @@
 /** @type {import('next').NextConfig} */
 
-// Content Security Policy. Next.js (App Router) injects inline bootstrap scripts
-// and next/font emits inline styles, so we allow 'unsafe-inline' there rather
-// than wiring per-request nonces. The non-script directives still meaningfully
-// constrain where content can load from, and frame-ancestors blocks clickjacking.
-const csp = [
-  "default-src 'self'",
-  "img-src 'self' data: blob: https:",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "connect-src 'self'",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join("; ");
-
+// NOTE: Content-Security-Policy is set per-request in middleware.js so it can
+// carry a unique nonce and use a strict script-src in production (no
+// 'unsafe-inline'/'unsafe-eval'). The static headers below cover everything else.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

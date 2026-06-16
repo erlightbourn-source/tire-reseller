@@ -49,7 +49,8 @@ export async function PATCH(req, { params }) {
     data.priceCents = Math.round(price * 100);
   }
   if (b.status !== undefined && ["active", "sold"].includes(b.status)) data.status = b.status;
-  if (b.featured !== undefined) data.featured = !!b.featured;
+  // NOTE: `featured` (paid/admin promotion) is intentionally NOT accepted here —
+  // allowing the owner to set it would let any seller promote a listing for free.
   if (b.season !== undefined) data.season = SEASONS.includes(b.season) ? b.season : null;
   if (b.loadIndex !== undefined) data.loadIndex = b.loadIndex ? String(b.loadIndex).trim().slice(0, 8) : null;
   if (b.speedRating !== undefined) data.speedRating = b.speedRating ? String(b.speedRating).trim().toUpperCase().slice(0, 4) : null;

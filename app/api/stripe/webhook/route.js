@@ -14,6 +14,8 @@ async function activateForCustomer(customerId, { status, priceId, currentPeriodE
       subscriptionStatus: status,
       subscriptionPriceId: priceId ?? user.subscriptionPriceId,
       subscriptionCurrentEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : user.subscriptionCurrentEnd,
+      // Pro can't outlive the subscription: clear it whenever billing lapses.
+      ...(status === "active" ? {} : { pro: false }),
     },
   });
 }
