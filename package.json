@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
     "backfill": "node prisma/backfill.mjs",
+    "demo:css": "tailwindcss -c docs/_tw/tailwind.config.cjs -i docs/_tw/input.css -o docs/tw.css --minify",
     "setup": "prisma db push && node prisma/seed.js",
     "test": "node --test",
     "audit:ci": "npm audit --omit=dev --audit-level=high"
