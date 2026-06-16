@@ -156,21 +156,17 @@ export default async function BrowsePage({ searchParams }) {
 
   const place = near && radius ? "near you" : state ? `in ${stateName(state)}` : "nationwide";
 
-  // When an exact tire size (e.g. from a vehicle search) has no matches, fall
-  // back to tires on the same rim diameter so a car selection still returns
-  // something useful instead of a dead-end empty page.
+  // A vehicle search resolves to a specific fitment size from data, independent
+  // of our inventory. Results are the exact in-stock matches only — zero is a
+  // valid, honest answer. We count tires on the same rim diameter so we can
+  // OFFER them as an optional, clearly-labeled link (never as a substitute).
   const rim = searchParams.size ? (String(searchParams.size).match(/R\s?(\d{2})/i) || [])[1] : null;
-  let fallback = [];
+  let similarCount = 0;
   if (count === 0 && rim) {
-    const fAND = [{ status: "active" }, { hidden: false }, { size: { contains: `R${rim}` } }];
+    const fAND = [{ status: "active" }, { hidden: false }, { size: { contains: `R${rim}` } }, { size: { not: searchParams.size } }];
     if (blockedIds.length) fAND.push({ sellerId: { notIn: blockedIds } });
     if (state) fAND.push({ state });
-    fallback = await prisma.listing.findMany({
-      where: { AND: fAND },
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-      include: { photos: { orderBy: { sort: "asc" }, take: 1 }, seller: { select: { pro: true } } },
-      take: 24,
-    });
+    similarCount = await prisma.listing.count({ where: { AND: fAND } });
   }
 
   const pageHref = (p) => {
@@ -203,11 +199,7 @@ export default async function BrowsePage({ searchParams }) {
             <span className="font-medium text-slate-200">{near && radius ? "Near me" : state ? stateName(state) : "All states"}</span>
           </nav>
           <h1 className="mt-1 font-display text-2xl font-extrabold text-white">
-            {count > 0
-              ? `${count} tire set${count !== 1 ? "s" : ""} ${place}`
-              : fallback.length > 0
-              ? `${fallback.length} similar tire set${fallback.length !== 1 ? "s" : ""} ${place}`
-              : `0 tire sets ${place}`}
+            {count} tire set{count !== 1 ? "s" : ""} {place}
           </h1>
           <p className="text-sm text-slate-400">New &amp; used sets from local resellers — message sellers directly.</p>
         </div>
@@ -221,7 +213,8 @@ export default async function BrowsePage({ searchParams }) {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30">
           <span className="flex items-center gap-2">
             <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>
-            Showing <span className="font-mono font-semibold">{searchParams.size}</span> — fits your <span className="font-semibold">{searchParams.fits}</span>.
+            Your <span className="font-semibold">{searchParams.fits}</span> takes <span className="font-mono font-semibold">{searchParams.size}</span> —{" "}
+            <span className={count > 0 ? "font-semibold text-brand-300" : "font-semibold text-slate-300"}>{count} in stock</span>.
           </span>
           <Link href="/browse" className="font-semibold text-brand-300 hover:underline">Change vehicle</Link>
         </div>
@@ -229,21 +222,30 @@ export default async function BrowsePage({ searchParams }) {
 
       <MarketplaceFilters brands={brands}>
         <RecentlyViewed />
-        {count === 0 && fallback.length > 0 ? (
-          <>
-            <div className="card px-4 py-3">
-              <p className="text-sm text-slate-200">
-                No exact <span className="font-mono font-semibold text-brand-400">{searchParams.size}</span> listings
-                {state ? ` in ${stateName(state)}` : ""} right now. Showing <span className="font-semibold text-white">R{rim}</span>{" "}
-                tires that may fit your wheels — confirm the size before buying.
-              </p>
+        {count === 0 && searchParams.size ? (
+          <div className="card px-6 py-12 text-center">
+            <span className="text-4xl">🛞</span>
+            <p className="mt-3 font-display text-lg font-bold text-slate-200">
+              <span className="font-mono text-brand-400">{searchParams.size}</span> — 0 in stock{state ? ` in ${stateName(state)}` : ""} right now
+            </p>
+            <p className="mt-1 text-sm text-slate-400">
+              {searchParams.fits ? `That's the correct size for your ${searchParams.fits}. ` : ""}
+              We don't have a match listed yet — get notified, or widen your search.
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {similarCount > 0 && (
+                <Link href={`/browse?q=R${rim}`} className="btn-primary">
+                  See {similarCount} R{rim} tire{similarCount !== 1 ? "s" : ""} that may fit
+                </Link>
+              )}
+              <Link href="/browse" className="btn-secondary">Browse all tires</Link>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {fallback.map((l) => (
-                <ListingCard key={l.id} listing={l} favorited={false} distance={null} rating={null} fair={null} />
-              ))}
+            <div className="mx-auto mt-6 max-w-md rounded-xl bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
+              <p className="text-sm font-semibold text-slate-200">Email me when {searchParams.size} is listed</p>
+              <p className="mt-0.5 text-xs text-slate-400">No account needed — we'll notify you when a match appears.</p>
+              <EmailAlertForm query={currentQuery} />
             </div>
-          </>
+          </div>
         ) : count === 0 ? (
           <div className="card px-6 py-12 text-center">
             <span className="text-4xl">🛞</span>
