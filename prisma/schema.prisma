@@ -3,7 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  // Canonical production provider. scripts/db-provider.mjs swaps this to "sqlite"
+  // automatically for a local file: DATABASE_URL (zero-config dev); a postgres://
+  // URL (prod) keeps it as "postgresql". Runs before every prisma command below.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

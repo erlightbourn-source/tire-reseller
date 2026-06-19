@@ -27,10 +27,13 @@ tiers and none require a credit card.
    many short-lived connections and will exhaust a direct Postgres connection
    under load. Append `?pgbouncer=true&connection_limit=1` if not already present.
 
-2. **Prisma provider is automatic.** The `build` script runs
-   `scripts/db-provider.mjs`, which sets the datasource provider to `postgresql`
-   when `DATABASE_URL` is a `postgres://` URL (and `sqlite` otherwise). No manual
-   schema edit needed — just set `DATABASE_URL` to your Neon string in the host.
+2. **Postgres is the canonical provider.** `prisma/schema.prisma` declares
+   `provider = "postgresql"`, and there's a committed baseline migration in
+   `prisma/migrations/`. Local dev stays zero-config on **sqlite**:
+   `scripts/db-provider.mjs` (run before every prisma command via the npm
+   scripts) swaps the provider to `sqlite` whenever `DATABASE_URL` is a `file:`
+   URL, and leaves it `postgresql` for a `postgres://` URL (prod). No manual
+   schema edits.
 
 3. **Resend** (optional) → resend.com → API Keys → Create → copy `re_…`.
 
@@ -44,16 +47,19 @@ tiers and none require a credit card.
      - `NEXT_PUBLIC_SITE_URL` = your `https://<app>.vercel.app`
      - `RESEND_API_KEY`, `EMAIL_FROM` (optional)
 
-5. **Create the tables** against Neon (from your machine, with `DATABASE_URL`
-   pointing at Neon):
+5. **Create the tables** against Neon (with `DATABASE_URL` pointing at Neon):
    ```bash
-   npx prisma db push
-   npx prisma db seed   # optional demo data (also backfills denormalized cols)
+   npm run db:migrate:deploy   # applies prisma/migrations (Postgres, auditable)
+   npx prisma db seed          # optional demo data (also backfills denorm cols)
    ```
-   **Upgrading an existing DB** after a schema change that adds the denormalized
-   browse columns (`rimDiameter`, `treadDepth32`, `perTireCents`, `sellerPro`,
-   `ratingAvg`, …): run `npx prisma db push` then **`npm run backfill`** once to
-   populate them for existing rows. It's idempotent.
+   New schema changes: `npx prisma migrate dev --name <change>` locally against a
+   Postgres dev DB to add a migration, commit it, and `db:migrate:deploy` ships
+   it in prod. (Local sqlite dev uses `npm run db:push` instead of migrations.)
+
+   **Upgrading an existing DB** after a change that adds the denormalized browse
+   columns (`rimDiameter`, `treadDepth32`, `perTireCents`, `sellerPro`,
+   `ratingAvg`, …): after migrating, run **`npm run backfill`** once to populate
+   them for existing rows. It's idempotent.
 
 6. **Deploy** — push to `main`; Vercel builds automatically. Done.
 
