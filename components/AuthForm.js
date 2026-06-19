@@ -13,10 +13,24 @@ export default function AuthForm({ mode }) {
   const [role, setRole] = useState(params.get("role") === "seller" ? "seller" : "buyer");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);       // signup → "check your email"
+  const [unverified, setUnverified] = useState("");    // login of an unverified account → offer resend
+  const [resent, setResent] = useState(false);
+
+  async function resend() {
+    if (!unverified) return;
+    setResent(true);
+    await fetch("/api/auth/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: unverified }),
+    }).catch(() => {});
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+    setUnverified("");
     setLoading(true);
     const form = new FormData(e.currentTarget);
     const body = Object.fromEntries(form.entries());
@@ -29,10 +43,17 @@ export default function AuthForm({ mode }) {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
+      if (data.code === "verify_email") setUnverified(body.email || "");
       setErr(data.error || "Something went wrong.");
       return;
     }
-    if (isSignup) track("Signup", { role });
+    if (isSignup) {
+      // New accounts are created unverified — no session yet. Tell them to check
+      // their email rather than redirecting into the app.
+      track("Signup", { role });
+      setPending(true);
+      return;
+    }
     // Sellers land on their dashboard; buyers on the marketplace. Only honor a
     // same-origin relative `next` (reject `//evil.com`, `https://…`, etc.) so the
     // post-login redirect can't be turned into an open-redirect phishing pivot.
@@ -87,11 +108,30 @@ export default function AuthForm({ mode }) {
               : "Manage your listings and messages."}
           </p>
 
+          {!isSignup && params.get("verified") && !err && (
+            <div className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+              ✓ Email verified — you can log in now.
+            </div>
+          )}
+
+          {pending && (
+            <div className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-3 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
+              <p className="font-semibold">✓ Almost there — check your email.</p>
+              <p className="mt-1 text-emerald-300/90">We sent a confirmation link to finish creating your account. It expires in 24 hours.</p>
+            </div>
+          )}
+
           {err && (
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">
               <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-current"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 11H9v-2h2v2Zm0-3H9V6h2v4Z"/></svg>
               {err}
             </div>
+          )}
+
+          {unverified && (
+            <button type="button" onClick={resend} className="mt-2 text-sm font-semibold text-brand-300 hover:underline">
+              {resent ? "Verification email sent ✓" : "Resend verification email"}
+            </button>
           )}
 
           <form onSubmit={onSubmit} className="mt-5 space-y-3.5">

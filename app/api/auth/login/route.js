@@ -39,6 +39,14 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  // Block login until the email is verified (double opt-in signup).
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please verify your email first — check your inbox for the confirmation link.", code: "verify_email" },
+      { status: 403 }
+    );
+  }
+
   // Soft-deleted accounts: reactivate if still within the 7-day grace window,
   // otherwise refuse (a purge job removes them after grace).
   let reactivated = false;

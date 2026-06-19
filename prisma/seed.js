@@ -295,6 +295,9 @@ async function main() {
     data: { threadId: thread.id, senderId: buyer.id, kind: "offer", offerCents: 85000, offerStatus: "pending", body: "Offer: $850", createdAt: new Date() },
   });
 
+  // Seeded accounts are pre-verified so the demo logins work immediately.
+  await prisma.user.updateMany({ data: { emailVerified: true } });
+
   // Populate denormalized columns (size components, tread, per-tire price,
   // sellerPro, seller ratings) used by the indexed browse queries. One source of
   // truth shared with `npm run backfill`.

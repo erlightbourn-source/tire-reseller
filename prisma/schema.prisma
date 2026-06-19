@@ -31,6 +31,11 @@ model User {
   tokenVersion       Int      @default(0)
   resetTokenHash     String?
   resetTokenExpiry   DateTime?
+
+  // Email verification (double opt-in signup): login is blocked until verified.
+  emailVerified      Boolean   @default(false)
+  verifyTokenHash    String?   @unique
+  verifyTokenExpiry  DateTime?
   deletedAt          DateTime? // soft-delete: account scheduled for removal (7-day grace)
 
   // Seller billing. The first year of selling is free for every seller;

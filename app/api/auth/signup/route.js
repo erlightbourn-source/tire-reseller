@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { hashPassword, createSession, freeYearFromNow } from "@/lib/auth";
+import { hashPassword, freeYearFromNow, newResetToken } from "@/lib/auth";
 import { isStateAbbr } from "@/lib/states";
 import { enforceRateLimit, isEmail, cleanStr, ValidationError, LIMITS, clientIp } from "@/lib/security";
 import { isPasswordPwned } from "@/lib/breach";
+import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site";
 import { logAudit } from "@/lib/audit";
+
+const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req) {
   // Limit account creation per IP to curb spam/abuse.
@@ -41,13 +45,23 @@ export async function POST(req) {
     );
   }
 
+  // Neutral, identical response whether or not the email is already taken — no
+  // account-existence oracle. New accounts are created UNVERIFIED and must click
+  // an emailed link before they can log in (double opt-in).
+  const NEUTRAL = NextResponse.json({ ok: true, pending: true });
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
+    // Tell the real owner someone tried to sign up — don't leak existence to the requester.
+    await sendEmail({
+      to: email,
+      subject: "You already have a TireTrader account",
+      text: `Someone tried to sign up with this email. You already have an account — just log in:\n\n${SITE_URL}/login\n\nForgot your password? ${SITE_URL}/forgot`,
+    });
+    return NEUTRAL;
   }
 
   const isSeller = role === "seller";
-
+  const { token: verifyToken, hash: verifyTokenHash } = newResetToken();
   const user = await prisma.user.create({
     data: {
       email,
@@ -58,10 +72,21 @@ export async function POST(req) {
       role: isSeller ? "seller" : "buyer",
       // Sellers get their first year free — no charge until this date.
       sellerFreeUntil: isSeller ? freeYearFromNow() : null,
+      emailVerified: false,
+      verifyTokenHash,
+      verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
     },
   });
 
-  await createSession(user.id, user.tokenVersion);
+  await sendEmail({
+    to: email,
+    subject: "Confirm your TireTrader account",
+    text: `Welcome to TireTrader! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
+  });
   await logAudit("signup", { userId: user.id, ip: clientIp(req), meta: { role: user.role } });
-  return NextResponse.json({ ok: true, userId: user.id, role: user.role });
+  // In dev (no email provider) surface the link so the flow is testable.
+  const devLink = process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY
+    ? `${SITE_URL}/api/auth/verify?token=${verifyToken}`
+    : undefined;
+  return NextResponse.json({ ok: true, pending: true, devLink });
 }
