@@ -14,9 +14,9 @@
 </p>
 
 <p align="center">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white">
-  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma&logoColor=white">
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-Postgres%20%7C%20SQLite-2D3748?logo=prisma&logoColor=white">
   <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss&logoColor=white">
   <img alt="Stripe" src="https://img.shields.io/badge/Stripe-test%20mode-635BFF?logo=stripe&logoColor=white">
   <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-22c55e">
@@ -53,14 +53,15 @@ Then open **http://localhost:3000** and log in with the demo seller
 
 ## Stack
 
-| Layer       | Choice                                              |
-|-------------|-----------------------------------------------------|
-| Framework   | **Next.js 14** (App Router) + **React 18**          |
-| Styling     | **Tailwind CSS**                                     |
-| Database    | **SQLite** via **Prisma ORM** (zero external setup) |
-| Auth        | Email/password, **bcrypt** + signed **JWT** cookie  |
-| Payments    | **Stripe** Checkout + webhooks (test mode)          |
-| Uploads     | Local disk (`/public/uploads`) for the MVP          |
+| Layer       | Choice                                                            |
+|-------------|------------------------------------------------------------------|
+| Framework   | **Next.js 15** (App Router) + **React 18**                       |
+| Styling     | **Tailwind CSS** — brutalist brand (black + acid yellow)         |
+| Database    | **Postgres** (canonical) via **Prisma ORM**; **SQLite** for zero-config local dev |
+| Auth        | Email/password (**SHA-256→bcrypt**), signed **JWT** cookie, **email verification** |
+| Payments    | **Stripe** Checkout + webhooks (test mode)                       |
+| Uploads     | **Vercel Blob** in prod (local disk for dev), magic-byte + EXIF-stripped |
+| Email       | **Resend** (free tier); console fallback in dev                 |
 
 ---
 
@@ -144,16 +145,20 @@ subscription activates even if the webhook listener isn't running.
 - ✅ **Seller dashboard** — listing views, conversation counts, active/sold
   counts, subscription status, and per-listing stats.
 
+- ✅ **Email** — verification on signup, password reset, and saved-search
+  digests (Resend; logged to console in dev when no key is set).
+- ✅ **Security** — CSP (nonce in prod), CSRF middleware, rate limiting,
+  HIBP breached-password check, audit log, soft-delete + data export/deletion.
+
 ### Stubbed / simplified for the MVP
 
-- **Photos** are stored on local disk. Swap for S3/Cloudinary in production.
-  (Seed listings use generated SVG placeholder images so it works offline.)
+- **Photos**: Vercel Blob in prod, local disk in dev. (Seed listings use
+  generated SVG placeholders so it works offline.)
 - **Stripe Customer Portal** (self-serve cancel/update card) is not wired up yet;
   subscription status is driven by Checkout + webhooks.
 - **Real-time messaging** uses polling, not WebSockets.
-- **Email notifications** are not implemented.
-- SQLite is great for local/MVP; switch the Prisma datasource to Postgres for
-  production scale.
+- **Rate limiting** is in-memory unless `UPSTASH_REDIS_*` is set (required for
+  multi-instance prod) — see DEPLOY.md.
 
 ---
 
@@ -189,10 +194,24 @@ prisma/
 ## Useful commands
 
 ```bash
-npm run dev        # dev server (http://localhost:3000)
-npm run setup      # prisma db push + seed
-npm run db:push    # apply schema to SQLite
-npm run db:seed    # (re)seed demo data
-npm run build      # production build
-npm start          # run the production build
+npm run dev               # dev server (http://localhost:3000)
+npm run setup             # provider-resolve + db push + seed
+npm run db:push           # apply schema to the local (sqlite) DB
+npm run db:seed           # (re)seed demo data (+ backfills denormalized cols)
+npm run backfill          # repopulate denormalized cols on an existing DB
+npm run db:migrate:deploy # apply Postgres migrations (prod)
+npm run build             # production build
+npm start                 # run the production build
+npm test                  # unit tests (node:test, ~49)
+npm run test:e2e          # E2E happy-path (boots the app; run after build)
+npm run demo:css          # regenerate the static demo's Tailwind CSS
 ```
+
+---
+
+## Architecture & brand
+
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for the key design decisions — the
+brutalist brand (now canonical across the app), the denormalized indexed browse
+columns, the dual-provider DB setup, email-verified signup, and the security
+posture. To launch, follow **[GO-LIVE.md](GO-LIVE.md)**.
