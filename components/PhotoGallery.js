@@ -22,6 +22,8 @@ export default function PhotoGallery({ photos, alt }) {
             <button
               key={p.id || i}
               onClick={() => setActive(i)}
+              aria-label={`View photo ${i + 1} of ${photos.length}`}
+              aria-current={i === active ? "true" : undefined}
               className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl ring-2 transition ${
                 i === active ? "ring-brand-400" : "ring-white/10 hover:ring-white/30"
               }`}
