@@ -51,6 +51,17 @@ body::before {
 /* Lo-fi, monochrome, grainy imagery. */
 main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
 
+/* Respect reduced-motion: drop animations and the film-grain overlay. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  body::before { display: none; }
+}
+
 @layer components {
   /* Buttons — square, 2px border, hard offset shadow, instant invert hover. */
   .btn {
