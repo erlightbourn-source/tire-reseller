@@ -6,6 +6,8 @@ import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
 import { priceContext } from "@/lib/pricing";
 import { jsonLdHtml } from "@/lib/jsonld";
+import { sizeSlug } from "@/lib/site";
+import { parseTireSize } from "@/lib/tiresize";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -102,6 +104,10 @@ export default async function ListingDetail({ params }) {
   const lifePct = treadLifePct(listing.treadDepth);
   const sellerSince = new Date(listing.seller.createdAt).getFullYear();
   const initials = listing.seller.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+  // Link the Size spec to its SEO landing page when it's a parseable metric size.
+  const sz = parseTireSize(listing.size);
+  const sizeHref = sz.width && sz.aspect && sz.rim ? `/sizes/${sizeSlug(`${sz.width}/${sz.aspect}R${sz.rim}`)}` : null;
 
   // Full spec list for the table.
   const specs = [
@@ -269,7 +275,13 @@ export default async function ListingDetail({ params }) {
               {specs.map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between gap-4 px-5 py-2.5 text-sm">
                   <dt className="text-slate-400">{label}</dt>
-                  <dd className="font-semibold text-slate-100">{value}</dd>
+                  <dd className="font-semibold text-slate-100">
+                    {label === "Size" && sizeHref ? (
+                      <Link href={sizeHref} className="text-brand-300 hover:underline">{value}</Link>
+                    ) : (
+                      value
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>

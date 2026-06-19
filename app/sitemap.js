@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { SITE_URL, brandSlug } from "@/lib/site";
+import { SITE_URL, brandSlug, sizeSlug } from "@/lib/site";
 import { STATES } from "@/lib/states";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,7 @@ export default async function sitemap() {
   }));
 
   let brandPages = [];
+  let sizePages = [];
   let listingPages = [];
   try {
     const brands = await prisma.listing.findMany({
@@ -33,6 +34,19 @@ export default async function sitemap() {
     });
     brandPages = brands.map((b) => ({
       url: url(`/tires/${brandSlug(b.brand)}`),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.6,
+    }));
+
+    // Per-size landing pages (distinct sizes that have structured columns set).
+    const sizes = await prisma.listing.findMany({
+      where: { status: "active", hidden: false, rimDiameter: { not: null } },
+      select: { size: true },
+      distinct: ["size"],
+    });
+    sizePages = sizes.map((s) => ({
+      url: url(`/sizes/${sizeSlug(s.size)}`),
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.6,
@@ -54,5 +68,5 @@ export default async function sitemap() {
     // DB unavailable at build time — static pages are still emitted.
   }
 
-  return [...staticPages, ...statePages, ...brandPages, ...listingPages];
+  return [...staticPages, ...statePages, ...brandPages, ...sizePages, ...listingPages];
 }
