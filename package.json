@@ -14,6 +14,7 @@
     "demo:css": "tailwindcss -c docs/_tw/tailwind.config.cjs -i docs/_tw/input.css -o docs/tw.css --minify",
     "setup": "node scripts/db-provider.mjs && prisma db push && node prisma/seed.js",
     "test": "node --test",
+    "test:e2e": "node --test e2e/flows.mjs",
     "audit:ci": "npm audit --omit=dev --audit-level=high"
   },
   "prisma": {
