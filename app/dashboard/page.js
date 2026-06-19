@@ -105,8 +105,8 @@ export default async function DashboardPage() {
 
       {/* Account / billing banner */}
       <div
-        className={`relative overflow-hidden rounded-2xl p-5 text-white shadow-soft ${
-          banner.good ? "bg-gradient-to-br from-brand-600 to-brand-800" : "bg-gradient-to-br from-slate-700 to-ink-900"
+        className={`relative overflow-hidden rounded-2xl p-5 shadow-soft ${
+          banner.good ? "bg-gradient-to-br from-brand-600 to-brand-800 text-black" : "bg-gradient-to-br from-slate-700 to-ink-900 text-white"
         }`}
       >
         <div className="tread absolute inset-0 opacity-30" />
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
               <span className={`h-2.5 w-2.5 rounded-full ${banner.good ? "bg-emerald-400" : "bg-amber-400"}`} />
               <p className="font-display text-lg font-bold">{banner.title}</p>
             </div>
-            <p className="mt-1 text-sm text-white/70">{banner.sub}</p>
+            <p className="mt-1 text-sm opacity-80">{banner.sub}</p>
           </div>
           {!isSeller && (
             <Link href="/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">

@@ -10,33 +10,35 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Brutalist pairing: Georgia (serif) body, Courier (mono) headers.
       fontFamily: {
-        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
+        sans: ["Georgia", "Times New Roman", "serif"],
+        display: ["var(--font-display)", '"Courier New"', "ui-monospace", "monospace"],
+        mono: ["var(--font-display)", '"Courier New"', "monospace"],
       },
+      // Two-color brutalist palette: near-black + acid yellow.
       colors: {
-        // Deep automotive ink for dark surfaces
         ink: {
-          800: "#15171c",
-          900: "#0d0f13",
-          950: "#070809",
+          800: "#1a1a1a",
+          900: "#0f0f0f",
+          950: "#000000",
         },
         brand: {
-          50: "#eff4ff",
-          100: "#dbe6fe",
-          200: "#bdd0fe",
-          300: "#90b0fc",
-          400: "#5c86f8",
-          500: "#3b63f1",
-          600: "#2545e6",
-          700: "#1d33d3",
-          800: "#1e2cab",
-          900: "#1e2b87",
+          50: "#fbffcc",
+          100: "#f6ff99",
+          200: "#f1ff66",
+          300: "#ecff33",
+          400: "#e5ff00",
+          500: "#e5ff00",
+          600: "#c9e000",
+          700: "#a8bd00",
+          800: "#7d8c00",
+          900: "#525c00",
         },
         accent: {
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
+          400: "#e5ff00",
+          500: "#e5ff00",
+          600: "#c9e000",
         },
       },
       boxShadow: {

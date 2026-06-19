@@ -117,7 +117,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                     {live && !m.mine && counterFor !== m.id && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         <button onClick={() => respond(m.id, "accept")} className="btn bg-emerald-500 px-3 py-1 text-xs text-ink-950 hover:bg-emerald-400">Accept</button>
-                        <button onClick={() => { setCounterFor(m.id); setCounterAmt(Math.round(m.offerCents / 100)); }} className="btn bg-brand-600 px-3 py-1 text-xs text-white hover:bg-brand-500">Counter</button>
+                        <button onClick={() => { setCounterFor(m.id); setCounterAmt(Math.round(m.offerCents / 100)); }} className="btn bg-brand-600 px-3 py-1 text-xs text-black hover:bg-brand-500">Counter</button>
                         <button onClick={() => respond(m.id, "decline")} className="btn bg-white/10 px-3 py-1 text-xs text-slate-200 hover:bg-white/20">Decline</button>
                       </div>
                     )}
@@ -125,7 +125,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                       <div className="mt-2 flex items-center gap-1.5">
                         <span className="text-xs text-slate-300">$</span>
                         <input type="number" value={counterAmt} onChange={(e) => setCounterAmt(e.target.value)} className="input max-w-[100px] py-1 text-sm" />
-                        <button onClick={() => respond(m.id, "counter", Math.round(Number(counterAmt) * 100))} className="btn bg-brand-600 px-3 py-1 text-xs text-white">Send</button>
+                        <button onClick={() => respond(m.id, "counter", Math.round(Number(counterAmt) * 100))} className="btn bg-brand-600 px-3 py-1 text-xs text-black">Send</button>
                         <button onClick={() => setCounterFor(null)} className="btn-ghost px-2 py-1 text-xs">✕</button>
                       </div>
                     )}
@@ -135,7 +135,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                     );
                   })()
                 ) : (
-                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-600 text-white" : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
+                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-600 text-black" : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
                     {m.body}
                     <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-400"}`}>
                       {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}

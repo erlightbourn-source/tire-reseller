@@ -46,7 +46,7 @@ export default async function SellTiresPage() {
             </span>
             <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.08] tracking-tight text-balance sm:text-5xl">
               Move tire inventory faster — without the{" "}
-              <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">Marketplace chaos</span>.
+              <span className="text-brand-500">Marketplace chaos</span>.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">
               List unlimited sets with real tire specs, reach buyers searching by size and vehicle, and
@@ -72,7 +72,7 @@ export default async function SellTiresPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SELLER_BENEFITS.map((b) => (
             <div key={b.title} className="card p-5">
-              <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+              <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[b.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{b.title}</p>
@@ -95,7 +95,7 @@ export default async function SellTiresPage() {
             ["Message buyers & sell", "Field questions and offers in-app, then arrange local pickup."],
           ].map(([t, d], i) => (
             <li key={t} className="relative rounded-2xl bg-white/[0.03] p-5 ring-1 ring-inset ring-white/10">
-              <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-brand-600 font-display font-bold text-white">{i + 1}</span>
+              <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-brand-600 font-display font-bold text-black">{i + 1}</span>
               <p className="font-display font-bold text-white">{t}</p>
               <p className="mt-1 text-sm text-slate-400">{d}</p>
             </li>

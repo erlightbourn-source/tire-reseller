@@ -38,7 +38,7 @@ export default async function StatesPage() {
             </span>
             <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
               Find tires{" "}
-              <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">near you</span>
+              <span className="text-brand-500">near you</span>
             </h1>
             <p className="mt-4 max-w-xl text-slate-300">
               {user && selected ? (

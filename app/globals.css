@@ -2,12 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── BRUTALIST THEME: near-black + acid yellow, Georgia body / Courier headers,
+   raw square edges, hard offset shadows, instant color-invert hovers. ── */
 :root {
   color-scheme: dark;
 }
 
-/* Visible keyboard-focus ring for all interactive elements (mouse clicks are
-   unaffected thanks to :focus-visible). */
+@layer base {
+  /* No rounded corners anywhere — raw, jagged edges. */
+  *, *::before, *::after { border-radius: 0 !important; }
+  h1, h2, h3, h4 { @apply font-display; letter-spacing: -0.02em; }
+}
+
+/* Visible keyboard-focus ring (mouse clicks unaffected via :focus-visible). */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -15,115 +22,87 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #5c86f8;
+  outline: 3px solid #e5ff00;
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 body {
-  @apply bg-ink-950 text-slate-200 antialiased;
-  background-color: #070809;
+  @apply bg-ink-950 text-slate-200 font-sans antialiased;
+  background-color: #000000;
+  /* Visible structural grid lines. */
   background-image:
-    radial-gradient(48rem 42rem at 88% -8%, rgba(37, 99, 235, 0.18), transparent 60%),
-    radial-gradient(42rem 40rem at -8% 6%, rgba(245, 158, 11, 0.1), transparent 55%),
-    radial-gradient(60rem 50rem at 50% 120%, rgba(59, 99, 241, 0.08), transparent 60%);
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 44px);
   background-attachment: fixed;
 }
 
-/* Carbon-weave texture layer behind everything */
+/* Film-grain overlay. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.5;
-  background-image:
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 7px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 7px);
+  opacity: 0.85;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
 }
 
+/* Lo-fi, monochrome, grainy imagery. */
+main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
+
 @layer components {
-  /* Buttons */
+  /* Buttons — square, 2px border, hard offset shadow, instant invert hover. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wide font-display disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer;
+    border: 2px solid #000;
+    transition: none;
   }
-  .btn-primary {
-    @apply btn text-white;
-    background-image: linear-gradient(180deg, #3b63f1, #2545e6);
-    box-shadow: 0 8px 26px -8px rgba(37, 69, 230, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-  .btn-primary:hover {
-    background-image: linear-gradient(180deg, #4c72f5, #2c4ce8);
-    @apply -translate-y-0.5;
-  }
-  .btn-secondary {
-    @apply btn bg-white/5 text-slate-100 ring-1 ring-inset ring-white/10 hover:bg-white/10 hover:ring-white/20;
-  }
-  .btn-ghost {
-    @apply btn text-slate-300 hover:bg-white/5 hover:text-white;
-  }
-  .btn-danger {
-    @apply btn bg-red-500/90 text-white hover:bg-red-500;
-  }
-  .btn-accent {
-    @apply btn bg-accent-500 text-ink-950 hover:bg-accent-400;
-    box-shadow: 0 8px 26px -8px rgba(245, 158, 11, 0.55);
-  }
+  .btn-primary { @apply btn bg-brand-500 text-black; border-color: #000; box-shadow: 5px 5px 0 #000; }
+  .btn-primary:hover { @apply bg-black text-brand-500; border-color: #e5ff00; box-shadow: 5px 5px 0 #e5ff00; transform: translate(1px, 1px); }
+  .btn-secondary { @apply btn bg-black text-brand-400; border-color: #e5ff00; box-shadow: 4px 4px 0 #e5ff00; }
+  .btn-secondary:hover { @apply bg-brand-500 text-black; border-color: #000; box-shadow: 4px 4px 0 #000; transform: translate(1px, 1px); }
+  .btn-accent { @apply btn bg-brand-500 text-black; border-color: #000; box-shadow: 5px 5px 0 #000; }
+  .btn-accent:hover { @apply bg-black text-brand-500; border-color: #e5ff00; box-shadow: 5px 5px 0 #e5ff00; transform: translate(1px, 1px); }
+  .btn-danger { @apply btn bg-[#ff2b2b] text-white; border-color: #000; box-shadow: 4px 4px 0 #000; }
+  .btn-danger:hover { @apply bg-black text-[#ff2b2b]; border-color: #ff2b2b; box-shadow: 4px 4px 0 #ff2b2b; }
+  .btn-ghost { @apply btn bg-transparent text-brand-400; border-color: transparent; box-shadow: none; }
+  .btn-ghost:hover { @apply bg-brand-500 text-black; }
 
-  /* Form controls */
+  /* Form controls. */
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-slate-100 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-brand-400/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-brand-500/15;
+    @apply w-full bg-black px-3.5 py-2.5 text-sm text-slate-100 font-mono outline-none placeholder:text-slate-400;
+    border: 2px solid #3a3a3a;
+    transition: none;
   }
-  .input option {
-    @apply bg-ink-800 text-slate-100;
-  }
-  .label {
-    @apply mb-1.5 block text-sm font-medium text-slate-300;
-  }
+  .input:focus { border-color: #e5ff00; box-shadow: 3px 3px 0 #e5ff00; }
+  .input option { @apply bg-black text-slate-100; }
+  .label { @apply mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-300 font-display; }
 
-  /* Surfaces */
-  .card {
-    @apply rounded-2xl border border-white/10 bg-[#13161c] shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_18px_40px_-24px_rgba(0,0,0,0.8)];
-  }
-  .glass {
-    @apply rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-xl;
-  }
-  .card-hover {
-    @apply transition-all duration-200 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_24px_50px_-20px_rgba(0,0,0,0.9)];
-  }
+  /* Surfaces. */
+  .card { @apply bg-ink-900; border: 2px solid #2a2a2a; box-shadow: 6px 6px 0 #000; }
+  .glass { @apply bg-ink-900; border: 2px solid #2a2a2a; }
+  .card-hover { transition: none; }
+  .card-hover:hover { border-color: #e5ff00; box-shadow: 8px 8px 0 #e5ff00; transform: translate(-2px, -2px); }
 
-  /* Badges */
-  .badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
-  }
-  .badge-new {
-    @apply badge bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30;
-  }
-  .badge-used {
-    @apply badge bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-400/30;
-  }
+  /* Badges — square, mono, bordered. */
+  .badge { @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide font-display; border: 2px solid currentColor; }
+  .badge-new { @apply badge bg-black text-brand-400; }
+  .badge-used { @apply badge bg-black text-slate-300; }
 
-  /* Section heading */
-  .eyebrow {
-    @apply text-xs font-bold uppercase tracking-[0.18em] text-brand-300;
-  }
+  /* Section heading. */
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.25em] text-brand-400 font-display; }
 }
 
 @layer utilities {
-  /* Subtle tire-tread texture for dark surfaces */
-  .tread {
-    background-image:
-      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 14px);
-  }
+  .tread { background-image: repeating-linear-gradient(90deg, rgba(229, 255, 0, 0.14) 0 2px, transparent 2px 13px); }
+  /* "mesh" repurposed as a hard yellow grid (no gradients). */
   .mesh {
     background-image:
-      radial-gradient(40rem 30rem at 80% -20%, rgba(91, 134, 248, 0.4), transparent 60%),
-      radial-gradient(34rem 30rem at 0% 120%, rgba(245, 158, 11, 0.28), transparent 55%);
+      repeating-linear-gradient(0deg, rgba(229, 255, 0, 0.10) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(90deg, rgba(229, 255, 0, 0.10) 0 1px, transparent 1px 38px);
   }
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }

@@ -71,7 +71,7 @@ export default async function MessagesPage() {
                   <p className="truncate text-sm text-slate-400">{last ? last.body : "No messages yet"}</p>
                 </div>
                 {unread[t.id] > 0 && (
-                  <span className="badge bg-brand-600 text-white">{unread[t.id]}</span>
+                  <span className="badge bg-brand-600 text-black">{unread[t.id]}</span>
                 )}
               </Link>
             );

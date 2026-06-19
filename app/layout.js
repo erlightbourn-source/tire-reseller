@@ -1,16 +1,16 @@
 import "./globals.css";
-import { Inter, Sora } from "next/font/google";
+import { Courier_Prime } from "next/font/google";
 import Link from "next/link";
 import { getCurrentUser, canSell, isAdmin } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
 import Analytics from "@/components/Analytics";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const sora = Sora({
+// Brutalist headers/monospace; body uses Georgia (system serif) via globals.
+const courier = Courier_Prime({
   subsets: ["latin"],
   variable: "--font-display",
-  weight: ["600", "700", "800"],
+  weight: ["400", "700"],
   display: "swap",
 });
 
@@ -30,10 +30,10 @@ export const viewport = {
 export default async function RootLayout({ children }) {
   const user = await getCurrentUser();
   return (
-    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
+    <html lang="en" className={courier.variable}>
       <body className="flex min-h-screen flex-col font-sans">
         <Analytics />
-        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white">
+        <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:bg-brand-500 focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-black">
           Skip to content
         </a>
         <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">

@@ -204,7 +204,7 @@ export default async function ListingDetail({ params }) {
           {/* Seller trust card */}
           <Link href={`/sellers/${listing.seller.id}`} className="card block p-4 transition hover:border-white/20">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials}</span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-black">{initials}</span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-semibold text-white">{listing.seller.name}</p>

@@ -96,7 +96,7 @@ export default async function Home() {
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
               Find tire sets from{" "}
-              <span className="bg-gradient-to-r from-brand-300 to-accent-400 bg-clip-text text-transparent">trusted local resellers</span>.
+              <span className="text-brand-500">trusted local resellers</span>.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">
               New and used tires from real sellers near you — searchable by size, vehicle, or location.
@@ -123,7 +123,7 @@ export default async function Home() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map((t) => (
             <div key={t.title} className="card p-5">
-              <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+              <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{t.title}</p>
@@ -158,20 +158,20 @@ export default async function Home() {
       </section>
 
       {/* Seller CTA */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-lift">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-black shadow-lift">
         <div className="tread absolute inset-0 opacity-20" />
         <div className="relative flex flex-col items-start gap-5 px-6 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           <div className="max-w-xl">
             <p className="text-sm font-semibold text-brand-100">For resellers</p>
             <h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">Sell tire inventory for $10/month</h2>
-            <p className="mt-2 text-white/80">
+            <p className="mt-2 text-black/80">
               Move sets faster without the Facebook Marketplace chaos. List unlimited tires, message buyers,
               and track your sales. <span className="font-semibold text-white">First year free.</span>
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:items-end">
             <Link href="/sell-tires" className="btn bg-white text-ink-950 hover:bg-slate-100">Start selling</Link>
-            <span className="text-xs text-white/70">$10/month · cancel anytime</span>
+            <span className="text-xs text-black/70">$10/month · cancel anytime</span>
           </div>
         </div>
       </section>

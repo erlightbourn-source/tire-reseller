@@ -25,7 +25,7 @@ export default function SavedSearchRow({ search }) {
         <p className="text-xs text-slate-400">Saved {new Date(search.createdAt).toLocaleDateString()}</p>
       </div>
       {search.newCount > 0 && (
-        <span className="badge bg-brand-600 text-white">{search.newCount} new</span>
+        <span className="badge bg-brand-600 text-black">{search.newCount} new</span>
       )}
       <Link
         href={`/browse?${search.query}`}

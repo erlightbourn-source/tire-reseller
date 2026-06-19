@@ -76,7 +76,7 @@ export default function MarketplaceFilters({ brands, children }) {
           <button type="button" onClick={() => setDrawer(true)} className="btn-secondary relative shrink-0" aria-label="Open filters">
             <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 5h14v2H3V5Zm3 4h8v2H6V9Zm2 4h4v2H8v-2Z"/></svg>
             Filters
-            {activeCount > 0 && <span className="ml-1 rounded-full bg-brand-500 px-1.5 text-[10px] font-bold text-white">{activeCount}</span>}
+            {activeCount > 0 && <span className="ml-1 rounded-full bg-brand-500 px-1.5 text-[10px] font-bold text-black">{activeCount}</span>}
           </button>
         </form>
       </div>
@@ -148,7 +148,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
     <div className="space-y-4">
       {/* Quick actions */}
       <div className="grid grid-cols-3 gap-2">
-        <button type="button" onClick={useMyLocation} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center text-[11px] font-semibold ring-1 ring-inset transition ${nearActive ? "bg-brand-600 text-white ring-brand-400" : "bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10"}`}>
+        <button type="button" onClick={useMyLocation} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center text-[11px] font-semibold ring-1 ring-inset transition ${nearActive ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10"}`}>
           <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>
           {locating ? "…" : "Near me"}
         </button>
@@ -194,7 +194,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
         <div className="grid grid-cols-3 gap-1.5">
           {[["", "All"], ["new", "New"], ["used", "Used"]].map(([val, lbl]) => (
             <button key={val} type="button" onClick={() => apply({ condition: val })}
-              className={`rounded-lg px-2 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${sel("condition") === val ? "bg-brand-600 text-white ring-brand-400" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"}`}>
+              className={`rounded-lg px-2 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${sel("condition") === val ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"}`}>
               {lbl}
             </button>
           ))}

@@ -27,7 +27,7 @@ export default async function ProPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-white">
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-black">
           <div className="tread absolute inset-0 opacity-20" />
           <div className="relative">
             <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>

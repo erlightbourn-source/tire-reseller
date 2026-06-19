@@ -12,7 +12,7 @@ function Avatar({ name }) {
     .join("")
     .toUpperCase();
   return (
-    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-white">
+    <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-xs font-bold text-black">
       {initials}
     </span>
   );

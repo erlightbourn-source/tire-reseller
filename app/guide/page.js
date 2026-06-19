@@ -48,7 +48,7 @@ export default function GuidePage() {
         <ol className="mt-4 space-y-3">
           {BUYER_CHECKLIST.map(([title, body], i) => (
             <li key={title} className="card flex gap-4 p-4">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 font-display font-bold text-white">{i + 1}</span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 font-display font-bold text-black">{i + 1}</span>
               <div>
                 <p className="font-display font-bold text-white">{title}</p>
                 <p className="mt-0.5 text-sm leading-relaxed text-slate-400">{body}</p>
@@ -103,9 +103,9 @@ export default function GuidePage() {
       </section>
 
       {/* CTA */}
-      <section className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-center text-white shadow-lift">
+      <section className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-center text-black shadow-lift">
         <h2 className="font-display text-2xl font-extrabold">Ready to find your set?</h2>
-        <p className="mt-1 text-white/80">Browse new &amp; used tires from local resellers near you.</p>
+        <p className="mt-1 text-black/70">Browse new &amp; used tires from local resellers near you.</p>
         <Link href="/browse" className="btn mt-4 bg-white text-ink-950 hover:bg-slate-100">Browse tires</Link>
       </section>
     </div>
