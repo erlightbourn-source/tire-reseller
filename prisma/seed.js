@@ -175,6 +175,18 @@ async function main() {
     { brand: "Firestone", model: "WeatherGrip", size: "235/55R17", cond: "used", tread: "7/32in", qty: 4, price: 260, loc: "Charlotte, NC", desc: "Great all-weather set. Smooth and quiet." },
     { brand: "Michelin", model: "Defender T+H", size: "215/55R17", cond: "used", tread: "8/32in", qty: 4, price: 300, loc: "Dallas, TX", desc: "Long-life touring tires, low miles." },
     { brand: "Goodyear", model: "Wrangler DuraTrac", size: "275/55R20", cond: "new", tread: "17/32in", qty: 4, price: 1240, loc: "Nashville, TN", desc: "Heavy duty, brand new set for full-size trucks." },
+    // Extra 225/45R17 + 245/40R18 inventory so same-size price cohorts form and
+    // the fair-price indicator has comparable comps to score against.
+    { brand: "Continental", model: "ExtremeContact DWS06", size: "225/45R17", cond: "used", tread: "6/32in", qty: 4, price: 300, loc: "Los Angeles, CA", desc: "Square set, even wear. Great all-season grip." },
+    { brand: "Pirelli", model: "Cinturato P7", size: "225/45R17", cond: "used", tread: "7/32in", qty: 4, price: 380, loc: "Atlanta, GA", desc: "Comfortable touring set, no repairs." },
+    { brand: "Michelin", model: "Pilot Sport 4", size: "225/45R17", cond: "new", tread: "10/32in", qty: 4, price: 560, loc: "Dallas, TX", desc: "Brand new performance set, never mounted." },
+    { brand: "Hankook", model: "Ventus V2", size: "225/45R17", cond: "used", tread: "5/32in", qty: 4, price: 260, loc: "Chicago, IL", desc: "Budget-friendly, usable tread left." },
+    { brand: "Continental", model: "ProContact", size: "245/40R18", cond: "used", tread: "7/32in", qty: 4, price: 480, loc: "Houston, TX", desc: "OEM takeoffs, low miles." },
+    { brand: "Pirelli", model: "P Zero", size: "245/40R18", cond: "used", tread: "6/32in", qty: 4, price: 520, loc: "Miami, FL", desc: "Summer performance, plenty of grip." },
+    { brand: "Goodyear", model: "Eagle Exhilarate", size: "245/40R18", cond: "new", tread: "11/32in", qty: 4, price: 640, loc: "Denver, CO", desc: "New all-season UHP set." },
+    { brand: "Bridgestone", model: "Potenza RE980AS", size: "245/40R18", cond: "used", tread: "8/32in", qty: 4, price: 440, loc: "Phoenix, AZ", desc: "Quiet, grippy, even wear." },
+    { brand: "Yokohama", model: "Geolandar A/T", size: "265/70R17", cond: "used", tread: "9/32in", qty: 4, price: 520, loc: "Seattle, WA", desc: "All-terrain set, two seasons on them." },
+    { brand: "Cooper", model: "Endeavor", size: "205/55R16", cond: "new", tread: "11/32in", qty: 4, price: 360, loc: "Charlotte, NC", desc: "New all-season set, great value." },
   ];
   const stateOf = (loc) => (loc.split(",").pop() || "").trim().toUpperCase();
   // Coordinates for the seed cities (for "near me" radius search).
