@@ -21,7 +21,7 @@
   .btn-danger:hover { @apply bg-black text-[#ff2b2b]; border-color:#ff2b2b; box-shadow:4px 4px 0 #ff2b2b; }
   .btn-ghost { @apply btn bg-transparent text-brand-400; border-color:transparent; box-shadow:none; }
   .btn-ghost:hover { @apply bg-brand-500 text-black; }
-  .input { @apply w-full bg-black px-3.5 py-2.5 text-sm text-slate-100 font-mono outline-none placeholder:text-slate-600; border:2px solid #3a3a3a; transition:none; }
+  .input { @apply w-full bg-black px-3.5 py-2.5 text-sm text-slate-100 font-mono outline-none placeholder:text-slate-400; border:2px solid #3a3a3a; transition:none; }
   .input:focus { border-color:#e5ff00; box-shadow:3px 3px 0 #e5ff00; }
   .input option { @apply bg-black text-slate-100; }
   .label { @apply mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-300 font-display; }

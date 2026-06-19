@@ -63,25 +63,25 @@ export default async function RootLayout({ children }) {
                 <Logo className="h-7 w-7" />
                 <span className="font-display font-bold text-slate-200">TireTrader</span>
               </div>
-              <p className="mt-2 max-w-xs text-sm text-slate-500">
+              <p className="mt-2 max-w-xs text-sm text-slate-400">
                 Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.
               </p>
             </div>
             <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3" aria-label="Footer">
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Buy</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Buy</span>
                 <Link href="/browse" className="text-slate-300 hover:text-white">Browse tires</Link>
                 <Link href="/states" className="text-slate-300 hover:text-white">Browse by state</Link>
                 <Link href="/guide" className="text-slate-300 hover:text-white">Buying guide</Link>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Sell</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Sell</span>
                 <Link href="/sell-tires" className="text-slate-300 hover:text-white">Sell tires</Link>
                 <Link href="/pro" className="text-slate-300 hover:text-white">Go Pro</Link>
                 <Link href="/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</Link>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide text-slate-500">More</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-400">More</span>
                 <Link href="/app" className="text-slate-300 hover:text-white">📱 Get the app</Link>
                 <Link href="/terms" className="text-slate-300 hover:text-white">Terms</Link>
                 <Link href="/privacy" className="text-slate-300 hover:text-white">Privacy</Link>

@@ -22,7 +22,7 @@ export default function SavedSearchRow({ search }) {
     <div className="card flex items-center gap-3 p-4">
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-white">{search.label}</p>
-        <p className="text-xs text-slate-500">Saved {new Date(search.createdAt).toLocaleDateString()}</p>
+        <p className="text-xs text-slate-400">Saved {new Date(search.createdAt).toLocaleDateString()}</p>
       </div>
       {search.newCount > 0 && (
         <span className="badge bg-brand-600 text-white">{search.newCount} new</span>

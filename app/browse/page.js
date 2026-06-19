@@ -250,7 +250,7 @@ export default async function BrowsePage({ searchParams }) {
             </div>
             {brands.length > 0 && (
               <div className="mt-6">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Popular brands</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Popular brands</p>
                 <div className="mt-2 flex flex-wrap justify-center gap-2">
                   {brands.slice(0, 10).map((b) => (
                     <Link key={b} href={`/browse?brand=${encodeURIComponent(b)}`}

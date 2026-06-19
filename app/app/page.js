@@ -47,7 +47,7 @@ export default function AppPage() {
             <StoreBadge store="apple" sub="Download on the" />
             <StoreBadge store="google" sub="Get it on" />
           </div>
-          <p className="mt-2 text-xs text-slate-500">Native store apps coming soon — badges are placeholders.</p>
+          <p className="mt-2 text-xs text-slate-400">Native store apps coming soon — badges are placeholders.</p>
 
           <div className="mx-auto mt-6 max-w-md text-left">
             <NotifyApp />
@@ -65,7 +65,7 @@ export default function AppPage() {
         ))}
       </div>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-400">
         In the meantime, <Link href="/browse" className="font-semibold text-brand-300 hover:underline">browse on the web</Link> — it works great on mobile.
       </p>
     </div>

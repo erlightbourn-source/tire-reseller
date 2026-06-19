@@ -30,11 +30,11 @@ export default function ReportListing({ listingId, loggedIn }) {
     if (res.ok) setDone(true);
   }
 
-  if (done) return <p className="text-center text-xs text-slate-500">Thanks — our team will review this listing.</p>;
+  if (done) return <p className="text-center text-xs text-slate-400">Thanks — our team will review this listing.</p>;
 
   if (!open) {
     return (
-      <button onClick={() => (loggedIn ? setOpen(true) : (window.location.href = `/login?next=/listings/${listingId}`))} className="mx-auto block text-xs text-slate-500 hover:text-slate-300">
+      <button onClick={() => (loggedIn ? setOpen(true) : (window.location.href = `/login?next=/listings/${listingId}`))} className="mx-auto block text-xs text-slate-400 hover:text-slate-300">
         ⚐ Report this listing
       </button>
     );
@@ -50,7 +50,7 @@ export default function ReportListing({ listingId, loggedIn }) {
           </button>
         ))}
       </div>
-      <button onClick={() => setOpen(false)} className="mt-1 px-2.5 text-xs text-slate-500 hover:text-slate-300">Cancel</button>
+      <button onClick={() => setOpen(false)} className="mt-1 px-2.5 text-xs text-slate-400 hover:text-slate-300">Cancel</button>
     </div>
   );
 }

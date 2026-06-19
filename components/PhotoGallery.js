@@ -5,7 +5,7 @@ export default function PhotoGallery({ photos, alt }) {
   const [active, setActive] = useState(0);
   if (!photos || photos.length === 0) {
     return (
-      <div className="grid aspect-[4/3] w-full place-items-center rounded-2xl bg-gradient-to-br from-slate-800 to-ink-900 text-6xl text-slate-600">
+      <div className="grid aspect-[4/3] w-full place-items-center rounded-2xl bg-gradient-to-br from-slate-800 to-ink-900 text-6xl text-slate-400">
         ◎
       </div>
     );

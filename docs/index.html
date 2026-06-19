@@ -478,15 +478,15 @@ function ReportBtn({ lid }) {
   const { me, report } = useApp();
   const [open, setOpen] = useState(false); const [done, setDone] = useState(false);
   const reasons = [['spam','Spam or duplicate'],['scam','Looks like a scam'],['prohibited','Prohibited / counterfeit'],['wrong category','Not tires / wrong category'],['other','Something else']];
-  if(done) return <p className="text-xs text-slate-500">Thanks — we'll review this listing.</p>;
-  if(!open) return <button onClick={()=>{ if(!me){ navigate('/login'); return; } setOpen(true); }} className="text-xs text-slate-500 hover:text-slate-300">⚐ Report this listing</button>;
-  return <div className="card p-3"><p className="mb-2 text-xs font-semibold text-slate-300">Why are you reporting this?</p><div className="space-y-1">{reasons.map(([v,lbl])=><button key={v} onClick={()=>{ report(lid,v); setOpen(false); setDone(true); }} className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-200 hover:bg-white/5">{lbl}</button>)}</div><button onClick={()=>setOpen(false)} className="mt-1 px-2.5 text-xs text-slate-500 hover:text-slate-300">Cancel</button></div>;
+  if(done) return <p className="text-xs text-slate-400">Thanks — we'll review this listing.</p>;
+  if(!open) return <button onClick={()=>{ if(!me){ navigate('/login'); return; } setOpen(true); }} className="text-xs text-slate-400 hover:text-slate-300">⚐ Report this listing</button>;
+  return <div className="card p-3"><p className="mb-2 text-xs font-semibold text-slate-300">Why are you reporting this?</p><div className="space-y-1">{reasons.map(([v,lbl])=><button key={v} onClick={()=>{ report(lid,v); setOpen(false); setDone(true); }} className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-200 hover:bg-white/5">{lbl}</button>)}</div><button onClick={()=>setOpen(false)} className="mt-1 px-2.5 text-xs text-slate-400 hover:text-slate-300">Cancel</button></div>;
 }
 function RecentlyViewed({ exclude }) {
   const [items, setItems] = useState([]);
   useEffect(()=>{ try{ const all=JSON.parse(localStorage.getItem('tt_recently_viewed')||'[]'); setItems(all.filter(x=>x.id!==exclude).slice(0,8)); }catch(e){} },[exclude]);
   if(items.length===0) return null;
-  return <div className="card p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-bold text-slate-200">Recently viewed</p><button onClick={()=>{ localStorage.removeItem('tt_recently_viewed'); setItems([]); }} className="text-xs text-slate-500 hover:text-slate-300">Clear</button></div><div className="no-scrollbar flex gap-3 overflow-x-auto">{items.map(l=><a key={l.id} href={`#/listings/${l.id}`} className="w-32 shrink-0"><div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-ink-900 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition||'used',l.photoIdx)} alt="" className="h-full w-full object-cover" /></div><p className="mt-1 truncate text-xs font-semibold text-white">{l.brand}</p><p className="text-xs text-slate-400">{fmt(l.priceCents)}</p></a>)}</div></div>;
+  return <div className="card p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-bold text-slate-200">Recently viewed</p><button onClick={()=>{ localStorage.removeItem('tt_recently_viewed'); setItems([]); }} className="text-xs text-slate-400 hover:text-slate-300">Clear</button></div><div className="no-scrollbar flex gap-3 overflow-x-auto">{items.map(l=><a key={l.id} href={`#/listings/${l.id}`} className="w-32 shrink-0"><div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-ink-900 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition||'used',l.photoIdx)} alt="" className="h-full w-full object-cover" /></div><p className="mt-1 truncate text-xs font-semibold text-white">{l.brand}</p><p className="text-xs text-slate-400">{fmt(l.priceCents)}</p></a>)}</div></div>;
 }
 function PromoteBtn({ l }) {
   const { togglePromote } = useApp();
@@ -522,7 +522,7 @@ function Card({ l, distance=null }) {
             <h3 className="font-display font-bold leading-tight text-white">{l.brand}</h3>
             <div className="text-right"><span className="block whitespace-nowrap font-display text-lg font-extrabold text-white">{fmt(l.priceCents)}</span>{l.quantity>1 && <span className="block text-[11px] text-slate-400">{fmt(perTire(l.priceCents,l.quantity))}/tire</span>}</div>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300"><span>Qty {l.quantity}</span>{tread && <><span className="text-slate-600">·</span><span>{tread}</span></>}{age && <><span className="text-slate-600">·</span><span>DOT {l.dotYear}{age.aging?' ⚠':''}</span></>}</div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-300"><span>Qty {l.quantity}</span>{tread && <><span className="text-slate-400">·</span><span>{tread}</span></>}{age && <><span className="text-slate-400">·</span><span>DOT {l.dotYear}{age.aging?' ⚠':''}</span></>}</div>
           {(l.season || l.runFlat || l.shipping) && <div className="mt-2 flex flex-wrap gap-1">{l.season && <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-inset ring-white/10">{seasonLabel(l.season)}</span>}{l.runFlat && <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">Run-flat</span>}{l.shipping && <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30">Ships</span>}</div>}
           {dealTone && <p className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${dealTone==='good'?'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30':'bg-amber-500/15 text-amber-300 ring-amber-400/30'}`}>{dealTone==='good'?`▼ ${Math.abs(_fair.deltaPct)}% below avg`:`▲ ${_fair.deltaPct}% above avg`}</p>}
           {rating && <p className="mt-2 flex items-center gap-1 text-[11px] text-slate-400"><svg viewBox="0 0 20 20" className="h-3 w-3 fill-accent-400" aria-hidden="true"><path d="M10 1.6l2.47 5.01 5.53.8-4 3.9.94 5.5L10 14.2l-4.94 2.6.94-5.5-4-3.9 5.53-.8L10 1.6Z"/></svg><span className="font-semibold text-slate-300">{rating.avg.toFixed(1)}</span><span>seller rating ({rating.count})</span></p>}
@@ -539,7 +539,7 @@ function StateMap({ counts, selected, loggedIn }) {
   const [hover, setHover] = useState(selected);
   const max = Math.max(1, ...STATES.map(s => counts[s.abbr] || 0));
   const go = (a) => { if (loggedIn) setUserState(a); navigate('/browse?state=' + a); };
-  const cls = (a) => { const n = counts[a]||0; if (!n) return 'bg-white/[0.04] text-slate-500 hover:bg-white/10 hover:text-slate-300'; const t=n/max; if(t>0.66) return 'bg-brand-500 text-white hover:bg-brand-400'; if(t>0.33) return 'bg-brand-500/60 text-white hover:bg-brand-500/80'; return 'bg-brand-500/30 text-brand-100 hover:bg-brand-500/50'; };
+  const cls = (a) => { const n = counts[a]||0; if (!n) return 'bg-white/[0.04] text-slate-400 hover:bg-white/10 hover:text-slate-300'; const t=n/max; if(t>0.66) return 'bg-brand-500 text-white hover:bg-brand-400'; if(t>0.33) return 'bg-brand-500/60 text-white hover:bg-brand-500/80'; return 'bg-brand-500/30 text-brand-100 hover:bg-brand-500/50'; };
   const focus = hover || selected; const fc = focus ? (counts[focus]||0) : 0;
   return (
     <div className="card p-4 sm:p-6">
@@ -629,7 +629,7 @@ function AppPage() {
           <p className="mx-auto mt-3 max-w-xl text-slate-300">We're building native iOS &amp; Android apps so you can buy and sell tires anywhere. Want first dibs? Drop your email and we'll ping you at launch.</p>
           <div className="mt-6 flex flex-col items-center gap-3"><InstallApp /><p className="text-xs text-slate-400">Available now as an installable web app — add it to your home screen.</p></div>
           <div className="mt-6 flex flex-wrap justify-center gap-3 opacity-80"><Badge store="apple" sub="Download on the" /><Badge store="google" sub="Get it on" /></div>
-          <p className="mt-2 text-xs text-slate-500">Native store apps coming soon — badges are placeholders.</p>
+          <p className="mt-2 text-xs text-slate-400">Native store apps coming soon — badges are placeholders.</p>
           <div className="mx-auto mt-6 max-w-md text-left">
             {done ? <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">🎉 You're on the list — we'll email you at launch.</div>
               : <form onSubmit={e=>{e.preventDefault(); if(email.includes('@')) setDone(true);}} className="flex flex-col gap-2 sm:flex-row"><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" className="input" /><button className="btn-primary whitespace-nowrap px-5">Notify me</button></form>}
@@ -637,7 +637,7 @@ function AppPage() {
         </div>
       </section>
       <div className="grid gap-3 sm:grid-cols-3">{feats.map(([i,t,s])=><div key={t} className="card p-4"><p className="text-2xl">{i}</p><p className="mt-2 font-display font-bold text-white">{t}</p><p className="mt-1 text-sm text-slate-400">{s}</p></div>)}</div>
-      <p className="text-center text-sm text-slate-500">In the meantime, <a href="#/browse" className="font-semibold text-brand-300 hover:underline">browse on the web</a> — it works great on mobile.</p>
+      <p className="text-center text-sm text-slate-400">In the meantime, <a href="#/browse" className="font-semibold text-brand-300 hover:underline">browse on the web</a> — it works great on mobile.</p>
     </div>
   );
 }
@@ -708,7 +708,7 @@ function SellerProfile({ id }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>{seller.pro && <span className="badge bg-brand-500 text-black">PRO</span>}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400"><Stars value={avg} /><span className="font-semibold text-slate-200">{avg?avg.toFixed(1):'—'}</span><span>({count} review{count!==1?'s':''})</span>{seller.location && <span>· 📍 {seller.location}</span>}</div>
-          <p className="mt-1 text-xs text-slate-500">{active.length} active · {sold} sold · Member since 2026</p>
+          <p className="mt-1 text-xs text-slate-400">{active.length} active · {sold} sold · Member since 2026</p>
         </div>
         {me && me.id!==id && <button onClick={()=>{ if(isBlocked(id)||confirm('Block this seller? You will not see their listings or be able to message them.')) toggleBlock(id); }} className={isBlocked(id)?'btn-secondary':'btn-ghost text-slate-400'}>{isBlocked(id)?'Unblock seller':'🚫 Block seller'}</button>}
       </div>
@@ -719,7 +719,7 @@ function SellerProfile({ id }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <div><h2 className="mb-3 font-display text-lg font-bold text-white">Reviews</h2>
           {list.length===0 ? <div className="card px-6 py-8 text-center text-sm text-slate-400">No reviews yet.</div>
-            : <div className="space-y-2">{list.map(r=>{ const a=db.users.find(u=>u.id===r.authorId); return <div key={r.id} className="card p-4"><div className="flex items-center justify-between"><span className="font-semibold text-white">{a?a.name:'User'}</span><Stars value={r.rating} size="h-3.5 w-3.5" /></div>{r.body && <p className="mt-1 text-sm text-slate-400">{r.body}</p>}<p className="mt-1 text-xs text-slate-500">{timeAgo(r.createdAt)}</p></div>; })}</div>}
+            : <div className="space-y-2">{list.map(r=>{ const a=db.users.find(u=>u.id===r.authorId); return <div key={r.id} className="card p-4"><div className="flex items-center justify-between"><span className="font-semibold text-white">{a?a.name:'User'}</span><Stars value={r.rating} size="h-3.5 w-3.5" /></div>{r.body && <p className="mt-1 text-sm text-slate-400">{r.body}</p>}<p className="mt-1 text-xs text-slate-400">{timeAgo(r.createdAt)}</p></div>; })}</div>}
         </div>
         <div>
           {canReview ? (
@@ -748,13 +748,13 @@ function SavedSearches() {
       {mine.length===0 ? <div className="card grid place-items-center px-6 py-14 text-center"><span className="text-4xl">🔔</span><p className="mt-3 font-display text-lg font-bold text-slate-200">No saved searches yet</p><p className="mt-1 text-sm text-slate-400">Set up filters on browse, then tap “Save search”.</p><a href="#/browse" className="btn-secondary mt-4">Browse tires</a></div>
         : <div className="space-y-2">{mine.map(s=>{ const nc=newCount(s); return (
           <div key={s.id} className="card flex items-center gap-3 p-4">
-            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{s.label}</p><p className="text-xs text-slate-500">Saved {new Date(s.createdAt).toLocaleDateString()}</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{s.label}</p><p className="text-xs text-slate-400">Saved {new Date(s.createdAt).toLocaleDateString()}</p></div>
             {nc>0 && <span className="badge bg-brand-600 text-white">{nc} new</span>}
             <a href={`#/browse?${s.query}`} onClick={()=>seenSearch(s.id)} className="btn-secondary">View</a>
             <button onClick={()=>deleteSearch(s.id)} className="btn-ghost px-2" aria-label="Delete"><svg viewBox="0 0 20 20" className="h-4 w-4 fill-current"><path d="M7 2h6l1 2h3v2H3V4h3l1-2Zm-2 5h10l-1 11H6L5 7Z"/></svg></button>
           </div>
         ); })}</div>}
-      <p className="text-xs text-slate-500">In production these become email/push alerts. Here, new-match counts update live.</p>
+      <p className="text-xs text-slate-400">In production these become email/push alerts. Here, new-match counts update live.</p>
     </div>
   );
 }
@@ -1004,7 +1004,7 @@ function Marketplace({ params }) {
             size ? (
               <div className="card px-6 py-12 text-center"><div className="text-4xl">🛞</div><p className="mt-3 font-display text-lg font-bold text-slate-200"><span className="font-mono text-brand-400">{size}</span> — 0 in stock{st?` in ${stateName(st)}`:''} right now</p><p className="mt-1 text-sm text-slate-400">{fits?`That's the correct size for your ${fits}. `:''}We don't have a match listed yet — check back soon, or widen your search.</p><div className="mt-4 flex flex-wrap justify-center gap-2">{similarCount>0 && <a href={`#/browse?q=R${rim}`} className="btn-primary">See {similarCount} R{rim} tire{similarCount!==1?'s':''} that may fit</a>}<a href="#/browse" className="btn-secondary">Browse all tires</a></div></div>
             ) : (
-            <div className="card px-6 py-12 text-center"><div className="text-4xl">🛞</div><p className="mt-3 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="btn-primary">Clear filters</button><a href="#/states" className="btn-secondary">Open map</a></div>{brands.length>0 && <div className="mt-6"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Popular brands</p><div className="mt-2 flex flex-wrap justify-center gap-2">{brands.slice(0,10).map(b=><button key={b} onClick={()=>{ clearAll(); setBrand(b); }} className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">{b}</button>)}</div></div>}</div>
+            <div className="card px-6 py-12 text-center"><div className="text-4xl">🛞</div><p className="mt-3 font-display text-lg font-bold text-slate-200">{st ? `No tires in ${stateName(st)} yet` : 'No tires match your filters'}</p><p className="mt-1 text-sm text-slate-400">Try clearing filters, a wider radius, or another state.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="btn-primary">Clear filters</button><a href="#/states" className="btn-secondary">Open map</a></div>{brands.length>0 && <div className="mt-6"><p className="text-xs font-bold uppercase tracking-wide text-slate-400">Popular brands</p><div className="mt-2 flex flex-wrap justify-center gap-2">{brands.slice(0,10).map(b=><button key={b} onClick={()=>{ clearAll(); setBrand(b); }} className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">{b}</button>)}</div></div>}</div>
             )
           ) : (
             <>
@@ -1067,7 +1067,7 @@ function Detail({ id }) {
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white">{initials(seller.name)}</span>
               <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate font-semibold text-white">{seller.name}</p>{seller.pro && <Badge tone="pro"><svg viewBox="0 0 20 20" className="h-3 w-3 fill-current"><path d="M10 1l2.4 1.7 2.9-.2.9 2.8 2.4 1.7-.9 2.8.9 2.8-2.4 1.7-.9 2.8-2.9-.2L10 19l-2.4-1.7-2.9.2-.9-2.8L1.4 13l.9-2.8L1.4 7.4l2.4-1.7.9-2.8 2.9.2L10 1z"/></svg>Verified Pro</Badge>}</div><div className="flex items-center gap-1.5 text-xs text-slate-400"><Stars value={sr.avg} size="h-3 w-3" /><span>{sr.count?`${sr.avg.toFixed(1)} (${sr.count} review${sr.count>1?'s':''})`:'No reviews yet'}</span></div></div>
-              <span className="text-slate-500" aria-hidden="true">›</span>
+              <span className="text-slate-400" aria-hidden="true">›</span>
             </div>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400"><span>📅 Listed {timeAgo(l.createdAt)}</span>{seller.pro && <span>⚡ Usually responds within a day</span>}<span>📍 {seller.location||l.location}</span></div>
           </a>
@@ -1306,9 +1306,9 @@ function Dashboard() {
         <Stat tone="from-slate-600 to-slate-800" val={fmt(inv)} label="Inventory value" sub={`${sold.length} sold`} icon="🛡" />
       </div>
       {isSeller && <div className="card p-5">
-        <div className="mb-3 flex items-end justify-between"><div><p className="text-sm font-bold text-slate-200">Listing views</p><p className="text-xs text-slate-500">Last 14 days</p></div><p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-500">views</span></p></div>
+        <div className="mb-3 flex items-end justify-between"><div><p className="text-sm font-bold text-slate-200">Listing views</p><p className="text-xs text-slate-400">Last 14 days</p></div><p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-400">views</span></p></div>
         <div className="flex h-28 items-end gap-1.5">{chartDays.map(d=><div key={d.key} title={`${d.label}: ${d.count} views`} className="flex-1 rounded-t bg-gradient-to-t from-brand-700 to-brand-400" style={{height:`${Math.max(3,(d.count/maxDay)*100)}%`}} />)}</div>
-        <div className="mt-1 flex gap-1.5">{chartDays.map(d=><span key={d.key} className="flex-1 text-center text-[9px] text-slate-600">{d.label}</span>)}</div>
+        <div className="mt-1 flex gap-1.5">{chartDays.map(d=><span key={d.key} className="flex-1 text-center text-[9px] text-slate-400">{d.label}</span>)}</div>
       </div>}
       <div><h2 className="mb-3 font-display text-lg font-bold text-white">Your listings</h2>
         {mine.length === 0 ? (
@@ -1317,7 +1317,7 @@ function Dashboard() {
           <div className="card divide-y divide-white/5">{mine.map(l => (
             <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
               <a href={`#/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></a>
-              <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><a href={`#/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">{l.brand} · {l.size}</a><span className={`badge ${l.status==='active'?'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30':'bg-white/10 text-slate-300'}`}>{l.status==='active'?'Active':'Sold'}</span></div><p className="mt-0.5 text-sm text-slate-400"><span className="font-semibold text-slate-200">{fmt(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}</p><p className="mt-0.5 text-xs text-slate-500">👁 {l.views} views · 💬 {db.threads.filter(t=>t.listingId===l.id).length} chats</p></div>
+              <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><a href={`#/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">{l.brand} · {l.size}</a><span className={`badge ${l.status==='active'?'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30':'bg-white/10 text-slate-300'}`}>{l.status==='active'?'Active':'Sold'}</span></div><p className="mt-0.5 text-sm text-slate-400"><span className="font-semibold text-slate-200">{fmt(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}</p><p className="mt-0.5 text-xs text-slate-400">👁 {l.views} views · 💬 {db.threads.filter(t=>t.listingId===l.id).length} chats</p></div>
               <div className="flex shrink-0 gap-2">{l.status==='active' && <PromoteBtn l={l} />}<a href={`#/sell/${l.id}`} className="btn-secondary">Edit</a></div>
             </div>
           ))}</div>
@@ -1343,7 +1343,7 @@ function Messages() {
           return (
             <a key={t.id} href={`#/messages/${t.id}`} className="card card-hover flex items-center gap-3 p-3">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div>
-              <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><p className="truncate font-semibold text-white">{l.brand} · {l.size}</p><span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(lastTime(db,t))}</span></div><p className="text-xs text-slate-500">{t.buyerId===me.id?'Seller':'Buyer'}: {other.name} · {fmt(l.priceCents)}</p><p className="truncate text-sm text-slate-500">{last ? last.body : 'No messages yet'}</p></div>
+              <div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><p className="truncate font-semibold text-white">{l.brand} · {l.size}</p><span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(lastTime(db,t))}</span></div><p className="text-xs text-slate-400">{t.buyerId===me.id?'Seller':'Buyer'}: {other.name} · {fmt(l.priceCents)}</p><p className="truncate text-sm text-slate-400">{last ? last.body : 'No messages yet'}</p></div>
             </a>
           );
         })}</div>
@@ -1377,7 +1377,7 @@ function Thread({ id }) {
       <a href={`#/listings/${l.id}`} className="card mt-2 flex items-center gap-3 p-3 transition hover:border-white/20"><div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10"><img src={tireSVG(l.brand,l.size,l.condition,l.photoIdx)} alt="" className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate font-semibold text-white">{l.brand} · {l.size}</p><p className="text-sm text-slate-400">{fmt(l.priceCents)} · with {other.name}</p></div></a>
       <div className="card mt-3 flex h-[60vh] flex-col overflow-hidden">
         <div className="flex-1 space-y-2 overflow-y-auto bg-black/20 p-4">
-          {msgs.length===0 && <p className="mt-10 text-center text-sm text-slate-500">Start the conversation with {other.name}.</p>}
+          {msgs.length===0 && <p className="mt-10 text-center text-sm text-slate-400">Start the conversation with {other.name}.</p>}
           {msgs.map(m => { const mine = m.senderId===me.id; const isOffer = m.kind==='offer'; return (
             <div key={m.id} className={`flex ${mine?'justify-end':'justify-start'}`}>
               {isOffer ? (()=>{ const exp=offerExp(m); const live=m.offerStatus==='pending'&&!exp.expired; return (
@@ -1395,7 +1395,7 @@ function Thread({ id }) {
                   <div className="mt-1 text-[10px] text-slate-400">{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div>
                 </div>
               ); })() : (
-                <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-500'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>
+                <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine?'rounded-br-md bg-brand-600 text-white':'rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10'}`}>{m.body}<div className={`mt-0.5 text-[10px] ${mine?'text-brand-100':'text-slate-400'}`}>{new Date(m.createdAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>
               )}
             </div>
           ); })}
@@ -1478,7 +1478,7 @@ function ForgotDemo() {
       <div className="mb-5 flex items-center gap-2.5"><Logo cls="h-9 w-9" /><span className="font-display text-xl font-extrabold text-white">Tire<span className="text-brand-400">Trader</span></span></div>
       <div className="card p-6">
         <h1 className="font-display text-2xl font-bold text-white">Reset your password</h1>
-        <p className="mt-1 text-xs text-slate-500">Demo: the full app emails a secure, expiring reset link. Here you can reset directly for a known email.</p>
+        <p className="mt-1 text-xs text-slate-400">Demo: the full app emails a secure, expiring reset link. Here you can reset directly for a known email.</p>
         <form onSubmit={submit} className="mt-4 space-y-3.5">
           {err && <div className="rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-inset ring-red-400/30">{err}</div>}
           <div><label className="label" htmlFor="fe">Email</label><input id="fe" type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="input" placeholder="you@example.com" /></div>
@@ -1522,11 +1522,11 @@ function Footer() {
   return (
     <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
-        <div><div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div><p className="mt-2 max-w-xs text-sm text-slate-500">Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.</p></div>
+        <div><div className="flex items-center gap-2.5"><Logo cls="h-7 w-7" /><span className="font-display font-bold text-slate-200">TireTrader</span></div><p className="mt-2 max-w-xs text-sm text-slate-400">Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.</p></div>
         <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3" aria-label="Footer">
-          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">Buy</span><a href="#/browse" className="text-slate-300 hover:text-white">Browse tires</a><a href="#/states" className="text-slate-300 hover:text-white">Browse by state</a><a href="#/guide" className="text-slate-300 hover:text-white">Buying guide</a></div>
-          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">Sell</span><a href="#/sell-tires" className="text-slate-300 hover:text-white">Sell tires</a><a href="#/pro" className="text-slate-300 hover:text-white">Go Pro</a><a href="#/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</a></div>
-          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">More</span><a href="#/app" className="text-slate-300 hover:text-white">📱 Get the app</a><a href="#/terms" className="text-slate-300 hover:text-white">Terms</a><a href="#/privacy" className="text-slate-300 hover:text-white">Privacy</a><a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">Source on GitHub</a><button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-left text-slate-400 hover:text-brand-300">↺ Reset demo</button></div>
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-400">Buy</span><a href="#/browse" className="text-slate-300 hover:text-white">Browse tires</a><a href="#/states" className="text-slate-300 hover:text-white">Browse by state</a><a href="#/guide" className="text-slate-300 hover:text-white">Buying guide</a></div>
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-400">Sell</span><a href="#/sell-tires" className="text-slate-300 hover:text-white">Sell tires</a><a href="#/pro" className="text-slate-300 hover:text-white">Go Pro</a><a href="#/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</a></div>
+          <div className="flex flex-col gap-2"><span className="text-xs font-bold uppercase tracking-wide text-slate-400">More</span><a href="#/app" className="text-slate-300 hover:text-white">📱 Get the app</a><a href="#/terms" className="text-slate-300 hover:text-white">Terms</a><a href="#/privacy" className="text-slate-300 hover:text-white">Privacy</a><a href="https://github.com/erlightbourn-source/tire-reseller" className="text-brand-300 hover:underline">Source on GitHub</a><button onClick={()=>{ if(confirm('Reset demo data to defaults?')) reset(); }} className="text-left text-slate-400 hover:text-brand-300">↺ Reset demo</button></div>
         </nav>
       </div>
     </footer>

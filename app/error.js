@@ -1,7 +1,10 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
+import { reportClientError } from "@/lib/report-error";
 
 export default function Error({ error, reset }) {
+  useEffect(() => { reportClientError(error); }, [error]);
   return (
     <div className="mx-auto max-w-md py-16 text-center">
       <span className="text-4xl">🛞</span>

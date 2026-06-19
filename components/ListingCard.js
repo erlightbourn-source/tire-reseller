@@ -141,5 +141,5 @@ function Spec({ icon, children }) {
 }
 
 function Dot() {
-  return <span className="text-slate-600">·</span>;
+  return <span className="text-slate-400">·</span>;
 }

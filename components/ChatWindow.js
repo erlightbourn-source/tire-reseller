@@ -86,7 +86,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
     <div className="card flex h-[62vh] flex-col overflow-hidden">
       <div className="flex-1 space-y-2 overflow-y-auto bg-black/20 p-4">
         {loaded && messages.length === 0 && (
-          <p className="mt-10 text-center text-sm text-slate-500">Start the conversation with {otherName}.</p>
+          <p className="mt-10 text-center text-sm text-slate-400">Start the conversation with {otherName}.</p>
         )}
         {messages.map((m) => {
           const day = new Date(m.createdAt).toLocaleDateString();
@@ -137,7 +137,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                 ) : (
                   <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-600 text-white" : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
                     {m.body}
-                    <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-500"}`}>
+                    <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-400"}`}>
                       {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                     </div>
                   </div>

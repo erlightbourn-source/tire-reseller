@@ -144,9 +144,9 @@ export default async function DashboardPage() {
           <div className="mb-3 flex items-end justify-between">
             <div>
               <p className="text-sm font-bold text-slate-200">Listing views</p>
-              <p className="text-xs text-slate-500">Last 14 days</p>
+              <p className="text-xs text-slate-400">Last 14 days</p>
             </div>
-            <p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-500">views</span></p>
+            <p className="font-display text-2xl font-extrabold text-white">{views14}<span className="ml-1 text-xs font-medium text-slate-400">views</span></p>
           </div>
           <div className="flex h-28 items-end gap-1.5">
             {days.map((d) => (
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
           </div>
           <div className="mt-1 flex gap-1.5">
             {days.map((d) => (
-              <span key={d.key} className="flex-1 text-center text-[9px] text-slate-600">{d.label}</span>
+              <span key={d.key} className="flex-1 text-center text-[9px] text-slate-400">{d.label}</span>
             ))}
           </div>
         </div>
@@ -204,7 +204,7 @@ export default async function DashboardPage() {
                   <p className="mt-0.5 text-sm text-slate-400">
                     <span className="font-semibold text-slate-200">{formatPrice(l.priceCents)}</span> · Qty {l.quantity} · {timeAgo(l.createdAt)}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-3 text-xs text-slate-500">
+                  <p className="mt-0.5 flex items-center gap-3 text-xs text-slate-400">
                     <span>👁 {l.views} views</span>
                     <span>💬 {l._count.threads} chats</span>
                   </p>

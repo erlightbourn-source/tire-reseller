@@ -1,8 +1,11 @@
 "use client";
+import { useEffect } from "react";
+import { reportClientError } from "@/lib/report-error";
 
 // Catches errors thrown in the root layout itself. Must render its own
 // <html>/<body> because it replaces the whole document tree.
-export default function GlobalError({ reset }) {
+export default function GlobalError({ error, reset }) {
+  useEffect(() => { reportClientError(error, { fatal: true }); }, [error]);
   return (
     <html lang="en">
       <body style={{ background: "#070809", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>

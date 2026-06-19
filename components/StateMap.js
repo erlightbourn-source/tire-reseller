@@ -26,7 +26,7 @@ export default function StateMap({ counts = {}, selected = null, loggedIn = fals
   // graduated fill by listing count
   function cls(abbr) {
     const n = counts[abbr] || 0;
-    if (n === 0) return "bg-white/[0.04] text-slate-500 hover:bg-white/10 hover:text-slate-300";
+    if (n === 0) return "bg-white/[0.04] text-slate-400 hover:bg-white/10 hover:text-slate-300";
     const t = n / max;
     if (t > 0.66) return "bg-brand-500 text-white hover:bg-brand-400";
     if (t > 0.33) return "bg-brand-500/60 text-white hover:bg-brand-500/80";

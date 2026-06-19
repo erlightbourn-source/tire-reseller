@@ -58,7 +58,7 @@ export default async function SellerProfile({ params }) {
             <span>({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
             {seller.location && <span>· 📍 {seller.location}</span>}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-400">
             {seller.listings.length} active · {soldCount} sold · Member since {new Date(seller.createdAt).getFullYear()}
           </p>
         </div>
@@ -92,7 +92,7 @@ export default async function SellerProfile({ params }) {
                     <Stars value={r.rating} size="h-3.5 w-3.5" />
                   </div>
                   {r.body && <p className="mt-1 text-sm text-slate-400">{r.body}</p>}
-                  <p className="mt-1 text-xs text-slate-500">{timeAgo(r.createdAt)}</p>
+                  <p className="mt-1 text-xs text-slate-400">{timeAgo(r.createdAt)}</p>
                 </div>
               ))}
             </div>

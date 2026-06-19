@@ -82,7 +82,7 @@ export default async function AdminPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-white">{u.name}</span>
-                  <span className="text-xs text-slate-500">{u.email}</span>
+                  <span className="text-xs text-slate-400">{u.email}</span>
                   {u.admin && <span className="badge bg-brand-500/15 text-brand-200 ring-1 ring-inset ring-brand-400/30">Admin</span>}
                   {u.deletedAt && <span className="badge bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-400/30">Deleted</span>}
                 </div>
@@ -109,7 +109,7 @@ export default async function AdminPage() {
           ) : audit.map((a) => (
             <div key={a.id} className="flex items-center justify-between gap-3 px-4 py-2">
               <span className="font-mono text-xs text-slate-200">{a.action}</span>
-              <span className="text-xs text-slate-500">{a.ip || "—"} · {timeAgo(a.createdAt)}</span>
+              <span className="text-xs text-slate-400">{a.ip || "—"} · {timeAgo(a.createdAt)}</span>
             </div>
           ))}
         </div>

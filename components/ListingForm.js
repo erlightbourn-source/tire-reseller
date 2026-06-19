@@ -145,7 +145,7 @@ export default function ListingForm({ initial }) {
       <div>
         <label className="label">Photos</label>
         <input type="file" accept="image/*" multiple onChange={onUpload} className="block text-sm" />
-        {uploading && <p className="mt-1 text-sm text-slate-500">Uploading…</p>}
+        {uploading && <p className="mt-1 text-sm text-slate-400">Uploading…</p>}
         {photos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {photos.map((url) => (

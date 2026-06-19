@@ -21,7 +21,7 @@ export default function RecentlyViewed({ exclude }) {
         <p className="text-sm font-bold text-slate-200">Recently viewed</p>
         <button
           onClick={() => { localStorage.removeItem("tt_recently_viewed"); setItems([]); }}
-          className="text-xs text-slate-500 hover:text-slate-300"
+          className="text-xs text-slate-400 hover:text-slate-300"
         >
           Clear
         </button>
@@ -34,7 +34,7 @@ export default function RecentlyViewed({ exclude }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={l.photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
               ) : (
-                <div className="grid h-full w-full place-items-center text-2xl text-slate-600">◎</div>
+                <div className="grid h-full w-full place-items-center text-2xl text-slate-400">◎</div>
               )}
             </div>
             <p className="mt-1 truncate text-xs font-semibold text-white">{l.brand}</p>

@@ -51,7 +51,7 @@ export default async function SavedSearchesPage() {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-slate-400">
         In a production build these become email/push alerts. For now, new-match counts update here.
       </p>
     </div>

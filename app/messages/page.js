@@ -67,8 +67,8 @@ export default async function MessagesPage() {
                     <p className="truncate font-semibold text-white">{t.listing.brand} · {t.listing.size}</p>
                     <span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(t.updatedAt)}</span>
                   </div>
-                  <p className="text-xs text-slate-500">{role}: {other.name} · {formatPrice(t.listing.priceCents)}</p>
-                  <p className="truncate text-sm text-slate-500">{last ? last.body : "No messages yet"}</p>
+                  <p className="text-xs text-slate-400">{role}: {other.name} · {formatPrice(t.listing.priceCents)}</p>
+                  <p className="truncate text-sm text-slate-400">{last ? last.body : "No messages yet"}</p>
                 </div>
                 {unread[t.id] > 0 && (
                   <span className="badge bg-brand-600 text-white">{unread[t.id]}</span>

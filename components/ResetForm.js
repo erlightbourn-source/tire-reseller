@@ -50,7 +50,7 @@ export default function ResetForm() {
               <input id="reset-pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input" placeholder="••••••••" />
             </div>
             <button disabled={busy} className="btn-primary w-full">{busy ? "Saving…" : "Reset password"}</button>
-            <p className="text-center text-xs text-slate-500">For your security, this signs you out of all other devices.</p>
+            <p className="text-center text-xs text-slate-400">For your security, this signs you out of all other devices.</p>
           </form>
         )}
       </div>
