@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
+import { deriveListingColumns } from "@/lib/tiresize";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
