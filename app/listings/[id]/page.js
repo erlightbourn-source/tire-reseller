@@ -27,7 +27,7 @@ async function fetchListing(id) {
     where: { id },
     include: {
       photos: { orderBy: { sort: "asc" } },
-      seller: { select: { id: true, name: true, location: true, createdAt: true, pro: true } },
+      seller: { select: { id: true, name: true, location: true, createdAt: true, pro: true, deletedAt: true } },
       _count: { select: { threads: true } },
     },
   });
@@ -37,9 +37,9 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   const l = await prisma.listing.findUnique({
     where: { id },
-    select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
+    select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, hidden: true, seller: { select: { deletedAt: true } }, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
   });
-  if (!l) return { title: "Listing not found — TireTrader" };
+  if (!l || l.hidden || l.seller?.deletedAt) return { title: "Listing not found — TireTrader" };
   const cond = conditionMeta(l.condition).label;
   const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireTrader`;
   const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)} in ${l.location}. Message the seller directly on TireTrader.`;
@@ -58,6 +58,11 @@ export default async function ListingDetail({ params }) {
   if (!listing) notFound();
 
   const isOwner = user?.id === listing.sellerId;
+  // Hidden (moderation/auto-hide) or soft-deleted-seller listings must not be
+  // reachable by direct URL for anyone but the owner — otherwise the report
+  // auto-hide and account-deletion takedowns are trivially bypassed.
+  if (!isOwner && (listing.hidden || listing.seller?.deletedAt)) notFound();
+
   if (!isOwner) {
     await prisma.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
     await prisma.listingView.create({ data: { listingId: listing.id } }).catch(() => {});

@@ -19,7 +19,7 @@ export default async function SellerProfile({ params }) {
     where: { id },
     include: {
       listings: {
-        where: { status: "active" },
+        where: { status: "active", hidden: false },
         orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
         include: { photos: { take: 1, orderBy: { sort: "asc" } } },
       },
@@ -30,7 +30,7 @@ export default async function SellerProfile({ params }) {
       _count: { select: { listings: true } },
     },
   });
-  if (!seller || seller.role !== "seller") notFound();
+  if (!seller || seller.role !== "seller" || seller.deletedAt) notFound();
 
   const reviews = seller.reviewsReceived;
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
