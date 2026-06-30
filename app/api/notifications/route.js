@@ -36,7 +36,10 @@ export async function GET() {
   for (const s of searches) {
     const params = Object.fromEntries(new URLSearchParams(s.query));
     const AND = buildListingWhere(params);
-    AND.push({ createdAt: { gt: s.lastSeenAt } });
+    // Mirror the browse/alerts visibility contract: never count moderated
+    // (hidden) listings or listings from soft-deleted sellers, since the user
+    // can't actually open them — otherwise the badge over-counts dead matches.
+    AND.push({ hidden: false }, { seller: { deletedAt: null } }, { createdAt: { gt: s.lastSeenAt } });
     newMatches += await prisma.listing.count({ where: { AND } });
   }
 

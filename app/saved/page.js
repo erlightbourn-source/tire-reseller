@@ -20,7 +20,10 @@ export default async function SavedSearchesPage() {
     searches.map(async (s) => {
       const params = Object.fromEntries(new URLSearchParams(s.query));
       const AND = buildListingWhere(params);
-      AND.push({ createdAt: { gt: s.lastSeenAt } });
+      // Only count matches the user can actually open: exclude moderated
+      // (hidden) listings and listings from soft-deleted sellers, matching the
+      // browse/alerts visibility contract.
+      AND.push({ hidden: false }, { seller: { deletedAt: null } }, { createdAt: { gt: s.lastSeenAt } });
       const newCount = await prisma.listing.count({ where: { AND } });
       return { ...s, newCount };
     })
