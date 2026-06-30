@@ -19,10 +19,37 @@ export async function GET(req) {
     select: { id: true },
     take: 500,
   });
-  // Cascades remove listings, threads, messages, favorites, etc. (schema FKs).
-  if (stale.length) {
-    await prisma.user.deleteMany({ where: { id: { in: stale.map((u) => u.id) } } });
+
+  if (!stale.length) return NextResponse.json({ ok: true, purged: 0 });
+
+  const ids = stale.map((u) => u.id);
+
+  // Reviews these users *wrote* will be cascade-deleted along with them, so the
+  // denormalized ratingAvg/ratingCount on the sellers they reviewed would drift
+  // (stale, inflated counts). Capture those sellers BEFORE the delete, then
+  // recompute their aggregates after, so the browse minRating filter and seller
+  // cards keep reading accurate columns.
+  const affected = await prisma.review.findMany({
+    where: { authorId: { in: ids } },
+    select: { sellerId: true },
+    distinct: ["sellerId"],
+  });
+  const sellerIds = affected.map((r) => r.sellerId).filter((sid) => !ids.includes(sid));
+
+  // Cascades remove listings, threads, messages, favorites, reviews, etc. (FKs).
+  await prisma.user.deleteMany({ where: { id: { in: ids } } });
+
+  for (const sid of sellerIds) {
+    const agg = await prisma.review.aggregate({
+      where: { sellerId: sid },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    await prisma.user.update({
+      where: { id: sid },
+      data: { ratingAvg: agg._avg.rating || 0, ratingCount: agg._count._all },
+    }).catch(() => {});
   }
 
-  return NextResponse.json({ ok: true, purged: stale.length });
+  return NextResponse.json({ ok: true, purged: stale.length, ratingsRecomputed: sellerIds.length });
 }
