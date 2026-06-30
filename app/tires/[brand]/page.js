@@ -33,7 +33,7 @@ export async function generateMetadata({ params }) {
     title,
     description,
     alternates: { canonical: `/tires/${brandSlug(brand)}` },
-    openGraph: { title, description, type: "website" },
+    openGraph: { title, description, type: "website", images: ["/opengraph-image"] },
   };
 }
 

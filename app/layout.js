@@ -5,6 +5,7 @@ import { getCurrentUser, canSell, isAdmin } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
 import Analytics from "@/components/Analytics";
+import { SITE_URL } from "@/lib/site";
 
 // Brutalist headers/monospace; body uses Georgia (system serif) via globals.
 const courier = Courier_Prime({
@@ -15,6 +16,9 @@ const courier = Courier_Prime({
 });
 
 export const metadata = {
+  // Resolves relative canonical/OG/Twitter image URLs against the real host
+  // instead of localhost (set NEXT_PUBLIC_SITE_URL in production).
+  metadataBase: new URL(SITE_URL),
   title: "TireTrader — Buy & Sell Tires",
   description:
     "The marketplace built for tire resellers. Browse deals for free; sell for $10/month.",
