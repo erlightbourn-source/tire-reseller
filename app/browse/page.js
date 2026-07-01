@@ -33,7 +33,12 @@ export async function generateMetadata({ searchParams }) {
 // search, which bounds candidates with a lat/lng box then refines in JS.
 async function getListings(sp, blockedIds = [], page = 1, pageSize = 24) {
   const AND = buildListingWhere(sp); // size/tread/rating now indexed DB clauses
-  AND.push({ hidden: false });
+  // Public visibility contract (matches notifications + alerts cron): never
+  // surface moderated (hidden) listings or listings from soft-deleted/banned
+  // sellers — those can't be opened, so showing them yields dead results and
+  // would undercut account-deletion/ban takedowns if a listing were ever left
+  // un-hidden.
+  AND.push({ hidden: false }, { seller: { deletedAt: null } });
   if (blockedIds.length) AND.push({ sellerId: { notIn: blockedIds } });
   if (sp.q) {
     AND.push({
@@ -65,7 +70,7 @@ async function getListings(sp, blockedIds = [], page = 1, pageSize = 24) {
     if (sizes.length) {
       const cohorts = await prisma.listing.groupBy({
         by: ["size"],
-        where: { status: "active", hidden: false, size: { in: sizes }, perTireCents: { not: null } },
+        where: { status: "active", hidden: false, seller: { deletedAt: null }, size: { in: sizes }, perTireCents: { not: null } },
         _avg: { perTireCents: true },
         _count: { _all: true },
       });
@@ -118,7 +123,7 @@ export default async function BrowsePage({ searchParams }) {
   const [{ items: pageListings, total: count, page }, brandRows] = await Promise.all([
     getListings(searchParams, blockedIds, reqPage, PAGE_SIZE),
     prisma.listing.findMany({
-      where: { status: "active", hidden: false },
+      where: { status: "active", hidden: false, seller: { deletedAt: null } },
       select: { brand: true },
       distinct: ["brand"],
       orderBy: { brand: "asc" },
@@ -149,7 +154,7 @@ export default async function BrowsePage({ searchParams }) {
   const rim = searchParams.size ? parseTireSize(searchParams.size).rim : null;
   let similarCount = 0;
   if (count === 0 && rim) {
-    const fAND = [{ status: "active" }, { hidden: false }, { rimDiameter: rim }, { size: { not: searchParams.size } }];
+    const fAND = [{ status: "active" }, { hidden: false }, { seller: { deletedAt: null } }, { rimDiameter: rim }, { size: { not: searchParams.size } }];
     if (blockedIds.length) fAND.push({ sellerId: { notIn: blockedIds } });
     if (state) fAND.push({ state });
     similarCount = await prisma.listing.count({ where: { AND: fAND } });
