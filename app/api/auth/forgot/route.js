@@ -11,12 +11,17 @@ export async function POST(req) {
   if (limited) return limited;
 
   const { email } = await req.json();
-  const addr = String(email || "").toLowerCase();
+  const addr = String(email || "").trim().toLowerCase();
 
   // Generic response either way — never reveal whether an account exists.
   const generic = { ok: true };
 
   if (!isEmail(addr)) return NextResponse.json(generic);
+
+  // Per-recipient cap (3/hour) so an IP-rotating attacker can't bomb one
+  // victim's inbox with reset emails. Keyed on the normalized address.
+  const addrLimited = await enforceRateLimit(req, "forgot-addr", { key: addr, limit: 3, windowMs: 60 * 60 * 1000 });
+  if (addrLimited) return addrLimited;
 
   const user = await prisma.user.findUnique({ where: { email: addr } });
   if (!user) return NextResponse.json(generic);

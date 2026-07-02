@@ -13,9 +13,14 @@ export async function POST(req) {
   if (limited) return limited;
 
   const { email } = await req.json();
-  const addr = String(email || "").toLowerCase();
+  const addr = String(email || "").trim().toLowerCase();
   const NEUTRAL = NextResponse.json({ ok: true });
   if (!isEmail(addr)) return NEUTRAL;
+
+  // Per-recipient cap (3/hour) so an IP-rotating attacker can't bomb one
+  // victim's inbox with verification emails. Keyed on the normalized address.
+  const addrLimited = await enforceRateLimit(req, "resend-verify-addr", { key: addr, limit: 3, windowMs: 60 * 60 * 1000 });
+  if (addrLimited) return addrLimited;
 
   const user = await prisma.user.findUnique({ where: { email: addr } });
   if (user && !user.emailVerified) {
