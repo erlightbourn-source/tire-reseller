@@ -84,7 +84,7 @@ export default async function ListingDetail({ params }) {
   const reviewCount = sellerRating._count._all;
 
   const candidates = await prisma.listing.findMany({
-    where: { status: "active", hidden: false, id: { not: listing.id }, OR: [{ size: listing.size }, { brand: listing.brand }] },
+    where: { status: "active", hidden: false, seller: { deletedAt: null }, id: { not: listing.id }, OR: [{ size: listing.size }, { brand: listing.brand }] },
     include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     take: 8,
   });

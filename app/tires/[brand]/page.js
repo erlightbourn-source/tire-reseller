@@ -14,7 +14,7 @@ export const revalidate = 300;
 // Resolve a URL slug back to the brand's canonical casing from active listings.
 async function resolveBrand(slug) {
   const rows = await prisma.listing.findMany({
-    where: { status: "active", hidden: false },
+    where: { status: "active", hidden: false, seller: { deletedAt: null } },
     select: { brand: true },
     distinct: ["brand"],
   });
@@ -43,7 +43,7 @@ export default async function BrandPage({ params }) {
   if (!brand) notFound();
 
   const listings = await prisma.listing.findMany({
-    where: { status: "active", hidden: false, brand },
+    where: { status: "active", hidden: false, seller: { deletedAt: null }, brand },
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     take: 48,

@@ -35,7 +35,7 @@ export default async function SizePage({ params }) {
   if (!s) notFound();
 
   const listings = await prisma.listing.findMany({
-    where: { status: "active", hidden: false, widthMm: s.width, aspectRatio: s.aspect, rimDiameter: s.rim },
+    where: { status: "active", hidden: false, seller: { deletedAt: null }, widthMm: s.width, aspectRatio: s.aspect, rimDiameter: s.rim },
     orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
     include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     take: 48,

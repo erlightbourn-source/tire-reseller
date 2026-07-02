@@ -28,7 +28,7 @@ export default async function sitemap() {
   let listingPages = [];
   try {
     const brands = await prisma.listing.findMany({
-      where: { status: "active", hidden: false },
+      where: { status: "active", hidden: false, seller: { deletedAt: null } },
       select: { brand: true },
       distinct: ["brand"],
     });
@@ -41,7 +41,7 @@ export default async function sitemap() {
 
     // Per-size landing pages (distinct sizes that have structured columns set).
     const sizes = await prisma.listing.findMany({
-      where: { status: "active", hidden: false, rimDiameter: { not: null } },
+      where: { status: "active", hidden: false, seller: { deletedAt: null }, rimDiameter: { not: null } },
       select: { size: true },
       distinct: ["size"],
     });
@@ -53,7 +53,7 @@ export default async function sitemap() {
     }));
 
     const listings = await prisma.listing.findMany({
-      where: { status: "active", hidden: false },
+      where: { status: "active", hidden: false, seller: { deletedAt: null } },
       select: { id: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
       take: 5000,

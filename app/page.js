@@ -31,16 +31,16 @@ export default async function Home() {
   const homeState = userStateOf(user);
 
   const [totalActive, grouped, recent, brandRows] = await Promise.all([
-    prisma.listing.count({ where: { status: "active", hidden: false } }),
-    prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false }, _count: { _all: true } }),
+    prisma.listing.count({ where: { status: "active", hidden: false, seller: { deletedAt: null } } }),
+    prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
     prisma.listing.findMany({
-      where: { status: "active", hidden: false, ...(homeState ? { state: homeState } : {}) },
+      where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
       take: 4,
       include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     }),
     prisma.listing.findMany({
-      where: { status: "active", hidden: false },
+      where: { status: "active", hidden: false, seller: { deletedAt: null } },
       select: { brand: true },
       distinct: ["brand"],
       orderBy: { brand: "asc" },
@@ -53,7 +53,7 @@ export default async function Home() {
   const showcase = recent.length
     ? recent
     : await prisma.listing.findMany({
-        where: { status: "active", hidden: false },
+        where: { status: "active", hidden: false, seller: { deletedAt: null } },
         orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
         take: 4,
         include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
