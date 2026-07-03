@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { enforceRateLimit, isEmail, clientIp } from "@/lib/security";
+import { autoHiddenIds } from "@/lib/moderation";
 import { logAudit } from "@/lib/audit";
 
 const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -53,13 +54,15 @@ export async function POST(req) {
   if (user.deletedAt) {
     if (Date.now() - new Date(user.deletedAt).getTime() <= GRACE_MS) {
       await prisma.user.update({ where: { id: user.id }, data: { deletedAt: null } });
-      // Restore listings hidden by the soft-delete, but leave any that were
-      // auto-hidden by reports (>=3) hidden.
+      // Restore listings hidden by the soft-delete, but leave any that meet the
+      // report auto-hide rule hidden — same credible-reporter threshold the
+      // reports endpoint uses to hide, so the two rules can't drift.
       const hidden = await prisma.listing.findMany({
         where: { sellerId: user.id, hidden: true },
-        select: { id: true, _count: { select: { reports: true } } },
+        select: { id: true },
       });
-      const restore = hidden.filter((l) => l._count.reports < 3).map((l) => l.id);
+      const keepHidden = await autoHiddenIds(hidden.map((l) => l.id));
+      const restore = hidden.map((l) => l.id).filter((id) => !keepHidden.has(id));
       if (restore.length) await prisma.listing.updateMany({ where: { id: { in: restore } }, data: { hidden: false } });
       reactivated = true;
     } else {

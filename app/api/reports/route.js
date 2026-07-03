@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
+import { AUTO_HIDE_AT, credibleReportCount } from "@/lib/moderation";
 
 const REASONS = ["spam", "scam", "prohibited", "wrong category", "other"];
-const AUTO_HIDE_AT = 5; // distinct, non-throwaway reporters before auto-hide
-const MIN_ACCOUNT_AGE_MS = 24 * 60 * 60 * 1000; // reporters must be >24h old to count
 
 export async function POST(req) {
   const user = await getCurrentUser();
@@ -31,10 +30,7 @@ export async function POST(req) {
 
   // Auto-hide only on enough reports from established accounts, so a burst of
   // freshly-minted throwaways can't brigade a competitor's listing offline.
-  const cutoff = new Date(Date.now() - MIN_ACCOUNT_AGE_MS);
-  const credibleReports = await prisma.report.count({
-    where: { listingId, reporter: { createdAt: { lt: cutoff } } },
-  });
+  const credibleReports = await credibleReportCount(listingId);
   if (credibleReports >= AUTO_HIDE_AT && !listing.hidden) {
     await prisma.listing.update({ where: { id: listingId }, data: { hidden: true } });
   }
