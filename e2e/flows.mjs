@@ -90,3 +90,36 @@ test("cron endpoint fails closed without the secret", async () => {
   const r = await req("/api/cron/purge");
   assert.equal(r.status, 401);
 });
+
+// Per-recipient email caps (3/hour, keyed on the normalized address) on the
+// reset/verification senders, so an IP-rotating attacker can't bomb one inbox.
+// Each test stays within its route's 5/min per-IP budget (exactly 5 requests).
+test("forgot: 4th same-address request within the hour is capped, others unaffected", async () => {
+  const addr = `cap${Date.now()}@example.com`;
+  const post = (email) =>
+    req("/api/auth/forgot", { method: "POST", body: JSON.stringify({ email }) });
+  for (let i = 0; i < 3; i++) {
+    const r = await post(addr);
+    assert.equal(r.status, 200, `request ${i + 1} passes`);
+    assert.equal((await r.json()).ok, true, "neutral body");
+  }
+  const fourth = await post(addr);
+  assert.equal(fourth.status, 429, "4th same-address request is capped");
+  assert.ok(Number(fourth.headers.get("retry-after")) > 0, "Retry-After present");
+  const other = await post(`other${Date.now()}@example.com`);
+  assert.equal(other.status, 200, "a different address is not affected");
+});
+
+test("resend-verification: 4th same-address request capped; response neutral for existing accounts", async () => {
+  const addr = `capv${Date.now()}@example.com`;
+  const post = (email) =>
+    req("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) });
+  for (let i = 0; i < 3; i++) assert.equal((await post(addr)).status, 200);
+  const fourth = await post(addr);
+  assert.equal(fourth.status, 429, "4th same-address request is capped");
+  // Existence-oracle check: a real (verified) account gets the same neutral
+  // 200 {ok:true} a nonexistent address gets.
+  const existing = await post("demo@tiretrader.test");
+  assert.equal(existing.status, 200);
+  assert.deepEqual(await existing.json(), { ok: true });
+});
