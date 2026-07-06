@@ -4,7 +4,9 @@ import { prisma } from "@/lib/db";
 import { parseTireSize } from "@/lib/tiresize";
 import { sizeSlug, SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
+import { BUYER_FAQ } from "@/lib/content";
 import ListingCard from "@/components/ListingCard";
+import Faq from "@/components/Faq";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +93,18 @@ export default async function SizePage({ params }) {
           <Link href="/browse" className="btn-primary mt-3">Browse all tires</Link>
         </div>
       )}
+
+      <section className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <p className="eyebrow">Buying {s.label}</p>
+          <h2 className="mt-1 font-display text-2xl font-extrabold text-white">Know before you buy</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            New to used tires? Our <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">buying guide</Link> covers
+            tread depth, DOT dates, and how to vet a seller.
+          </p>
+        </div>
+        <div className="card px-5 py-2"><Faq items={BUYER_FAQ.slice(0, 3)} /></div>
+      </section>
     </div>
   );
 }

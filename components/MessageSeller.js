@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
+import { SAFETY_WARNING, detectOffPlatform } from "@/lib/safety";
 
 export default function MessageSeller({ listingId, loggedIn }) {
   const router = useRouter();
@@ -43,11 +44,20 @@ export default function MessageSeller({ listingId, loggedIn }) {
     );
   }
 
+  // Surface the standing anti-fraud warning in the composer (the moment a buyer
+  // is most exposed to off-platform scams), and elevate it if the buyer's own
+  // draft trips the off-platform detector. Advisory only — never blocks sending.
+  const offPlatform = detectOffPlatform(msg);
+
   return (
     <div className="card space-y-2 p-4">
       {err && <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       <p className="text-sm font-semibold text-slate-200">Send a message</p>
       <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className="input" />
+      <div className={`rounded-lg px-3 py-2 text-xs ${offPlatform.flagged ? "bg-amber-500/15 text-amber-200" : "bg-slate-500/10 text-slate-400"}`}>
+        {offPlatform.flagged && <span className="font-semibold">⚠ Keep this deal on TireTrader. </span>}
+        {SAFETY_WARNING}
+      </div>
       <div className="flex gap-2">
         <button onClick={send} disabled={busy} className="btn-primary flex-1">
           {busy ? "Sending…" : "Send message"}
