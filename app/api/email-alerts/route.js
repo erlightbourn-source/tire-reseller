@@ -37,16 +37,27 @@ export async function POST(req) {
   // Double opt-in: store UNCONFIRMED and send a confirmation request. The cron
   // only mails confirmed alerts, so we never send digests to an address that
   // didn't explicitly opt in.
-  const { token } = newResetToken();         // unsubscribe capability
-  const { token: confirmToken } = newResetToken(); // one-time confirm capability
-  await prisma.emailAlert.create({ data: { email: addr, query: cleanQuery, label, token, confirmToken } });
+  //
+  // Token storage:
+  //  - `confirmToken` is a ONE-TIME secret, emailed once and nulled on use — so we
+  //    store its HASH at rest (mirroring reset/verify tokens in lib/auth.js) and
+  //    hash the incoming token in the confirm route. A DB read can't confirm alerts.
+  //  - `token` (unsubscribe) is a PERSISTENT capability that the alerts cron
+  //    re-emits in the unsubscribe URL + List-Unsubscribe header on every digest
+  //    (app/api/cron/alerts/route.js), so the server must be able to regenerate the
+  //    link from stored data — it is stored in plaintext by design. It is a 256-bit
+  //    unguessable value granting only unsubscribe (low harm). Hardening it needs a
+  //    per-email HMAC redesign, not hash-at-rest — tracked in improvements/BACKLOG.md.
+  const { token } = newResetToken();               // unsubscribe capability (stored plaintext by design — see note above)
+  const confirm = newResetToken();                 // one-time confirm capability (hashed at rest)
+  await prisma.emailAlert.create({ data: { email: addr, query: cleanQuery, label, token, confirmToken: confirm.hash } });
 
   await sendEmail({
     to: addr,
     subject: "Confirm your TireTrader tire alerts",
     text:
       `Confirm you want alerts when new tires match: ${label}\n\n` +
-      `Confirm: ${SITE_URL}/api/email-alerts/confirm?token=${confirmToken}\n\n` +
+      `Confirm: ${SITE_URL}/api/email-alerts/confirm?token=${confirm.token}\n\n` +
       `If you didn't request this, just ignore this email — you won't hear from us again.`,
   });
 
