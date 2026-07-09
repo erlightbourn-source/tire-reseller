@@ -32,7 +32,11 @@ export async function POST(req) {
   const label = describeSearch(params, stateName);
 
   const existing = await prisma.emailAlert.findUnique({ where: { email_query: { email: addr, query: cleanQuery } } }).catch(() => null);
-  if (existing) return NextResponse.json({ ok: true, duplicate: true });
+  // Enumeration-safe: respond identically whether or not this (email, query) is
+  // already registered, so a probe can't distinguish an existing alert member
+  // from a new one (mirrors the confirm route's uniform redirect). The client
+  // ignores the old `duplicate` flag — it shows the same success state either way.
+  if (existing) return NextResponse.json({ ok: true });
 
   // Double opt-in: store UNCONFIRMED and send a confirmation request. The cron
   // only mails confirmed alerts, so we never send digests to an address that
