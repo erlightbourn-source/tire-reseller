@@ -6,6 +6,7 @@ import { jsonLdHtml } from "@/lib/jsonld";
 import { formatPrice } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
 import Faq from "@/components/Faq";
+import EmailAlertForm from "@/components/EmailAlertForm";
 import { BUYER_FAQ } from "@/lib/content";
 
 // Brand hubs aren't personalized — cache (ISR) for 5 min to cut DB load at scale.
@@ -150,6 +151,10 @@ export default async function BrandPage({ params }) {
             New to used tires? Our <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">buying guide</Link> covers
             tread depth, DOT dates, and how to vet a seller.
           </p>
+          <div className="mt-5">
+            <p className="text-sm font-semibold text-slate-200">Get an email when {brand} tires list</p>
+            <div className="mt-2 sm:max-w-sm"><EmailAlertForm query={`brand=${brand}`} compact /></div>
+          </div>
         </div>
         <div className="card px-5 py-2"><Faq items={BUYER_FAQ.slice(0, 3)} /></div>
       </section>

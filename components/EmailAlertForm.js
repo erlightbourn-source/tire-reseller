@@ -31,12 +31,15 @@ export default function EmailAlertForm({ query = "", compact = false }) {
   }
 
   return (
-    <form onSubmit={submit} className={`mx-auto flex w-full max-w-sm flex-col gap-2 sm:flex-row ${compact ? "" : "mt-2"}`}>
-      <label htmlFor="alert-email" className="sr-only">Email for alerts</label>
-      <input id="alert-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com" className="input" />
-      <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Email me matches"}</button>
-      {err && <p className="text-sm text-amber-300">{err}</p>}
-    </form>
+    <div className={`mx-auto w-full max-w-sm ${compact ? "" : "mt-2"}`}>
+      <form onSubmit={submit} className="flex w-full flex-col gap-2 sm:flex-row">
+        <label htmlFor="alert-email" className="sr-only">Email for alerts</label>
+        <input id="alert-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com" className="input" />
+        <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Email me matches"}</button>
+      </form>
+      {err && <p className="mt-1.5 text-sm text-amber-300">{err}</p>}
+      <p className="mt-1.5 text-xs text-slate-400">One email when tires match. No account needed, unsubscribe anytime.</p>
+    </div>
   );
 }
