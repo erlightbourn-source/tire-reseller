@@ -82,18 +82,18 @@ export default function StateMap({ counts = {}, selected = null, loggedIn = fals
                 onMouseLeave={() => setHover(selected)}
                 title={`${stateName(s.abbr)} — ${n} listing${n !== 1 ? "s" : ""}`}
                 style={{ gridColumn: s.col + 1, gridRow: s.row + 1 }}
-                className={`relative grid aspect-square place-items-center rounded-lg text-[11px] font-bold transition ${cls(
+                className={`relative grid aspect-square place-items-center text-[11px] font-bold transition ${cls(
                   s.abbr
                 )} ${isSel ? "ring-2 ring-accent-400 ring-offset-2 ring-offset-[#13161c]" : ""}`}
               >
                 {s.abbr}
                 {n > 0 && (
-                  <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-ink-950 px-1 text-[9px] font-bold text-white ring-1 ring-white/15">
+                  <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center bg-ink-950 px-1 text-[9px] font-bold text-white ring-1 ring-white/15">
                     {n}
                   </span>
                 )}
                 {isSel && (
-                  <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-accent-400" />
+                  <span className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 bg-accent-400" />
                 )}
               </button>
             );
@@ -104,10 +104,10 @@ export default function StateMap({ counts = {}, selected = null, loggedIn = fals
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <span>Fewer</span>
-          <span className="h-3 w-5 rounded bg-white/[0.06]" />
-          <span className="h-3 w-5 rounded bg-brand-500/30" />
-          <span className="h-3 w-5 rounded bg-brand-500/60" />
-          <span className="h-3 w-5 rounded bg-brand-500" />
+          <span className="h-3 w-5 bg-white/[0.06]" />
+          <span className="h-3 w-5 bg-brand-500/30" />
+          <span className="h-3 w-5 bg-brand-500/60" />
+          <span className="h-3 w-5 bg-brand-500" />
           <span>More listings</span>
         </div>
         <button onClick={() => router.push("/browse")} className="text-sm font-semibold text-brand-300 hover:underline">

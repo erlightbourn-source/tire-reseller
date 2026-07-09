@@ -76,7 +76,7 @@ export default function MarketplaceFilters({ brands, children }) {
           <button type="button" onClick={() => setDrawer(true)} className="btn-secondary relative shrink-0" aria-label="Open filters">
             <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 5h14v2H3V5Zm3 4h8v2H6V9Zm2 4h4v2H8v-2Z"/></svg>
             Filters
-            {activeCount > 0 && <span className="ml-1 rounded-full bg-brand-500 px-1.5 text-[10px] font-bold text-black">{activeCount}</span>}
+            {activeCount > 0 && <span className="ml-1 bg-brand-500 px-1.5 text-[10px] font-bold text-black">{activeCount}</span>}
           </button>
         </form>
       </div>
@@ -85,7 +85,7 @@ export default function MarketplaceFilters({ brands, children }) {
       {chips.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {chips.map((c) => (
-            <button key={c.key} onClick={() => apply(c.clear)} className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/15 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-brand-400/30 transition hover:bg-brand-500/25" aria-label={`Remove filter ${c.label}`}>
+            <button key={c.key} onClick={() => apply(c.clear)} className="inline-flex items-center gap-1.5 bg-brand-500/15 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-brand-400/30 transition hover:bg-brand-500/25" aria-label={`Remove filter ${c.label}`}>
               {c.label}
               <svg viewBox="0 0 16 16" className="h-3 w-3 fill-current" aria-hidden="true"><path d="M4.3 4.3a1 1 0 0 1 1.4 0L8 6.6l2.3-2.3a1 1 0 1 1 1.4 1.4L9.4 8l2.3 2.3a1 1 0 0 1-1.4 1.4L8 9.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L6.6 8 4.3 5.7a1 1 0 0 1 0-1.4Z"/></svg>
             </button>
@@ -148,15 +148,15 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
     <div className="space-y-4">
       {/* Quick actions */}
       <div className="grid grid-cols-3 gap-2">
-        <button type="button" onClick={useMyLocation} className={`flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 text-center text-[11px] font-semibold ring-1 ring-inset transition ${nearActive ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10"}`}>
+        <button type="button" onClick={useMyLocation} className={`flex flex-col items-center gap-1 px-2 py-2.5 text-center text-[11px] font-semibold ring-1 ring-inset transition ${nearActive ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-200 ring-white/10 hover:bg-white/10"}`}>
           <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6c0 4.2 6 10 6 10s6-5.8 6-10a6 6 0 0 0-6-6Zm0 8.5A2.5 2.5 0 1 1 10 5a2.5 2.5 0 0 1 0 5.5Z"/></svg>
           {locating ? "…" : "Near me"}
         </button>
-        <Link href="/states" className="flex flex-col items-center gap-1 rounded-xl bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
+        <Link href="/states" className="flex flex-col items-center gap-1 bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
           <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true"><path d="M10 2 3 6v12h5v-5h4v5h5V6l-7-4Z"/></svg>
           Change state
         </Link>
-        <Link href="/states" className="flex flex-col items-center gap-1 rounded-xl bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
+        <Link href="/states" className="flex flex-col items-center gap-1 bg-white/5 px-2 py-2.5 text-center text-[11px] font-semibold text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10">
           <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>
           By vehicle
         </Link>
@@ -194,7 +194,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
         <div className="grid grid-cols-3 gap-1.5">
           {[["", "All"], ["new", "New"], ["used", "Used"]].map(([val, lbl]) => (
             <button key={val} type="button" onClick={() => apply({ condition: val })}
-              className={`rounded-lg px-2 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${sel("condition") === val ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"}`}>
+              className={`px-2 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${sel("condition") === val ? "bg-brand-600 text-black ring-brand-400" : "bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10"}`}>
               {lbl}
             </button>
           ))}
@@ -256,7 +256,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
         </select>
       </Field>
 
-      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200">
+      <label className="flex cursor-pointer items-center gap-2.5 border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200">
         <input type="checkbox" checked={params.get("shipping") === "1"} onChange={(e) => apply({ shipping: e.target.checked ? "1" : "" })} className="h-4 w-4 accent-brand-500" />
         Ships (not pickup-only)
       </label>
@@ -271,7 +271,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
         </select>
       </Field>
 
-      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200">
+      <label className="flex cursor-pointer items-center gap-2.5 border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200">
         <input type="checkbox" checked={params.get("runFlat") === "1"} onChange={(e) => apply({ runFlat: e.target.checked ? "1" : "" })} className="h-4 w-4 accent-brand-500" />
         Run-flat only
       </label>

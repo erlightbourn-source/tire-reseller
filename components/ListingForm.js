@@ -56,7 +56,7 @@ export default function ListingForm({ initial }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {err && (
-        <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>
+        <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -106,7 +106,7 @@ export default function ListingForm({ initial }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+      <div className="border border-white/10 bg-white/[0.02] p-4">
         <p className="mb-3 text-sm font-bold text-slate-200">Tire details <span className="font-normal text-slate-400">— help buyers find the right fit</span></p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
@@ -132,11 +132,11 @@ export default function ListingForm({ initial }) {
             <input name="dotYear" type="number" min="2000" max="2030" defaultValue={initial?.dotYear || ""} className="input" placeholder="2022" />
           </div>
           <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-slate-200">
-            <input type="checkbox" name="runFlat" defaultChecked={initial?.runFlat} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-brand-500" />
+            <input type="checkbox" name="runFlat" defaultChecked={initial?.runFlat} className="h-4 w-4 border-white/20 bg-white/10 accent-brand-500" />
             Run-flat tires
           </label>
           <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-slate-200">
-            <input type="checkbox" name="shipping" defaultChecked={initial?.shipping} className="h-4 w-4 rounded border-white/20 bg-white/10 accent-brand-500" />
+            <input type="checkbox" name="shipping" defaultChecked={initial?.shipping} className="h-4 w-4 border-white/20 bg-white/10 accent-brand-500" />
             I can ship these
           </label>
         </div>
@@ -149,13 +149,13 @@ export default function ListingForm({ initial }) {
         {photos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
             {photos.map((url) => (
-              <div key={url} className="relative h-20 w-20 overflow-hidden rounded-lg ring-1 ring-white/10">
+              <div key={url} className="relative h-20 w-20 overflow-hidden ring-1 ring-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
                 <button
                   type="button"
                   onClick={() => setPhotos((p) => p.filter((u) => u !== url))}
-                  className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-bl bg-black/60 text-xs text-white"
+                  className="absolute right-0 top-0 grid h-5 w-5 place-items-center bg-black/60 text-xs text-white"
                 >
                   ✕
                 </button>

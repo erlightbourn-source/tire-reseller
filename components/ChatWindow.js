@@ -97,7 +97,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
             <div key={m.id}>
               {showDay && (
                 <div className="my-3 flex justify-center">
-                  <span className="rounded-full bg-white/5 px-3 py-0.5 text-xs text-slate-400 ring-1 ring-white/10">{day}</span>
+                  <span className="bg-white/5 px-3 py-0.5 text-xs text-slate-400 ring-1 ring-white/10">{day}</span>
                 </div>
               )}
               <div className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
@@ -106,7 +106,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                     const exp = offerExpiry(m);
                     const live = m.offerStatus === "pending" && !exp.expired;
                     return (
-                  <div className={`max-w-[80%] rounded-2xl border p-3 ${m.offerStatus === "accepted" ? "border-emerald-400/40 bg-emerald-500/10" : (m.offerStatus === "declined" || m.offerStatus === "countered" || exp.expired) ? "border-white/10 bg-white/5 opacity-70" : "border-accent-400/40 bg-accent-500/10"}`}>
+                  <div className={`max-w-[80%] border p-3 ${m.offerStatus === "accepted" ? "border-emerald-400/40 bg-emerald-500/10" : (m.offerStatus === "declined" || m.offerStatus === "countered" || exp.expired) ? "border-white/10 bg-white/5 opacity-70" : "border-accent-400/40 bg-accent-500/10"}`}>
                     <p className="text-xs font-semibold uppercase tracking-wide text-accent-300">{m.mine ? "Your offer" : "Offer"}</p>
                     <p className="font-display text-2xl font-extrabold text-white">{money(m.offerCents)}</p>
                     {m.offerStatus === "accepted" && <p className="text-xs font-semibold text-emerald-300">✓ Accepted</p>}
@@ -135,7 +135,7 @@ export default function ChatWindow({ threadId, otherName, listingPrice }) {
                     );
                   })()
                 ) : (
-                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-600 text-black" : "rounded-bl-md bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
+                  <div className={`max-w-[78%] px-3.5 py-2 text-sm shadow-sm ${m.mine ? " bg-brand-600 text-black" : " bg-white/[0.07] text-slate-100 ring-1 ring-white/10"}`}>
                     {m.body}
                     <div className={`mt-0.5 text-[10px] ${m.mine ? "text-brand-100" : "text-slate-400"}`}>
                       {new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}

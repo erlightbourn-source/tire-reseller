@@ -31,7 +31,7 @@ export default async function ThreadPage({ params }) {
       <Link href="/messages" className="text-sm text-brand-300 hover:underline">← All messages</Link>
 
       <Link href={`/listings/${thread.listing.id}`} className="card mt-2 flex items-center gap-3 p-3 transition hover:border-white/20">
-        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
+        <div className="h-12 w-12 shrink-0 overflow-hidden bg-white/5 ring-1 ring-white/10">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

@@ -48,7 +48,7 @@ export default function GuidePage() {
         <ol className="mt-4 space-y-3">
           {BUYER_CHECKLIST.map(([title, body], i) => (
             <li key={title} className="card flex gap-4 p-4">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 font-display font-bold text-black">{i + 1}</span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center bg-brand-600 font-display font-bold text-black">{i + 1}</span>
               <div>
                 <p className="font-display font-bold text-white">{title}</p>
                 <p className="mt-0.5 text-sm leading-relaxed text-slate-400">{body}</p>
@@ -85,8 +85,8 @@ export default function GuidePage() {
           ].map(([depth, label, tone, pct]) => (
             <div key={depth} className="flex items-center gap-3">
               <span className="w-20 shrink-0 font-mono font-semibold text-slate-200">{depth}</span>
-              <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                <div className={`h-full rounded-full ${tone === "emerald" ? "bg-emerald-500" : tone === "amber" ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${pct}%` }} />
+              <div className="h-2.5 flex-1 overflow-hidden bg-white/10">
+                <div className={`h-full ${tone === "emerald" ? "bg-emerald-500" : tone === "amber" ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${pct}%` }} />
               </div>
               <span className="w-36 shrink-0 text-right text-slate-400">{label}</span>
             </div>
@@ -103,7 +103,7 @@ export default function GuidePage() {
       </section>
 
       {/* CTA */}
-      <section className="rounded-2xl bg-brand-600 p-6 text-center text-black shadow-lift">
+      <section className="bg-brand-600 p-6 text-center text-black shadow-lift">
         <h2 className="font-display text-2xl font-extrabold">Ready to find your set?</h2>
         <p className="mt-1 text-black/70">Browse new &amp; used tires from local resellers near you.</p>
         <Link href="/browse" className="btn mt-4 bg-white text-ink-950 hover:bg-slate-100">Browse tires</Link>

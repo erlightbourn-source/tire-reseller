@@ -42,7 +42,7 @@ export default function FavoriteButton({ listingId, initial = false, className =
       onClick={toggle}
       aria-label={fav ? "Remove from favorites" : "Save to favorites"}
       aria-pressed={fav}
-      className={`grid h-8 w-8 place-items-center rounded-full bg-ink-950/60 backdrop-blur ring-1 ring-white/15 transition hover:bg-ink-950/80 ${className}`}
+      className={`grid h-8 w-8 place-items-center bg-ink-950/60 backdrop-blur ring-1 ring-white/15 transition hover:bg-ink-950/80 ${className}`}
     >
       <Heart filled={fav} />
     </button>

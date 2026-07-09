@@ -63,7 +63,7 @@ export default async function SubscribePage() {
 
         <div className="p-6">
           {!expired && (
-            <div className="mb-5 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
+            <div className="mb-5 flex items-center gap-2 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
               <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z" /></svg>
               First year free — <strong>$0 today, no card required.</strong>
             </div>
@@ -72,7 +72,7 @@ export default async function SubscribePage() {
           <ul className="space-y-3">
             {FEATURES.map(([title, sub]) => (
               <li key={title} className="flex gap-3">
-                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
                   <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4L8 13.2Z" /></svg>
                 </span>
                 <div>

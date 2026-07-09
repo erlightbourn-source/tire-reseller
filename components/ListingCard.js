@@ -39,7 +39,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
 
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/70 to-transparent p-2.5">
             <span className="font-mono text-sm font-semibold text-white drop-shadow">{listing.size}</span>
-            {dist && <span className="rounded-md bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">{dist}</span>}
+            {dist && <span className="bg-black/40 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur">{dist}</span>}
           </div>
         </div>
 
@@ -65,17 +65,17 @@ export default function ListingCard({ listing, favorited = false, distance = nul
           {(listing.season || listing.runFlat || listing.shipping) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {listing.season && (
-                <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-inset ring-white/10">
+                <span className="bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-inset ring-white/10">
                   {seasonLabel(listing.season)}
                 </span>
               )}
               {listing.runFlat && (
-                <span className="rounded-md bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">
+                <span className="bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-medium text-brand-200 ring-1 ring-inset ring-brand-400/30">
                   Run-flat
                 </span>
               )}
               {listing.shipping && (
-                <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
+                <span className="bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
                   Ships
                 </span>
               )}
@@ -83,7 +83,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
           )}
 
           {dealTone && (
-            <p className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${dealTone === "good" ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30" : "bg-amber-500/15 text-amber-300 ring-amber-400/30"}`}>
+            <p className={`mt-2 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${dealTone === "good" ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30" : "bg-amber-500/15 text-amber-300 ring-amber-400/30"}`}>
               {dealTone === "good" ? `▼ ${Math.abs(fair.deltaPct)}% below avg` : `▲ ${fair.deltaPct}% above avg`}
             </p>
           )}

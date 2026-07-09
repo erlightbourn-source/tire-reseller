@@ -35,13 +35,13 @@ export default async function SellTiresPage() {
   return (
     <div className="space-y-14 pb-20 lg:pb-0">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white shadow-lift">
+      <section className="relative overflow-hidden bg-ink-900 text-white shadow-lift">
         <div className="mesh absolute inset-0" />
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative grid items-center gap-6 px-6 py-12 sm:px-10 lg:grid-cols-[1.5fr_1fr]">
           <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+            <span className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
+              <span className="h-1.5 w-1.5 bg-accent-400" />
               For tire resellers
             </span>
             <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.08] tracking-tight text-balance sm:text-5xl">
@@ -72,7 +72,7 @@ export default async function SellTiresPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SELLER_BENEFITS.map((b) => (
             <div key={b.title} className="card p-5">
-              <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-brand-500 text-black">
+              <span className="mb-3 grid h-11 w-11 place-items-center bg-brand-500 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[b.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{b.title}</p>
@@ -94,8 +94,8 @@ export default async function SellTiresPage() {
             ["Post your tire sets", "Add size, tread, DOT year, condition, and photos. Bulk-add if you're a Pro."],
             ["Message buyers & sell", "Field questions and offers in-app, then arrange local pickup."],
           ].map(([t, d], i) => (
-            <li key={t} className="relative rounded-2xl bg-white/[0.03] p-5 ring-1 ring-inset ring-white/10">
-              <span className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-brand-600 font-display font-bold text-black">{i + 1}</span>
+            <li key={t} className="relative bg-white/[0.03] p-5 ring-1 ring-inset ring-white/10">
+              <span className="mb-3 grid h-9 w-9 place-items-center bg-brand-600 font-display font-bold text-black">{i + 1}</span>
               <p className="font-display font-bold text-white">{t}</p>
               <p className="mt-1 text-sm text-slate-400">{d}</p>
             </li>

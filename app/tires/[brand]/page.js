@@ -112,7 +112,7 @@ export default async function BrandPage({ params }) {
           <div className="flex flex-wrap gap-2">
             {sizes.map((s) => (
               <Link key={s} href={`/browse?brand=${encodeURIComponent(brand)}&size=${encodeURIComponent(s)}`}
-                className="rounded-full bg-white/5 px-3 py-1 font-mono text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
+                className="bg-white/5 px-3 py-1 font-mono text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
                 {s}
               </Link>
             ))}
@@ -136,7 +136,7 @@ export default async function BrandPage({ params }) {
         <div className="flex flex-wrap gap-2">
           {allBrands.filter((b) => b !== brand).map((b) => (
             <Link key={b} href={`/tires/${brandSlug(b)}`}
-              className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
+              className="bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
               {b}
             </Link>
           ))}

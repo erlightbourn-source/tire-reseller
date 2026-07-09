@@ -15,15 +15,15 @@ export default function HeroSearch({ homeState }) {
   const [tab, setTab] = useState("size");
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-ink-900/70 p-2 shadow-lift backdrop-blur">
-      <div role="tablist" aria-label="Find tires" className="flex gap-1 rounded-xl bg-black/20 p-1">
+    <div className="border border-white/10 bg-ink-900/70 p-2 shadow-lift backdrop-blur">
+      <div role="tablist" aria-label="Find tires" className="flex gap-1 bg-black/20 p-1">
         {TABS.map((t) => (
           <button
             key={t.key}
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            className={`flex-1 px-3 py-2 text-sm font-semibold transition ${
               tab === t.key ? "bg-white text-ink-950 shadow" : "text-slate-300 hover:text-white"
             }`}
           >

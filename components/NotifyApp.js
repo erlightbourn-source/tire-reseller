@@ -14,7 +14,7 @@ export default function NotifyApp() {
 
   if (done) {
     return (
-      <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
+      <div className="bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
         🎉 You're on the list — we'll email you the moment the app launches.
       </div>
     );

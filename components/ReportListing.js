@@ -45,7 +45,7 @@ export default function ReportListing({ listingId, loggedIn }) {
       <p className="mb-2 text-xs font-semibold text-slate-300">Why are you reporting this?</p>
       <div className="space-y-1">
         {REASONS.map(([val, label]) => (
-          <button key={val} disabled={busy} onClick={() => report(val)} className="block w-full rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-200 hover:bg-white/5">
+          <button key={val} disabled={busy} onClick={() => report(val)} className="block w-full px-2.5 py-1.5 text-left text-sm text-slate-200 hover:bg-white/5">
             {label}
           </button>
         ))}

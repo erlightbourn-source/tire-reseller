@@ -29,7 +29,7 @@ export default function RecentlyViewed({ exclude }) {
       <div className="no-scrollbar flex gap-3 overflow-x-auto">
         {items.map((l) => (
           <Link key={l.id} href={`/listings/${l.id}`} className="w-32 shrink-0">
-            <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-ink-900 ring-1 ring-white/10">
+            <div className="aspect-[4/3] w-full overflow-hidden bg-ink-900 ring-1 ring-white/10">
               {l.photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={l.photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

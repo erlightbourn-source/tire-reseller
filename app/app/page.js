@@ -13,7 +13,7 @@ const FEATURES = [
 
 function StoreBadge({ store, sub }) {
   return (
-    <span className="inline-flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 opacity-80">
+    <span className="inline-flex cursor-not-allowed items-center gap-3 border border-white/15 bg-white/[0.04] px-4 py-2.5 opacity-80">
       <span className="text-2xl">{store === "apple" ? "" : "▶"}</span>
       <span className="text-left leading-tight">
         <span className="block text-[10px] uppercase tracking-wide text-slate-400">{sub}</span>
@@ -26,7 +26,7 @@ function StoreBadge({ store, sub }) {
 export default function AppPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <section className="relative overflow-hidden rounded-3xl bg-ink-900 px-6 py-10 text-center text-white sm:px-10 sm:py-14">
+      <section className="relative overflow-hidden bg-ink-900 px-6 py-10 text-center text-white sm:px-10 sm:py-14">
         <div className="mesh absolute inset-0" />
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative">

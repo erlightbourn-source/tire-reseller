@@ -33,11 +33,11 @@ export default function ForgotForm() {
         <h1 className="font-display text-2xl font-bold text-white">Reset your password</h1>
         {sent ? (
           <div className="mt-4 space-y-3">
-            <div className="rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
+            <div className="bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
               If an account exists for that email, we've sent a reset link. Check your inbox.
             </div>
             {devLink && (
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-slate-300 ring-1 ring-inset ring-white/10">
+              <div className="bg-white/5 p-3 text-xs text-slate-300 ring-1 ring-inset ring-white/10">
                 <p className="mb-1 font-semibold text-slate-200">Dev mode (no email provider):</p>
                 <a href={devLink} className="break-all font-mono text-brand-300 hover:underline">{devLink}</a>
               </div>
