@@ -44,13 +44,13 @@ export default async function SellerProfile({ params }) {
   return (
     <div className="space-y-6">
       <div className="card flex flex-wrap items-center gap-4 p-5">
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-xl font-bold text-black">
+        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-brand-500 text-xl font-bold text-black">
           {initials(seller.name)}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
-            {seller.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
+            {seller.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
             <Stars value={avg} />

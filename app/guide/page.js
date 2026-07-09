@@ -103,7 +103,7 @@ export default function GuidePage() {
       </section>
 
       {/* CTA */}
-      <section className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-center text-black shadow-lift">
+      <section className="rounded-2xl bg-brand-600 p-6 text-center text-black shadow-lift">
         <h2 className="font-display text-2xl font-extrabold">Ready to find your set?</h2>
         <p className="mt-1 text-black/70">Browse new &amp; used tires from local resellers near you.</p>
         <Link href="/browse" className="btn mt-4 bg-white text-ink-950 hover:bg-slate-100">Browse tires</Link>

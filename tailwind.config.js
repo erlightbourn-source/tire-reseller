@@ -41,10 +41,12 @@ module.exports = {
           600: "#c9e000",
         },
       },
+      // Brutalist hard offset shadows (no blur) — was soft/blurred, which
+      // rendered non-brutalist on the sections still using shadow-lift/soft.
       boxShadow: {
-        soft: "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.12)",
-        lift: "0 8px 30px -8px rgba(15,23,42,0.18)",
-        glow: "0 10px 40px -10px rgba(37,69,230,0.45)",
+        soft: "4px 4px 0 #000",
+        lift: "6px 6px 0 #000",
+        glow: "6px 6px 0 #e5ff00",
       },
       borderRadius: {
         "2xl": "1rem",

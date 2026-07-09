@@ -14,8 +14,8 @@ export default async function BulkPage() {
     return (
       <div className="mx-auto max-w-lg">
         <div className="card overflow-hidden text-center">
-          <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-accent-600/10 px-6 py-8 text-black">
-            <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>
+          <div className="relative overflow-hidden bg-brand-500/15 px-6 py-8 text-black">
+            <span className="badge bg-brand-500 text-ink-950">PRO</span>
             <h1 className="mt-3 font-display text-xl font-bold">Bulk add is a Pro feature</h1>
           </div>
           <div className="p-6">
@@ -30,7 +30,7 @@ export default async function BulkPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex items-center gap-2">
-        <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>
+        <span className="badge bg-brand-500 text-ink-950">PRO</span>
         <h1 className="font-display text-2xl font-extrabold text-white">Bulk add listings</h1>
       </div>
       <div className="card p-6">

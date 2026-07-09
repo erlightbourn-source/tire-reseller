@@ -124,7 +124,7 @@ export default async function Home() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map((t) => (
             <div key={t.title} className="card p-5">
-              <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-black">
+              <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{t.title}</p>
@@ -159,7 +159,7 @@ export default async function Home() {
       </section>
 
       {/* Seller CTA */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 text-black shadow-lift">
+      <section className="relative overflow-hidden rounded-3xl bg-brand-600 text-black shadow-lift">
         <div className="tread absolute inset-0 opacity-20" />
         <div className="relative flex flex-col items-start gap-5 px-6 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           <div className="max-w-xl">
