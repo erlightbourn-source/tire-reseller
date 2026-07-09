@@ -19,6 +19,7 @@ import ShareListing from "@/components/ShareListing";
 import TrackView from "@/components/TrackView";
 import Badge, { ProBadge } from "@/components/Badge";
 import { detectOffPlatform, SAFETY_WARNING } from "@/lib/safety";
+import { BUYER_CHECKLIST } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
@@ -312,6 +313,23 @@ export default async function ListingDetail({ params }) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Before you pay — surface the inspect-in-person checklist at the point of decision */}
+          <div className="card p-5">
+            <h2 className="text-sm font-bold text-slate-200">Before you pay</h2>
+            <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
+              {BUYER_CHECKLIST.map(([title]) => (
+                <li key={title} className="flex items-start gap-2">
+                  <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-emerald-400" aria-hidden="true"><path d="M8 13.2 4.8 10l-1.3 1.3L8 15.8l8.5-8.5L15.2 6 8 13.2Z"/></svg>
+                  <span>{title}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-slate-400">
+              Meet in a public place, inspect in daylight, and only pay once you&apos;re satisfied.{" "}
+              <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">Full checklist</Link>
+            </p>
           </div>
 
           {/* Safety / buyer protection */}

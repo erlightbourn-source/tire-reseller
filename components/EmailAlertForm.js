@@ -1,10 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { track } from "@/lib/track";
 
 // Capture buyer demand without requiring an account: email me when matching
 // tires are listed. `query` is the current browse querystring.
 export default function EmailAlertForm({ query = "", compact = false }) {
+  // Unique per instance so multiple forms on one page can't collide on the id.
+  const inputId = useId();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,12 +33,15 @@ export default function EmailAlertForm({ query = "", compact = false }) {
   }
 
   return (
-    <form onSubmit={submit} className={`mx-auto flex w-full max-w-sm flex-col gap-2 sm:flex-row ${compact ? "" : "mt-2"}`}>
-      <label htmlFor="alert-email" className="sr-only">Email for alerts</label>
-      <input id="alert-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com" className="input" />
-      <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Email me matches"}</button>
-      {err && <p className="text-sm text-amber-300">{err}</p>}
-    </form>
+    <div className={`mx-auto w-full max-w-sm ${compact ? "" : "mt-2"}`}>
+      <form onSubmit={submit} className="flex w-full flex-col gap-2 sm:flex-row">
+        <label htmlFor={inputId} className="sr-only">Email for alerts</label>
+        <input id={inputId} type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com" className="input" />
+        <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Email me matches"}</button>
+      </form>
+      {err && <p className="mt-1.5 text-sm text-amber-300">{err}</p>}
+      <p className="mt-1.5 text-xs text-slate-400">One email when tires match. No account needed, unsubscribe anytime.</p>
+    </div>
   );
 }
