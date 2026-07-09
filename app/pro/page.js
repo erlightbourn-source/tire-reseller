@@ -27,7 +27,7 @@ export default async function ProPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="relative overflow-hidden bg-brand-500/15 px-6 py-8 text-black">
+        <div className="relative overflow-hidden bg-brand-500/15 px-6 py-8 text-white">
           <div className="tread absolute inset-0 opacity-20" />
           <div className="relative">
             <span className="badge bg-brand-500 text-ink-950">PRO</span>
