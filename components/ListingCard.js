@@ -111,7 +111,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
 
 function Placeholder() {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-800 to-ink-900">
+    <div className="flex h-full w-full items-center justify-center bg-ink-900">
       <svg viewBox="0 0 64 64" className="h-16 w-16 text-slate-700" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
         <circle cx="32" cy="32" r="26" />
         <circle cx="32" cy="32" r="11" />

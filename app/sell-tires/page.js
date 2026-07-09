@@ -72,7 +72,7 @@ export default async function SellTiresPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SELLER_BENEFITS.map((b) => (
             <div key={b.title} className="card p-5">
-              <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-black">
+              <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-brand-500 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[b.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{b.title}</p>

@@ -8,7 +8,7 @@ const TONES = {
   rose: "bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-400/30",
   slate: "bg-white/5 text-slate-300 ring-1 ring-inset ring-white/10",
   featured: "bg-accent-500 text-ink-950",
-  pro: "bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950",
+  pro: "bg-brand-500 text-ink-950",
   sold: "bg-ink-900/90 text-white ring-1 ring-inset ring-white/10",
 };
 

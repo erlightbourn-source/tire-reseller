@@ -89,7 +89,7 @@ export default async function DashboardPage() {
           <p className="eyebrow">{isSeller ? "Seller" : "Account"}</p>
           <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
             Dashboard
-            {user.pro && <span className="badge bg-gradient-to-r from-amber-400 to-accent-500 text-ink-950">PRO</span>}
+            {user.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
       {/* Account / billing banner */}
       <div
         className={`relative overflow-hidden rounded-2xl p-5 shadow-soft ${
-          banner.good ? "bg-gradient-to-br from-brand-600 to-brand-800 text-black" : "bg-gradient-to-br from-slate-700 to-ink-900 text-white"
+          banner.good ? "bg-brand-600 text-black" : "bg-ink-900 text-white"
         }`}
       >
         <div className="tread absolute inset-0 opacity-30" />
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               <div
                 key={d.key}
                 title={`${d.label}: ${d.count} views`}
-                className="flex-1 rounded-t bg-gradient-to-t from-brand-700 to-brand-400 transition hover:from-brand-600 hover:to-brand-300"
+                className="flex-1 rounded-t bg-brand-500 transition hover:bg-brand-600"
                 style={{ height: `${Math.max(3, (d.count / maxDay) * 100)}%` }}
               />
             ))}
@@ -222,17 +222,19 @@ export default async function DashboardPage() {
   );
 }
 
+// Each tone carries its own legible icon text color: the acid-yellow tones
+// (blue/amber) need dark text, the darker tones (emerald/slate) take white.
 const TONES = {
-  blue: "from-brand-500 to-brand-700",
-  emerald: "from-emerald-500 to-emerald-700",
-  amber: "from-amber-500 to-amber-600",
-  slate: "from-slate-600 to-slate-800",
+  blue: "bg-brand-500 text-black",
+  emerald: "bg-emerald-500 text-white",
+  amber: "bg-amber-500 text-black",
+  slate: "bg-slate-600 text-white",
 };
 
 function Stat({ label, value, icon, tone = "blue", sub, small }) {
   return (
     <div className="card p-4">
-      <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${TONES[tone]} text-white`}>
+      <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${TONES[tone]}`}>
         <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" dangerouslySetInnerHTML={{ __html: icon }} />
       </span>
       <p className={`font-display font-extrabold text-white ${small ? "text-xl" : "text-2xl"}`}>{value}</p>
