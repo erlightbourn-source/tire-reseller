@@ -8,6 +8,7 @@ const CONSPICUOUS = new Set([
   "No warranties",
   "Used tires — assumption of risk",
   "Limitation of liability",
+  "Arbitration & class-action waiver",
 ]);
 
 export const metadata = {
