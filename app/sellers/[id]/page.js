@@ -44,7 +44,7 @@ export default async function SellerProfile({ params }) {
   return (
     <div className="space-y-6">
       <div className="card flex flex-wrap items-center gap-4 p-5">
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-brand-500 text-xl font-bold text-black">
+        <span className="grid h-16 w-16 shrink-0 place-items-center bg-brand-500 text-xl font-bold text-black">
           {initials(seller.name)}
         </span>
         <div className="min-w-0 flex-1">

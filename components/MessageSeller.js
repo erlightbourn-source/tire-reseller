@@ -51,10 +51,10 @@ export default function MessageSeller({ listingId, loggedIn }) {
 
   return (
     <div className="card space-y-2 p-4">
-      {err && <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
+      {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       <p className="text-sm font-semibold text-slate-200">Send a message</p>
       <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className="input" />
-      <div className={`rounded-lg px-3 py-2 text-xs ${offPlatform.flagged ? "bg-amber-500/15 text-amber-200" : "bg-slate-500/10 text-slate-400"}`}>
+      <div className={`px-3 py-2 text-xs ${offPlatform.flagged ? "bg-amber-500/15 text-amber-200" : "bg-slate-500/10 text-slate-400"}`}>
         {offPlatform.flagged && <span className="font-semibold">⚠ Keep this deal on TireTrader. </span>}
         {SAFETY_WARNING}
       </div>

@@ -31,8 +31,8 @@ export default function ReviewForm({ sellerId, existing }) {
   return (
     <form onSubmit={submit} className="card space-y-3 p-4">
       <p className="text-sm font-bold text-slate-200">{existing ? "Update your review" : "Rate this seller"}</p>
-      {err && <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
-      {done && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">Thanks — your review was saved.</div>}
+      {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
+      {done && <div className="bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">Thanks — your review was saved.</div>}
       <div className="flex gap-1" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((n) => (
           <button

@@ -16,7 +16,7 @@ export default async function SellPage() {
         <div className="card overflow-hidden text-center">
           <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white">
             <div className="mesh absolute inset-0" />
-            <span className="relative inline-grid h-14 w-14 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15">
+            <span className="relative inline-grid h-14 w-14 place-items-center bg-white/10 text-2xl ring-1 ring-white/15">
               {expired ? "🔒" : "🏷️"}
             </span>
             <h1 className="relative mt-3 font-display text-xl font-bold">

@@ -36,11 +36,11 @@ export default function BulkAdd() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-400">
-        One listing per line: <code className="rounded bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST</code>
+        One listing per line: <code className="bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST</code>
       </p>
-      {err && <div className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
+      {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       {result && (
-        <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+        <div className="bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
           Added {result.count} listing{result.count !== 1 ? "s" : ""}.
           {result.errors?.length ? ` Skipped ${result.errors.length} line(s).` : ""}
         </div>

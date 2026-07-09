@@ -30,18 +30,18 @@ export default function NotificationBell() {
       <button
         onClick={() => setOpen((o) => !o)}
         onBlur={() => setTimeout(() => setOpen(false), 180)}
-        className="relative grid h-9 w-9 place-items-center rounded-lg text-slate-300 transition hover:bg-white/5 hover:text-white"
+        className="relative grid h-9 w-9 place-items-center text-slate-300 transition hover:bg-white/5 hover:text-white"
         aria-label="Notifications"
       >
         <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current"><path d="M10 2a5 5 0 0 0-5 5v3l-1.5 2.5A1 1 0 0 0 4.3 14h11.4a1 1 0 0 0 .8-1.5L15 10V7a5 5 0 0 0-5-5Zm0 16a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 10 18Z" /></svg>
         {n.total > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center bg-red-500 px-1 text-[10px] font-bold text-white">
             {n.total > 9 ? "9+" : n.total}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] py-1 backdrop-blur-xl shadow-2xl">
+        <div className="absolute right-0 mt-2 w-64 overflow-hidden border border-white/10 bg-white/[0.05] py-1 backdrop-blur-xl shadow-2xl">
           <div className="border-b border-white/10 px-3 py-2 text-sm font-semibold text-white">Notifications</div>
           {items.length === 0 ? (
             <p className="px-3 py-4 text-center text-sm text-slate-400">You're all caught up 🎉</p>

@@ -40,7 +40,7 @@ export default async function MessagesPage() {
       </div>
       {threads.length === 0 ? (
         <div className="card grid place-items-center px-6 py-14 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">💬</span>
+          <span className="grid h-14 w-14 place-items-center bg-white/5 text-2xl">💬</span>
           <p className="mt-3 font-display font-bold text-slate-200">No conversations yet</p>
           <p className="text-sm text-slate-400">Message a seller from any listing to start chatting.</p>
           <Link href="/" className="btn-secondary mt-4">Browse tires</Link>
@@ -54,7 +54,7 @@ export default async function MessagesPage() {
             const photo = t.listing.photos[0]?.url;
             return (
               <Link key={t.id} href={`/messages/${t.id}`} className="card card-hover flex items-center gap-3 p-3">
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
+                <div className="h-14 w-14 shrink-0 overflow-hidden bg-white/5 ring-1 ring-white/10">
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={photo} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />

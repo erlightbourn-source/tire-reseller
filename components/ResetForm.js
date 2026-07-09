@@ -43,7 +43,7 @@ export default function ResetForm() {
         ) : (
           <form onSubmit={submit} className="mt-4 space-y-3.5">
             {err && (
-              <div className="rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-inset ring-red-400/30">{err}</div>
+              <div className="bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-inset ring-red-400/30">{err}</div>
             )}
             <div>
               <label className="label" htmlFor="reset-pw">New password</label>

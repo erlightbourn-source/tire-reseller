@@ -86,13 +86,13 @@ export default async function Home() {
     <div className="space-y-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white shadow-lift">
+      <section className="relative overflow-hidden bg-ink-900 text-white shadow-lift">
         <div className="mesh absolute inset-0" />
         <div className="tread absolute inset-0 opacity-30" />
         <div className="relative px-5 py-10 sm:px-10 sm:py-14">
           <div className="max-w-2xl animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+            <span className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
+              <span className="h-1.5 w-1.5 bg-accent-400" />
               {totalActive} tire sets listed across {stateCount} states
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
@@ -124,7 +124,7 @@ export default async function Home() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map((t) => (
             <div key={t.title} className="card p-5">
-              <span className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-black">
+              <span className="mb-3 grid h-10 w-10 place-items-center bg-brand-500 text-black">
                 <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ICONS[t.icon] }} />
               </span>
               <p className="font-display font-bold text-white">{t.title}</p>
@@ -159,7 +159,7 @@ export default async function Home() {
       </section>
 
       {/* Seller CTA */}
-      <section className="relative overflow-hidden rounded-3xl bg-brand-600 text-black shadow-lift">
+      <section className="relative overflow-hidden bg-brand-600 text-black shadow-lift">
         <div className="tread absolute inset-0 opacity-20" />
         <div className="relative flex flex-col items-start gap-5 px-6 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           <div className="max-w-xl">
@@ -187,7 +187,7 @@ export default async function Home() {
           <div className="flex flex-wrap gap-2">
             {brands.map((b) => (
               <Link key={b} href={`/tires/${brandSlug(b)}`}
-                className="rounded-full bg-white/5 px-3.5 py-1.5 text-sm font-medium text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10 hover:text-white">
+                className="bg-white/5 px-3.5 py-1.5 text-sm font-medium text-slate-200 ring-1 ring-inset ring-white/10 transition hover:bg-white/10 hover:text-white">
                 {b}
               </Link>
             ))}

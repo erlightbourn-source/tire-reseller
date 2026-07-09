@@ -5,7 +5,7 @@
 export default function PageLoading() {
   return (
     <div className="grid place-items-center py-24" role="status" aria-label="Loading">
-      <span className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-brand-400" />
+      <span className="h-9 w-9 animate-spin border-2 border-white/15 border-t-brand-400" />
       <span className="sr-only">Loading…</span>
     </div>
   );

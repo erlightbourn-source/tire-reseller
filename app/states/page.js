@@ -27,13 +27,13 @@ export default async function StatesPage() {
 
   return (
     <div className="space-y-7">
-      <section className="relative overflow-hidden rounded-3xl bg-ink-900 text-white shadow-lift">
+      <section className="relative overflow-hidden bg-ink-900 text-white shadow-lift">
         <div className="mesh absolute inset-0" />
         <div className="tread absolute inset-0 opacity-40" />
         <div className="relative grid items-center gap-6 px-6 py-10 sm:px-10 sm:py-12 lg:grid-cols-[1.4fr_1fr]">
           <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
+            <span className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
+              <span className="h-1.5 w-1.5 bg-accent-400" />
               {totalActive} listings across {statesWithListings} states
             </span>
             <h1 className="mt-4 font-display text-3xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
@@ -60,7 +60,7 @@ export default async function StatesPage() {
           </div>
           <div className="hidden justify-center lg:flex">
             <div className="relative">
-              <div className="absolute -inset-6 rounded-full bg-brand-500/25 blur-3xl" />
+              <div className="absolute -inset-6 bg-brand-500/25 blur-3xl" />
               <Logo className="relative h-44 w-44 drop-shadow-2xl" spin bare />
             </div>
           </div>

@@ -190,7 +190,7 @@ export default async function ListingDetail({ params }) {
             )}
 
             {fairPrice && listing.status !== "sold" && (
-              <div className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
+              <div className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${
                 fairPrice.tone === "good" ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30"
                 : fairPrice.tone === "high" ? "bg-amber-500/15 text-amber-300 ring-amber-400/30"
                 : "bg-white/5 text-slate-300 ring-white/10"}`}>
@@ -216,7 +216,7 @@ export default async function ListingDetail({ params }) {
           {/* Seller trust card */}
           <Link href={`/sellers/${listing.seller.id}`} className="card block p-4 transition hover:border-white/20">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-500 font-bold text-black">{initials}</span>
+              <span className="grid h-11 w-11 shrink-0 place-items-center bg-brand-500 font-bold text-black">{initials}</span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-semibold text-white">{listing.seller.name}</p>
@@ -267,7 +267,7 @@ export default async function ListingDetail({ params }) {
               <h2 className="text-sm font-bold text-slate-200">Seller's description</h2>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{listing.description}</p>
               {detectOffPlatform(listing.description).flagged && (
-                <p className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-100 ring-1 ring-inset ring-amber-400/20">
+                <p className="mt-3 flex items-start gap-2 bg-amber-500/10 px-3 py-2 text-xs text-amber-100 ring-1 ring-inset ring-amber-400/20">
                   <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-amber-300" aria-hidden="true"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>
                   <span><strong>Safety tip:</strong> {SAFETY_WARNING}</span>
                 </p>
@@ -308,8 +308,8 @@ export default async function ListingDetail({ params }) {
                   <span>Estimated tread life left</span>
                   <span className="font-semibold text-slate-200">~{lifePct}%</span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
-                  <div className={`h-full rounded-full ${lifePct >= 60 ? "bg-emerald-500" : lifePct >= 30 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${Math.max(4, lifePct)}%` }} />
+                <div className="mt-1 h-2 overflow-hidden bg-white/10">
+                  <div className={`h-full ${lifePct >= 60 ? "bg-emerald-500" : lifePct >= 30 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${Math.max(4, lifePct)}%` }} />
                 </div>
               </div>
             )}
@@ -333,7 +333,7 @@ export default async function ListingDetail({ params }) {
           </div>
 
           {/* Safety / buyer protection */}
-          <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-5">
+          <div className="border border-amber-400/20 bg-amber-500/5 p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold text-amber-200">
               <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M10 1 1 18h18L10 1Zm0 6 .9 6h-1.8L10 7Zm0 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z"/></svg>
               Before you buy{isUsed ? " used tires" : ""}
@@ -364,7 +364,7 @@ export default async function ListingDetail({ params }) {
 
 function Spec({ label, value, hint, warn }) {
   return (
-    <div className="rounded-xl bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10">
+    <div className="bg-white/[0.04] px-3 py-2 ring-1 ring-inset ring-white/10">
       <dt className="text-xs text-slate-400">{label}</dt>
       <dd className="font-semibold text-slate-100">
         {value}

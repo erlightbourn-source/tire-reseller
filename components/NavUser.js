@@ -12,7 +12,7 @@ function Avatar({ name }) {
     .join("")
     .toUpperCase();
   return (
-    <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-500 text-xs font-bold text-black">
+    <span className="grid h-8 w-8 place-items-center bg-brand-500 text-xs font-bold text-black">
       {initials}
     </span>
   );
@@ -56,7 +56,7 @@ export default function NavUser({ user }) {
           <Link
             key={l.href}
             href={l.href}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
+            className="px-3 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
           >
             {l.label}
           </Link>
@@ -78,7 +78,7 @@ export default function NavUser({ user }) {
         <button
           onClick={() => setOpen((o) => !o)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition hover:bg-white/10"
+          className="flex items-center gap-2 p-0.5 pr-2 transition hover:bg-white/10"
         >
           <Avatar name={user.name} />
           <svg viewBox="0 0 20 20" className="hidden h-4 w-4 fill-slate-400 sm:block"><path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>

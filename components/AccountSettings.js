@@ -101,7 +101,7 @@ export default function AccountSettings() {
         </a>
       </div>
 
-      <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
+      <div className="border border-red-500/30 bg-red-500/5 p-5">
         <h2 className="font-display font-bold text-red-200">Delete account</h2>
         <p className="mt-1 text-sm text-red-100/80">
           This removes your account and hides your listings. You have <strong>7 days</strong> to recover it

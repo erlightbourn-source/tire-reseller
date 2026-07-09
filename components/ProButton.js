@@ -23,7 +23,7 @@ export default function ProButton({ isPro }) {
 
   return (
     <>
-      {err && <div className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
+      {err && <div className="mb-2 bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       <button onClick={go} disabled={busy} className={isPro ? "btn-secondary w-full" : "btn-accent w-full"}>
         {busy ? "One sec…" : isPro ? "Cancel Pro" : "Upgrade to Pro — $25/mo"}
       </button>

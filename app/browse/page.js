@@ -201,7 +201,7 @@ export default async function BrowsePage({ searchParams }) {
       </div>
 
       {searchParams.fits && searchParams.size && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-brand-500/10 px-4 py-2.5 text-sm text-brand-100 ring-1 ring-inset ring-brand-400/30">
           <span className="flex items-center gap-2">
             <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M3 11l2-5h10l2 5v4h-2a2 2 0 1 1-4 0H7a2 2 0 1 1-4 0H3v-4Zm3-4-1 3h10l-1-3H6Z"/></svg>
             Your <span className="font-semibold">{searchParams.fits}</span> takes <span className="font-mono font-semibold">{searchParams.size}</span> —{" "}
@@ -231,7 +231,7 @@ export default async function BrowsePage({ searchParams }) {
               )}
               <Link href="/browse" className="btn-secondary">Browse all tires</Link>
             </div>
-            <div className="mx-auto mt-6 max-w-md rounded-xl bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
+            <div className="mx-auto mt-6 max-w-md bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
               <p className="text-sm font-semibold text-slate-200">Email me when {searchParams.size} is listed</p>
               <p className="mt-0.5 text-xs text-slate-400">No account needed — we'll notify you when a match appears.</p>
               <EmailAlertForm query={currentQuery} />
@@ -248,7 +248,7 @@ export default async function BrowsePage({ searchParams }) {
               <Link href={state ? `/browse?state=${state}` : "/browse"} className="btn-secondary">Clear filters</Link>
               <Link href="/states" className="btn-secondary">Open map</Link>
             </div>
-            <div className="mx-auto mt-6 max-w-md rounded-xl bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
+            <div className="mx-auto mt-6 max-w-md bg-brand-500/5 p-4 ring-1 ring-inset ring-brand-400/20">
               <p className="text-sm font-semibold text-slate-200">Get notified when these are listed</p>
               <p className="mt-0.5 text-xs text-slate-400">No account needed — we'll email you when a match appears.</p>
               <EmailAlertForm query={currentQuery} />
@@ -259,7 +259,7 @@ export default async function BrowsePage({ searchParams }) {
                 <div className="mt-2 flex flex-wrap justify-center gap-2">
                   {brands.slice(0, 10).map((b) => (
                     <Link key={b} href={`/browse?brand=${encodeURIComponent(b)}`}
-                      className="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
+                      className="bg-white/5 px-3 py-1 text-xs text-slate-200 ring-1 ring-inset ring-white/10 hover:bg-white/10">
                       {b}
                     </Link>
                   ))}

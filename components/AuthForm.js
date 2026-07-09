@@ -65,7 +65,7 @@ export default function AuthForm({ mode }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.9)]">
+    <div className="mx-auto max-w-4xl overflow-hidden border border-white/10 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.9)]">
       <div className="grid md:grid-cols-2">
         {/* Brand panel */}
         <div className="relative hidden flex-col justify-between overflow-hidden bg-ink-900 p-8 text-white md:flex">
@@ -109,20 +109,20 @@ export default function AuthForm({ mode }) {
           </p>
 
           {!isSignup && params.get("verified") && !err && (
-            <div className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
+            <div className="mt-4 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300 ring-1 ring-inset ring-emerald-400/30">
               ✓ Email verified — you can log in now.
             </div>
           )}
 
           {pending && (
-            <div className="mt-4 rounded-xl bg-emerald-500/10 px-3 py-3 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
+            <div className="mt-4 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-200 ring-1 ring-inset ring-emerald-400/30">
               <p className="font-semibold">✓ Almost there — check your email.</p>
               <p className="mt-1 text-emerald-300/90">We sent a confirmation link to finish creating your account. It expires in 24 hours.</p>
             </div>
           )}
 
           {err && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">
+            <div className="mt-4 flex items-center gap-2 bg-red-500/10 px-3 py-2.5 text-sm text-red-300 ring-1 ring-red-400/30">
               <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-current"><path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm1 11H9v-2h2v2Zm0-3H9V6h2v4Z"/></svg>
               {err}
             </div>
@@ -155,7 +155,7 @@ export default function AuthForm({ mode }) {
                   />
                 </div>
                 {role === "seller" && (
-                  <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
+                  <p className="mt-2 flex items-center gap-1.5 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
                     <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>
                     Your first year of selling is on us — $0 today, no card required.
                   </p>
@@ -202,7 +202,7 @@ export default function AuthForm({ mode }) {
           </form>
 
           {!isSignup && (
-            <div className="mt-4 rounded-xl bg-white/5 px-3 py-2.5 text-xs text-slate-400 ring-1 ring-inset ring-white/10">
+            <div className="mt-4 bg-white/5 px-3 py-2.5 text-xs text-slate-400 ring-1 ring-inset ring-white/10">
               <span className="font-semibold text-slate-300">Demo:</span> demo@tiretrader.test / demo1234
             </div>
           )}
@@ -225,7 +225,7 @@ function RoleCard({ active, onClick, title, sub, icon }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border p-3 text-left transition ${
+      className={`border p-3 text-left transition ${
         active
           ? "border-brand-400/60 bg-brand-500/10 ring-2 ring-brand-500/30"
           : "border-white/10 bg-white/[0.03] hover:border-white/20"

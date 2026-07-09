@@ -105,7 +105,7 @@ export default async function DashboardPage() {
 
       {/* Account / billing banner */}
       <div
-        className={`relative overflow-hidden rounded-2xl p-5 shadow-soft ${
+        className={`relative overflow-hidden p-5 shadow-soft ${
           banner.good ? "bg-brand-600 text-black" : "bg-ink-900 text-white"
         }`}
       >
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
         <div className="relative flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${banner.good ? "bg-emerald-400" : "bg-amber-400"}`} />
+              <span className={`h-2.5 w-2.5 ${banner.good ? "bg-emerald-400" : "bg-amber-400"}`} />
               <p className="font-display text-lg font-bold">{banner.title}</p>
             </div>
             <p className="mt-1 text-sm opacity-80">{banner.sub}</p>
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               <div
                 key={d.key}
                 title={`${d.label}: ${d.count} views`}
-                className="flex-1 rounded-t bg-brand-500 transition hover:bg-brand-600"
+                className="flex-1 bg-brand-500 transition hover:bg-brand-600"
                 style={{ height: `${Math.max(3, (d.count / maxDay) * 100)}%` }}
               />
             ))}
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
         <h2 className="mb-3 font-display text-lg font-bold text-white">Your listings</h2>
         {listings.length === 0 ? (
           <div className="card grid place-items-center px-6 py-14 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-2xl">🛞</span>
+            <span className="grid h-14 w-14 place-items-center bg-white/5 text-2xl">🛞</span>
             <p className="mt-3 font-display font-bold text-slate-200">No tires listed yet</p>
             <p className="text-sm text-slate-400">Create your first listing to start selling.</p>
             {isSeller ? (
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
           <div className="card divide-y divide-white/5">
             {listings.map((l) => (
               <div key={l.id} className="flex items-center gap-3 p-3 transition hover:bg-white/5">
-                <Link href={`/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10">
+                <Link href={`/listings/${l.id}`} className="h-16 w-16 shrink-0 overflow-hidden bg-white/5 ring-1 ring-white/10">
                   {l.photos[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={l.photos[0].url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
@@ -234,7 +234,7 @@ const TONES = {
 function Stat({ label, value, icon, tone = "blue", sub, small }) {
   return (
     <div className="card p-4">
-      <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${TONES[tone]}`}>
+      <span className={`mb-3 grid h-10 w-10 place-items-center ${TONES[tone]}`}>
         <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" dangerouslySetInnerHTML={{ __html: icon }} />
       </span>
       <p className={`font-display font-extrabold text-white ${small ? "text-xl" : "text-2xl"}`}>{value}</p>
