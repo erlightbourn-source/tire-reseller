@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               <div
                 key={d.key}
                 title={`${d.label}: ${d.count} views`}
-                className="flex-1 rounded-t bg-brand-500 transition hover:bg-brand-400"
+                className="flex-1 rounded-t bg-brand-500 transition hover:bg-brand-600"
                 style={{ height: `${Math.max(3, (d.count / maxDay) * 100)}%` }}
               />
             ))}
@@ -222,17 +222,19 @@ export default async function DashboardPage() {
   );
 }
 
+// Each tone carries its own legible icon text color: the acid-yellow tones
+// (blue/amber) need dark text, the darker tones (emerald/slate) take white.
 const TONES = {
-  blue: "bg-brand-500",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  slate: "bg-slate-600",
+  blue: "bg-brand-500 text-black",
+  emerald: "bg-emerald-500 text-white",
+  amber: "bg-amber-500 text-black",
+  slate: "bg-slate-600 text-white",
 };
 
 function Stat({ label, value, icon, tone = "blue", sub, small }) {
   return (
     <div className="card p-4">
-      <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${TONES[tone]} text-white`}>
+      <span className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${TONES[tone]}`}>
         <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" dangerouslySetInnerHTML={{ __html: icon }} />
       </span>
       <p className={`font-display font-extrabold text-white ${small ? "text-xl" : "text-2xl"}`}>{value}</p>
