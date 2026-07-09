@@ -46,7 +46,7 @@ npm install && npm run setup && npm run dev
 Then open **http://localhost:3000** and log in with the demo seller
 **`demo@tiretrader.test` / `demo1234`** (or just browse — that's free).
 
-> Requires **Node.js 18+**. Stripe is optional — the app runs a simulated
+> Requires **Node.js 22.22.0+** (pinned in `.nvmrc` / `package.json` engines — closes the Jan 2026 Node HIGH CVEs). Stripe is optional — the app runs a simulated
 > checkout until you add your own test keys (see [below](#where-to-add-your-stripe-keys)).
 
 ---
@@ -67,7 +67,7 @@ Then open **http://localhost:3000** and log in with the demo seller
 
 ## Run it locally (one command)
 
-> Requires **Node.js 18+** and npm.
+> Requires **Node.js 22.22.0+** (see `.nvmrc`) and npm.
 
 ```bash
 npm run setup     # installs nothing — pushes the DB schema + seeds demo data
