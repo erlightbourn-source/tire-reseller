@@ -36,7 +36,7 @@ export default async function Home() {
     prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
     prisma.listing.findMany({
       where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
       take: 4,
       include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     }),
@@ -55,7 +55,7 @@ export default async function Home() {
     ? recent
     : await prisma.listing.findMany({
         where: { status: "active", hidden: false, seller: { deletedAt: null } },
-        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
         take: 4,
         include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
       });

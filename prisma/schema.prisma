@@ -22,6 +22,10 @@ model User {
   // Account type. Buyers browse free; sellers can list tires.
   role               String   @default("buyer") // buyer | seller
   pro                Boolean  @default(false)   // Pro seller upgrade
+  // Founding-seller promo (launch): grants Pro-tier perks + ranked placement
+  // for free (no Stripe). Mirrored onto Listing.sellerPro on write so it reuses
+  // the existing [status, featured, sellerPro, createdAt] index — no index change.
+  foundingSeller     Boolean  @default(false)
   admin              Boolean  @default(false)   // platform moderator
 
   // Denormalized seller rating (maintained on review write + backfilled) so the

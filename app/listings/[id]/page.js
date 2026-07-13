@@ -17,7 +17,8 @@ import ListingCard from "@/components/ListingCard";
 import ReportListing from "@/components/ReportListing";
 import ShareListing from "@/components/ShareListing";
 import TrackView from "@/components/TrackView";
-import Badge, { ProBadge } from "@/components/Badge";
+import Badge, { ProBadge, FoundingBadge } from "@/components/Badge";
+import { isProSeller } from "@/lib/seller";
 import { detectOffPlatform, SAFETY_WARNING } from "@/lib/safety";
 import { BUYER_CHECKLIST } from "@/lib/content";
 
@@ -28,7 +29,7 @@ async function fetchListing(id) {
     where: { id },
     include: {
       photos: { orderBy: { sort: "asc" } },
-      seller: { select: { id: true, name: true, location: true, createdAt: true, pro: true, deletedAt: true } },
+      seller: { select: { id: true, name: true, location: true, createdAt: true, pro: true, foundingSeller: true, deletedAt: true } },
       _count: { select: { threads: true } },
     },
   });
@@ -171,7 +172,9 @@ export default async function ListingDetail({ params }) {
             <div className="flex items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 {listing.featured && <Badge tone="featured">★ Featured</Badge>}
-                {listing.seller.pro && <Badge tone="pro">PRO</Badge>}
+                {listing.seller.foundingSeller
+                  ? <Badge tone="founding">★ Founding Seller</Badge>
+                  : listing.seller.pro && <Badge tone="pro">PRO</Badge>}
                 <Badge tone={cond.tone}>{cond.label}</Badge>
                 {listing.status === "sold" && <Badge tone="sold">Sold</Badge>}
               </div>
@@ -220,7 +223,7 @@ export default async function ListingDetail({ params }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate font-semibold text-white">{listing.seller.name}</p>
-                  {listing.seller.pro && <ProBadge />}
+                  {listing.seller.foundingSeller ? <FoundingBadge /> : listing.seller.pro && <ProBadge />}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-400">
                   <Stars value={avgRating} size="h-3 w-3" />
@@ -231,7 +234,7 @@ export default async function ListingDetail({ params }) {
             </div>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>📅 Member since {sellerSince}</span>
-              {listing.seller.pro && <span>⚡ Usually responds within a day</span>}
+              {isProSeller(listing.seller) && <span>⚡ Usually responds within a day</span>}
               <span>📍 {listing.seller.location || listing.location}</span>
             </div>
           </Link>
