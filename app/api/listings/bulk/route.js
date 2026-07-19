@@ -54,6 +54,7 @@ export async function POST(req) {
           lat: coords.lat ?? null,
           lng: coords.lng ?? null,
           sellerPro: isProSeller(user),
+          sellerFounding: !!user.foundingSeller,
           ...deriveListingColumns({ size, treadDepth: null, priceCents, quantity }),
         },
       });

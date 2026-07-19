@@ -32,7 +32,9 @@ export default function ListingCard({ listing, favorited = false, distance = nul
 
           <div className="absolute inset-x-0 top-0 flex flex-wrap items-start gap-1.5 p-2.5">
             {listing.featured && <Badge tone="featured">★ Featured</Badge>}
-            {listing.sellerPro && <Badge tone="pro">PRO</Badge>}
+            {listing.sellerFounding
+              ? <Badge tone="founding">★ Founding</Badge>
+              : listing.sellerPro && <Badge tone="pro">PRO</Badge>}
             <Badge tone={cond.tone}>{cond.label}</Badge>
             {sold && <Badge tone="sold">Sold</Badge>}
           </div>

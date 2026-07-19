@@ -80,6 +80,7 @@ export async function POST(req) {
       state: stateFromLocation(location),
       description,
       sellerPro: isProSeller(user),
+      sellerFounding: !!user.foundingSeller,
       ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
       ...tireAttrs(b),
       photos: {

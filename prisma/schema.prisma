@@ -11,107 +11,108 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(cuid())
-  email              String   @unique
-  passwordHash       String
-  name               String
-  location           String?
-  state              String?  // 2-letter home state — used to pre-load local listings
-  createdAt          DateTime @default(now())
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  location     String?
+  state        String? // 2-letter home state — used to pre-load local listings
+  createdAt    DateTime @default(now())
 
   // Account type. Buyers browse free; sellers can list tires.
-  role               String   @default("buyer") // buyer | seller
-  pro                Boolean  @default(false)   // Pro seller upgrade
+  role           String  @default("buyer") // buyer | seller
+  pro            Boolean @default(false) // Pro seller upgrade
   // Founding-seller promo (launch): grants Pro-tier perks + ranked placement
   // for free (no Stripe). Mirrored onto Listing.sellerPro on write so it reuses
   // the existing [status, featured, sellerPro, createdAt] index — no index change.
-  foundingSeller     Boolean  @default(false)
-  admin              Boolean  @default(false)   // platform moderator
+  foundingSeller Boolean @default(false)
+  admin          Boolean @default(false) // platform moderator
 
   // Denormalized seller rating (maintained on review write + backfilled) so the
   // browse min-rating filter is a DB clause, not an in-JS pass.
-  ratingAvg          Float    @default(0)
-  ratingCount        Int      @default(0)
+  ratingAvg   Float @default(0)
+  ratingCount Int   @default(0)
 
   // Session invalidation: bumping this revokes all existing JWTs (logout-all,
   // password change/reset). Password-reset token is stored hashed with expiry.
-  tokenVersion       Int      @default(0)
-  resetTokenHash     String?
-  resetTokenExpiry   DateTime?
+  tokenVersion     Int       @default(0)
+  resetTokenHash   String?
+  resetTokenExpiry DateTime?
 
   // Email verification (double opt-in signup): login is blocked until verified.
-  emailVerified      Boolean   @default(false)
-  verifyTokenHash    String?   @unique
-  verifyTokenExpiry  DateTime?
-  deletedAt          DateTime? // soft-delete: account scheduled for removal (7-day grace)
+  emailVerified     Boolean   @default(false)
+  verifyTokenHash   String?   @unique
+  verifyTokenExpiry DateTime?
+  deletedAt         DateTime? // soft-delete: account scheduled for removal (7-day grace)
 
   // Seller billing. The first year of selling is free for every seller;
   // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
   sellerFreeUntil        DateTime?
   stripeCustomerId       String?
-  subscriptionStatus     String   @default("inactive") // inactive | active | canceled | past_due
+  subscriptionStatus     String    @default("inactive") // inactive | active | canceled | past_due
   subscriptionPriceId    String?
   subscriptionCurrentEnd DateTime?
 
-  listings  Listing[]
-  buyerThreads  Thread[]  @relation("BuyerThreads")
-  sellerThreads Thread[]  @relation("SellerThreads")
-  messages  Message[]
-  favorites Favorite[]
+  listings        Listing[]
+  buyerThreads    Thread[]      @relation("BuyerThreads")
+  sellerThreads   Thread[]      @relation("SellerThreads")
+  messages        Message[]
+  favorites       Favorite[]
   savedSearches   SavedSearch[]
-  reviewsReceived Review[] @relation("ReviewsReceived")
-  reviewsWritten  Review[] @relation("ReviewsWritten")
+  reviewsReceived Review[]      @relation("ReviewsReceived")
+  reviewsWritten  Review[]      @relation("ReviewsWritten")
   reports         Report[]
-  blocksMade      Block[]  @relation("Blocker")
-  blocksReceived  Block[]  @relation("Blocked")
+  blocksMade      Block[]       @relation("Blocker")
+  blocksReceived  Block[]       @relation("Blocked")
 }
 
 model Listing {
-  id          String   @id @default(cuid())
-  sellerId    String
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
   brand       String
-  size        String   // e.g. 225/45R17
-  quantity    Int      @default(1)
-  condition   String   // new | used
-  treadDepth  String?  // e.g. "9/32in" or "new"
+  size        String // e.g. 225/45R17
+  quantity    Int     @default(1)
+  condition   String // new | used
+  treadDepth  String? // e.g. "9/32in" or "new"
   priceCents  Int
   location    String
-  state       String?  // 2-letter US state code derived from location
-  lat         Float?   // geocoded from city for radius search
+  state       String? // 2-letter US state code derived from location
+  lat         Float? // geocoded from city for radius search
   lng         Float?
   description String?
-  status      String   @default("active") // active | sold
+  status      String  @default("active") // active | sold
 
   // Tire-specific attributes (the marketplace's differentiator vs generic listings)
-  season      String?  // summer | winter | all-season | all-weather
-  loadIndex   String?  // e.g. "91"
-  speedRating String?  // e.g. "Y"
-  runFlat     Boolean  @default(false)
-  shipping    Boolean  @default(false) // seller offers shipping (vs local pickup only)
-  dotYear     Int?     // manufacture (DOT) year, e.g. 2022
+  season      String? // summer | winter | all-season | all-weather
+  loadIndex   String? // e.g. "91"
+  speedRating String? // e.g. "Y"
+  runFlat     Boolean @default(false)
+  shipping    Boolean @default(false) // seller offers shipping (vs local pickup only)
+  dotYear     Int? // manufacture (DOT) year, e.g. 2022
 
-  featured    Boolean  @default(false) // promoted listing
-  hidden      Boolean  @default(false) // auto-hidden after enough reports
-  views       Int      @default(0)
+  featured Boolean @default(false) // promoted listing
+  hidden   Boolean @default(false) // auto-hidden after enough reports
+  views    Int     @default(0)
 
   // Denormalized columns for indexed filtering/sorting (populated on write +
   // backfilled). Avoids `LIKE '%size%'` scans, in-JS tread filtering, the
   // per-request price-cohort scan, and enables DB-side ordering by seller-pro.
-  widthMm      Int?     // 245 from 245/40R19
-  aspectRatio  Int?     // 40
-  rimDiameter  Int?     // 19
-  treadDepth32 Float?   // parsed 32nds, e.g. 8 or 8.5
-  perTireCents Int?     // priceCents / quantity
-  sellerPro    Boolean  @default(false) // mirrors seller.pro for ranked placement
+  widthMm        Int? // 245 from 245/40R19
+  aspectRatio    Int? // 40
+  rimDiameter    Int? // 19
+  treadDepth32   Float? // parsed 32nds, e.g. 8 or 8.5
+  perTireCents   Int? // priceCents / quantity
+  sellerPro      Boolean @default(false) // mirrors seller.pro for ranked placement
+  sellerFounding Boolean @default(false) // mirrors seller.foundingSeller for the founding badge on cards (no join)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  photos    Photo[]
-  threads   Thread[]
-  favorites Favorite[]
+  photos     Photo[]
+  threads    Thread[]
+  favorites  Favorite[]
   viewEvents ListingView[]
   reports    Report[]
 
@@ -134,7 +135,7 @@ model Listing {
 model EmailAlert {
   id           String   @id @default(cuid())
   email        String
-  query        String   // saved-search querystring
+  query        String // saved-search querystring
   label        String
   token        String   @unique // unsubscribe capability token
   // Double opt-in: digests are only sent after the recipient confirms, so the
@@ -150,10 +151,10 @@ model EmailAlert {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String?  // nullable so logs survive account deletion
-  action    String   // login | signup | password_change | password_reset | account_delete | logout_all
+  userId    String? // nullable so logs survive account deletion
+  action    String // login | signup | password_change | password_reset | account_delete | logout_all
   ip        String?
-  meta      String?  // optional JSON detail
+  meta      String? // optional JSON detail
   createdAt DateTime @default(now())
 
   @@index([userId])
@@ -182,7 +183,7 @@ model Thread {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  messages  Message[]
+  messages Message[]
 
   @@unique([listingId, buyerId])
   @@index([buyerId])
@@ -203,13 +204,13 @@ model Favorite {
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   threadId  String
-  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  thread    Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
   senderId  String
-  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
   body      String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   readAt    DateTime?
 
   // "make an offer" support
@@ -225,7 +226,7 @@ model SavedSearch {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   label      String
-  query      String   // URL querystring of the filters
+  query      String // URL querystring of the filters
   createdAt  DateTime @default(now())
   lastSeenAt DateTime @default(now())
 
@@ -238,7 +239,7 @@ model Review {
   seller    User     @relation("ReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
   authorId  String
   author    User     @relation("ReviewsWritten", fields: [authorId], references: [id], onDelete: Cascade)
-  rating    Int      // 1-5
+  rating    Int // 1-5
   body      String?
   createdAt DateTime @default(now())
 
@@ -268,7 +269,7 @@ model Report {
   @@unique([listingId, reporterId])
   @@index([listingId])
   @@index([reporterId]) // reporter-scoped lookups (rate-limit / credibility join)
-  @@index([createdAt])  // moderation queue ordering
+  @@index([createdAt]) // moderation queue ordering
 }
 
 model Block {
