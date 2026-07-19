@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { SITE_URL, brandSlug, sizeSlug } from "@/lib/site";
 import { STATES } from "@/lib/states";
+import { CITIES } from "@/lib/cities";
 
 export const dynamic = "force-dynamic";
 
@@ -8,11 +9,22 @@ export default async function sitemap() {
   const now = new Date();
   const url = (path) => `${SITE_URL}${path}`;
 
-  const staticPages = ["/", "/browse", "/states", "/guide", "/sell-tires", "/app", "/pro"].map((p) => ({
+  const staticPages = [
+    "/", "/browse", "/locations", "/states", "/guide", "/sell-tires",
+    "/how-it-works", "/founding-seller", "/trust-safety", "/about", "/app", "/pro",
+  ].map((p) => ({
     url: url(p),
     lastModified: now,
     changeFrequency: p === "/" || p === "/browse" ? "daily" : "weekly",
     priority: p === "/" ? 1 : 0.7,
+  }));
+
+  // Programmatic Broward city landing pages — the core local-SEO play.
+  const cityPages = CITIES.map((c) => ({
+    url: url(`/used-tires/${c.slug}`),
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.7,
   }));
 
   // Per-state browse pages
@@ -68,5 +80,5 @@ export default async function sitemap() {
     // DB unavailable at build time — static pages are still emitted.
   }
 
-  return [...staticPages, ...statePages, ...brandPages, ...sizePages, ...listingPages];
+  return [...staticPages, ...cityPages, ...statePages, ...brandPages, ...sizePages, ...listingPages];
 }

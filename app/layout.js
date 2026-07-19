@@ -75,17 +75,21 @@ export default async function RootLayout({ children }) {
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Buy</span>
                 <Link href="/browse" className="text-slate-300 hover:text-white">Browse tires</Link>
-                <Link href="/states" className="text-slate-300 hover:text-white">Browse by state</Link>
+                <Link href="/locations" className="text-slate-300 hover:text-white">Locations</Link>
+                <Link href="/how-it-works" className="text-slate-300 hover:text-white">How it works</Link>
                 <Link href="/guide" className="text-slate-300 hover:text-white">Buying guide</Link>
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Sell</span>
                 <Link href="/sell-tires" className="text-slate-300 hover:text-white">Sell tires</Link>
+                <Link href="/founding-seller" className="text-slate-300 hover:text-white">Founding Seller</Link>
                 <Link href="/pro" className="text-slate-300 hover:text-white">Go Pro</Link>
                 <Link href="/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</Link>
               </div>
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">More</span>
+                <Link href="/trust-safety" className="text-slate-300 hover:text-white">Trust &amp; Safety</Link>
+                <Link href="/about" className="text-slate-300 hover:text-white">About</Link>
                 <Link href="/app" className="text-slate-300 hover:text-white">📱 Get the app</Link>
                 <Link href="/terms" className="text-slate-300 hover:text-white">Terms</Link>
                 <Link href="/privacy" className="text-slate-300 hover:text-white">Privacy</Link>
