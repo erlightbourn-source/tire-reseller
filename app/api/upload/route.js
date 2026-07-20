@@ -5,9 +5,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
 import { stripJpegMetadata } from "@/lib/image";
 
-// Photo upload. Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set (persistent,
-// works on serverless); otherwise writes to /public/uploads (fine for local dev,
-// ephemeral on most hosts). Both paths validate real image bytes + size.
+// Photo upload. Persistence backend is chosen at runtime:
+//   1. Cloudflare R2 (prod on CF) — via the OpenNext `UPLOADS_BUCKET` binding.
+//   2. /public/uploads — local dev only (ephemeral on serverless hosts).
+// The remote path validates real image bytes + size before storing.
+// (The prior Vercel Blob backend was removed with the Vercel→Cloudflare port.)
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB per file
 const MAX_FILES = 6;
@@ -30,17 +32,25 @@ async function storeLocal(bytes, fname) {
   return `/uploads/${fname}`;
 }
 
-async function storeBlob(bytes, fname, contentType) {
-  // Dynamically imported and webpack-ignored so the dependency is only required
-  // at runtime when Blob is enabled (install with `npm i @vercel/blob`).
-  const pkg = "@vercel/blob";
-  const { put } = await import(/* webpackIgnore: true */ pkg);
-  const { url } = await put(`uploads/${fname}`, bytes, {
-    access: "public",
-    contentType,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-  return url;
+// Cloudflare R2 via the OpenNext runtime binding — no external SDK to bundle.
+// Returns null (not throw) when not running on CF / no bucket bound, so callers
+// can fall through to the next backend.
+async function getR2Bucket() {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const ctx = getCloudflareContext();
+    return ctx?.env?.UPLOADS_BUCKET ?? null;
+  } catch {
+    return null; // not on the Cloudflare runtime (e.g. local dev)
+  }
+}
+
+async function storeR2(bucket, bytes, fname, contentType) {
+  await bucket.put(`uploads/${fname}`, bytes, { httpMetadata: { contentType } });
+  // Objects are served from the bucket's public base (R2 public dev URL or a
+  // custom domain), configured via R2_PUBLIC_BASE_URL.
+  const base = (process.env.R2_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
+  return `${base}/uploads/${fname}`;
 }
 
 const MIME = { jpg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" };
@@ -64,7 +74,7 @@ export async function POST(req) {
   const files = form.getAll("files").filter((f) => typeof f === "object" && f.size > 0);
   if (files.length === 0) return NextResponse.json({ error: "No files uploaded." }, { status: 400 });
 
-  const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const r2 = await getR2Bucket();
   const urls = [];
   for (const file of files.slice(0, MAX_FILES)) {
     if (file.size > MAX_BYTES) {
@@ -79,9 +89,9 @@ export async function POST(req) {
     if (ext === "jpg") bytes = stripJpegMetadata(bytes);
     const fname = `${user.id.slice(0, 6)}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
     try {
-      urls.push(useBlob ? await storeBlob(bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));
+      urls.push(r2 ? await storeR2(r2, bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));
     } catch (e) {
-      // If Blob isn't installed/configured, fall back to local rather than 500.
+      // If the R2 store isn't reachable/configured, fall back to local rather than 500.
       urls.push(await storeLocal(bytes, fname));
     }
   }
