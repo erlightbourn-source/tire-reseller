@@ -86,8 +86,9 @@ export default async function CityPage({ params }) {
           markup, no lowball DMs about a couch you&apos;re not selling.
         </p>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">{c.note}</p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={browseHref} className="btn-primary">Browse {c.name} tires</Link>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Link href="#size-alert" className="btn-primary">Set a size alert</Link>
+          <Link href={browseHref} className="btn-secondary">Browse {c.name} tires</Link>
           <Link href="/sell-tires" className="font-semibold text-brand-300 hover:underline">
             List your tires in {c.name} →
           </Link>
@@ -119,7 +120,7 @@ export default async function CityPage({ params }) {
         </div>
       </section>
 
-      <section className="card px-6 py-6">
+      <section id="size-alert" className="card px-6 py-6 scroll-mt-24">
         <div className="grid items-center gap-4 sm:grid-cols-[1.4fr_1fr]">
           <div>
             <h2 className="font-display text-xl font-extrabold text-white">No stock in your size yet?</h2>

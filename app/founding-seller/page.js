@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FoundingBadge } from "@/components/Badge";
 
 export const metadata = {
   title: "Founding Seller Program — TireTrader",
@@ -26,13 +27,21 @@ export default function FoundingSellerPage() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="eyebrow">Founding Seller Program</p>
+        <div className="flex items-center gap-3">
+          <p className="eyebrow">Founding Seller Program</p>
+          <FoundingBadge />
+        </div>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-white sm:text-4xl">
           Be First, Stay Ahead
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
           We&apos;re launching TireTrader with 25 South Florida sellers, not 2,500. Get in as a
           founder and the perks don&apos;t expire when we grow.
+        </p>
+        <p className="mt-4 max-w-2xl bg-brand-500/5 px-4 py-3 text-sm text-slate-300 ring-1 ring-inset ring-brand-400/20">
+          <span className="font-semibold text-white">Free to list during launch — no card required.</span>{" "}
+          The first 25 Founding Sellers lock in $10/mo for life after that; every seller after pays
+          $25/mo.
         </p>
         <div className="mt-5">
           <Link href="/sell-tires" className="btn-primary">Claim your Founding Seller spot</Link>
@@ -44,7 +53,10 @@ export default function FoundingSellerPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {PERKS.map(([title, body]) => (
             <div key={title} className="card px-5 py-5">
-              <p className="font-semibold text-white">{title}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-white">{title}</p>
+                {title.includes("Founding Seller badge") && <FoundingBadge />}
+              </div>
               <p className="mt-1 text-sm text-slate-400">{body}</p>
             </div>
           ))}
