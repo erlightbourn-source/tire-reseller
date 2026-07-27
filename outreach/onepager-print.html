@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TireTrader — Founding Seller One-Pager (Print)</title>
+<style>
+  @page { size: Letter portrait; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0 !important; }
+  html, body { width: 8.5in; height: 11in; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #000; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    padding: 0.5in 0.55in;
+    display: flex; flex-direction: column;
+  }
+  .mono { font-family: "Courier New", ui-monospace, monospace; }
+  h1,h2,h3 { font-family: "Courier New", ui-monospace, monospace; letter-spacing: -0.01em; text-transform: uppercase; }
+
+  /* ── Masthead ── */
+  .masthead { display: flex; justify-content: space-between; align-items: flex-start;
+    border-bottom: 4px solid #000; padding-bottom: 12px; }
+  .wordmark { font-family: "Courier New", monospace; font-weight: 700; font-size: 30px;
+    letter-spacing: -0.02em; line-height: 1; }
+  .wordmark .hl { background: #e5ff00; padding: 2px 5px; box-shadow: 3px 3px 0 #000; }
+  .tag { font-family: "Courier New", monospace; font-size: 10.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; margin-top: 8px; }
+
+  /* ── Founding badge (flat 2-tone, no gradient) ── */
+  .badge { width: 96px; height: 96px; border: 3px solid #000; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; box-shadow: 4px 4px 0 #e5ff00; flex: 0 0 auto; }
+  .badge svg { width: 28px; height: 28px; }
+  .badge .b1 { font-family: "Courier New", monospace; color: #e5ff00; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.04em; margin-top: 4px; line-height: 1.15; }
+  .badge .b2 { font-family: "Courier New", monospace; color: #fff; font-size: 7.5px;
+    letter-spacing: 0.12em; margin-top: 2px; }
+
+  /* ── Hook ── */
+  .hook { margin-top: 22px; }
+  .hook h1 { font-size: 27px; line-height: 1.06; }
+  .hook .sub { font-size: 13.5px; line-height: 1.4; margin-top: 10px; max-width: 6.3in; }
+
+  /* ── Why-it-wins ── */
+  .why { margin-top: 22px; }
+  .kicker { font-family: "Courier New", monospace; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; border-left: 6px solid #e5ff00; padding-left: 9px; }
+  .why ul { list-style: none; margin-top: 12px; }
+  .why li { font-size: 12.5px; line-height: 1.32; padding: 7px 0 7px 26px; position: relative;
+    border-bottom: 1px solid #000; }
+  .why li:first-child { border-top: 1px solid #000; }
+  .why li::before { content: "■"; position: absolute; left: 2px; top: 7px; font-size: 11px; }
+  .why li b { font-family: "Courier New", monospace; font-weight: 700; text-transform: uppercase;
+    font-size: 11.5px; }
+
+  /* ── The deal (accent block) ── */
+  .deal { margin-top: 20px; background: #e5ff00; border: 3px solid #000; padding: 16px 18px 18px;
+    box-shadow: 6px 6px 0 #000; }
+  .deal h2 { font-size: 15px; line-height: 1.1; }
+  .deal ul { list-style: none; margin-top: 12px; }
+  .deal li { font-size: 12.5px; line-height: 1.3; padding: 5px 0 5px 24px; position: relative; }
+  .deal li::before { content: "→"; position: absolute; left: 0; top: 5px;
+    font-family: "Courier New", monospace; font-weight: 700; }
+  .deal li b { font-weight: 700; }
+
+  /* ── CTA / footer ── */
+  .cta { margin-top: auto; padding-top: 16px; border-top: 4px solid #000;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+  .cta .call h3 { font-size: 17px; }
+  .cta .url { font-family: "Courier New", monospace; font-size: 15px; font-weight: 700;
+    background: #000; color: #fff; padding: 5px 8px; display: inline-block; margin-top: 8px; }
+  .cta .who { font-size: 12px; margin-top: 9px; }
+  .qr { flex: 0 0 auto; text-align: center; }
+  .qr .box { width: 108px; height: 108px; border: 3px solid #000; padding: 8px; background: #fff; }
+  .qr .box svg { width: 100%; height: 100%; display: block; }
+  .qr .cap { font-family: "Courier New", monospace; font-size: 8.5px; letter-spacing: 0.05em;
+    margin-top: 5px; text-transform: uppercase; }
+
+  .honest { font-size: 9.5px; line-height: 1.35; color: #000; margin-top: 12px;
+    border-top: 1px solid #000; padding-top: 7px; font-style: italic; }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <div>
+      <div class="wordmark">TIRE<span class="hl">TRADER</span></div>
+      <div class="tag">The South Florida tire marketplace</div>
+    </div>
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="#e5ff00" aria-hidden="true"><path d="M12 1.6l2.7 5.9 6.5.7-4.8 4.4 1.3 6.4L12 20l-5.7 3.4 1.3-6.4L2.8 8.2l6.5-.7z"/></svg>
+      <div class="b1">FOUNDING<br>SELLER</div>
+      <div class="b2">FIRST 25 · BROWARD</div>
+    </div>
+  </div>
+
+  <div class="hook">
+    <h1>Sell your tires to people who<br>actually came to buy tires.</h1>
+    <div class="sub">No lowball DMs about random junk. No getting buried under couches and phone cases.
+      On TireTrader, buyers search by size, vehicle, and location — so the people messaging you
+      already know what they want.</div>
+  </div>
+
+  <div class="why">
+    <div class="kicker">Why it beats Facebook &amp; OfferUp</div>
+    <ul>
+      <li><b>Found, not buried.</b> Buyers filter by tire size, vehicle, and your part of Broward.</li>
+      <li><b>Structured listings.</b> Size, tread depth, and DOT year are built into every post — far fewer "is this still available?" messages.</li>
+      <li><b>Messaging built in.</b> Talk to buyers without handing out your personal number.</li>
+      <li><b>Scam guardrails.</b> Off-platform-payment warnings are baked into every chat.</li>
+      <li><b>A real dashboard.</b> Track views, conversations, and the value of your inventory.</li>
+    </ul>
+  </div>
+
+  <div class="deal">
+    <h2>The Founding Seller deal — first 25 shops in Broward</h2>
+    <ul>
+      <li><b>Free to list right now.</b> No card, no billing. The platform is in launch mode.</li>
+      <li><b>Lock your rate for life.</b> When paid plans switch on, the first 25 founding shops keep it at $10/mo forever. Everyone after pays $25.</li>
+      <li><b>A permanent Founding Seller badge</b> and priority placement across the site.</li>
+      <li><b>Featured on the homepage</b> while we launch in Broward.</li>
+      <li><b>We build your first listings for you.</b> Send photos, we do the rest.</li>
+    </ul>
+  </div>
+
+  <div class="cta">
+    <div class="call">
+      <h3>Let's get you set up this week.</h3>
+      <div class="url">shoptiretrader.com</div>
+      <div class="who mono">Ask for Evan · TireTrader1@outlook.com</div>
+    </div>
+    <div class="qr">
+      <div class="box">
+        <svg viewBox="0 0 29 29"><path stroke="#000" d="M2 2.5h7m1 0h1m1 0h2m1 0h1m4 0h7m-25 1h1m5 0h1m1 0h2m2 0h1m1 0h1m3 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h2m2 0h2m1 0h1m2 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m6 0h1m4 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m3 0h1m7 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-13 1h2m2 0h1m-17 1h1m2 0h6m1 0h1m3 0h4m2 0h1m1 0h3m-25 1h2m2 0h1m2 0h1m1 0h1m1 0h2m1 0h2m3 0h5m-24 1h3m3 0h2m2 0h2m3 0h1m1 0h1m1 0h1m1 0h1m2 0h1m-24 1h2m2 0h1m1 0h2m1 0h1m4 0h4m2 0h4m-24 1h1m2 0h3m2 0h1m2 0h1m2 0h1m2 0h1m5 0h1m-25 1h1m2 0h2m2 0h1m1 0h1m2 0h5m3 0h1m2 0h1m-24 1h2m1 0h1m2 0h3m4 0h3m1 0h1m2 0h5m-25 1h1m1 0h2m3 0h1m1 0h1m6 0h2m1 0h1m1 0h2m1 0h1m-25 1h1m1 0h1m1 0h3m5 0h2m2 0h5m1 0h2m-16 1h3m3 0h1m1 0h1m3 0h1m1 0h2m-24 1h7m1 0h4m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m1 0h1m1 0h2m1 0h4m3 0h1m-21 1h1m1 0h3m1 0h1m1 0h5m2 0h6m-21 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h2m1 0h3m4 0h2m-25 1h1m1 0h3m1 0h1m4 0h1m1 0h1m6 0h5m-25 1h1m5 0h1m5 0h1m2 0h1m1 0h4m1 0h3m-25 1h7m1 0h2m1 0h2m3 0h3m2 0h1m2 0h1"/></svg>
+      </div>
+      <div class="cap">Scan to see it live</div>
+    </div>
+  </div>
+
+  <div class="honest">Buyers pay you directly and inspect the tires in person. TireTrader is the marketplace and the trust layer — not an escrow service and never a middleman on your money.</div>
+
+</body>
+</html>
