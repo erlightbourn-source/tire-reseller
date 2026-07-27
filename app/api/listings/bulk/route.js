@@ -4,6 +4,7 @@ import { getCurrentUser, canSell } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
+import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
 
 const MAX_LINES = 50;
@@ -52,7 +53,8 @@ export async function POST(req) {
           state: stateFromLocation(location),
           lat: coords.lat ?? null,
           lng: coords.lng ?? null,
-          sellerPro: !!user.pro,
+          sellerPro: isProSeller(user),
+          sellerFounding: !!user.foundingSeller,
           ...deriveListingColumns({ size, treadDepth: null, priceCents, quantity }),
         },
       });

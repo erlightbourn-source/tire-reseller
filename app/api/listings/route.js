@@ -4,6 +4,7 @@ import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
+import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
@@ -78,7 +79,8 @@ export async function POST(req) {
       location,
       state: stateFromLocation(location),
       description,
-      sellerPro: !!user.pro,
+      sellerPro: isProSeller(user),
+      sellerFounding: !!user.foundingSeller,
       ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
       ...tireAttrs(b),
       photos: {

@@ -137,7 +137,7 @@ async function main() {
 
   const sellerData = [
     { email: "mike@tiretrader.test", name: "Mike's Tire Co", location: "Houston, TX", state: "TX", pro: true },
-    { email: "rosa@tiretrader.test", name: "Rosa Wheels", location: "Phoenix, AZ", state: "AZ" },
+    { email: "rosa@tiretrader.test", name: "Rosa Wheels", location: "Phoenix, AZ", state: "AZ", foundingSeller: true },
     { email: "ken@tiretrader.test", name: "Ken Auto", location: "Atlanta, GA", state: "GA" },
   ];
   const sellers = [demo];
@@ -152,6 +152,7 @@ async function main() {
           state: s.state,
           role: "seller",
           pro: !!s.pro,
+          foundingSeller: !!s.foundingSeller,
           sellerFreeUntil: freeUntil,
         },
       })

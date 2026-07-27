@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, canSell } from "@/lib/auth";
+import { isProSeller } from "@/lib/seller";
 import BulkAdd from "@/components/BulkAdd";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +11,7 @@ export default async function BulkPage() {
   if (!user) redirect("/login?next=/sell/bulk");
   if (!canSell(user)) redirect("/subscribe");
 
-  if (!user.pro) {
+  if (!isProSeller(user)) {
     return (
       <div className="mx-auto max-w-lg">
         <div className="card overflow-hidden text-center">

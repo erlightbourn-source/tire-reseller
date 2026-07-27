@@ -1,0 +1,13 @@
+{
+  "name": "shoptiretrader",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // Persistent uploads. Bucket is created once CF auth lands
+  // (`wrangler r2 bucket create shoptiretrader-uploads`); the app reads it via
+  // the UPLOADS_BUCKET binding. R2_PUBLIC_BASE_URL (env var) serves the objects.
+  "r2_buckets": [
+    { "binding": "UPLOADS_BUCKET", "bucket_name": "shoptiretrader-uploads" }
+  ]
+}

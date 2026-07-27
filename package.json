@@ -27,6 +27,7 @@
     "postcss": "$postcss"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.20.1",
     "@prisma/client": "5.22.0",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",
