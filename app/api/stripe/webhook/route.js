@@ -19,7 +19,8 @@ async function activateForCustomer(customerId, { status, priceId, currentPeriodE
     },
   });
   if (status !== "active") {
-    await prisma.listing.updateMany({ where: { sellerId: user.id }, data: { sellerPro: false } });
+    // A founding seller keeps ranked placement even when billing lapses.
+    await prisma.listing.updateMany({ where: { sellerId: user.id }, data: { sellerPro: !!user.foundingSeller } });
   }
 }
 

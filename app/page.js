@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
 import { jsonLdHtml } from "@/lib/jsonld";
 import ListingCard from "@/components/ListingCard";
+import Stars from "@/components/Stars";
+import { FoundingBadge } from "@/components/Badge";
 import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
 import Logo from "@/components/Logo";
@@ -31,12 +33,12 @@ export default async function Home() {
   const user = await getCurrentUser();
   const homeState = userStateOf(user);
 
-  const [totalActive, grouped, recent, brandRows] = await Promise.all([
+  const [totalActive, grouped, recent, brandRows, founders] = await Promise.all([
     prisma.listing.count({ where: { status: "active", hidden: false, seller: { deletedAt: null } } }),
     prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
     prisma.listing.findMany({
       where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
       take: 4,
       include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
     }),
@@ -45,6 +47,14 @@ export default async function Home() {
       select: { brand: true },
       distinct: ["brand"],
       orderBy: { brand: "asc" },
+    }),
+    // Founding-seller spotlight: launch-cohort sellers with live inventory.
+    // Degrades to an empty array (section hidden) when there are none yet.
+    prisma.user.findMany({
+      where: { foundingSeller: true, deletedAt: null, listings: { some: { status: "active", hidden: false } } },
+      select: { id: true, name: true, location: true, state: true, ratingAvg: true, ratingCount: true },
+      orderBy: [{ ratingCount: "desc" }, { createdAt: "asc" }],
+      take: 8,
     }),
   ]);
   const stateCount = grouped.filter((g) => g.state).length;
@@ -55,7 +65,7 @@ export default async function Home() {
     ? recent
     : await prisma.listing.findMany({
         where: { status: "active", hidden: false, seller: { deletedAt: null } },
-        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
         take: 4,
         include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
       });
@@ -157,6 +167,31 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {/* Founding Sellers spotlight — launch cohort; hidden until ≥1 exists */}
+      {founders.length > 0 && (
+        <section>
+          <div className="mb-4">
+            <p className="eyebrow">Founding sellers</p>
+            <h2 className="font-display text-2xl font-extrabold text-white">Meet our launch-cohort resellers</h2>
+            <p className="mt-1 text-sm text-slate-400">Hand-vetted local sellers who helped build the marketplace.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {founders.map((f) => (
+              <Link key={f.id} href={`/sellers/${f.id}`} className="card card-hover p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate font-display font-bold text-white">{f.name}</p>
+                  <FoundingBadge />
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
+                  {f.ratingCount > 0 && <Stars value={f.ratingAvg} size="h-3 w-3" />}
+                  <span className="truncate">{f.location || (f.state ? stateName(f.state) : "")}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Seller CTA */}
       <section className="relative overflow-hidden bg-brand-600 text-black shadow-lift">

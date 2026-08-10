@@ -12,3 +12,4 @@ public/uploads/*
 npm-debug.log*
 .vercel
 .env*
+.open-next/

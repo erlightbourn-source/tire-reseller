@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
+import { FoundingBadge } from "@/components/Badge";
 import Stars from "@/components/Stars";
 import ReviewForm from "@/components/ReviewForm";
 import BlockSeller from "@/components/BlockSeller";
@@ -50,7 +51,9 @@ export default async function SellerProfile({ params }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
-            {seller.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
+            {seller.foundingSeller
+              ? <FoundingBadge />
+              : seller.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
             <Stars value={avg} />

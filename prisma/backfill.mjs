@@ -1,5 +1,5 @@
 // Backfill the denormalized columns added for indexed browse queries:
-//   Listing.widthMm/aspectRatio/rimDiameter/treadDepth32/perTireCents/sellerPro
+//   Listing.widthMm/aspectRatio/rimDiameter/treadDepth32/perTireCents/sellerPro/sellerFounding
 //   User.ratingAvg/ratingCount
 // Idempotent — safe to re-run. Used by the seed and runnable standalone after a
 // deploy that adds these columns:  `node prisma/backfill.mjs`  (or `npm run backfill`).
@@ -10,13 +10,17 @@ export async function backfillDenorm(prisma) {
   const listings = await prisma.listing.findMany({
     select: {
       id: true, size: true, treadDepth: true, priceCents: true, quantity: true,
-      seller: { select: { pro: true } },
+      seller: { select: { pro: true, foundingSeller: true } },
     },
   });
   for (const l of listings) {
     await prisma.listing.update({
       where: { id: l.id },
-      data: { ...deriveListingColumns(l), sellerPro: !!l.seller?.pro },
+      data: {
+        ...deriveListingColumns(l),
+        sellerPro: !!(l.seller?.pro || l.seller?.foundingSeller),
+        sellerFounding: !!l.seller?.foundingSeller,
+      },
     });
   }
 
