@@ -15,7 +15,7 @@ export default function HeroSearch({ homeState }) {
   const [tab, setTab] = useState("size");
 
   return (
-    <div className="border border-white/10 bg-ink-900/70 p-2 shadow-lift backdrop-blur">
+    <div className="border border-white/10 bg-ink-900 p-2 shadow-lift">
       <div role="tablist" aria-label="Find tires" className="flex gap-1 bg-black/20 p-1">
         {TABS.map((t) => (
           <button
