@@ -201,7 +201,7 @@ export default function AuthForm({ mode }) {
             </button>
           </form>
 
-          {!isSignup && (
+          {!isSignup && process.env.NODE_ENV !== "production" && (
             <div className="mt-4 bg-white/5 px-3 py-2.5 text-xs text-slate-400 ring-1 ring-inset ring-white/10">
               <span className="font-semibold text-slate-300">Demo:</span> demo@tiretrader.test / demo1234
             </div>
