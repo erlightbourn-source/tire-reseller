@@ -119,7 +119,10 @@ async function main() {
       location: "Dallas, TX",
       state: "TX",
       role: "seller",
-      admin: true, // demo moderator (for the /admin surface)
+      // SECURITY (2026-08-27): the demo account must NEVER be admin. Its credentials
+      // (demo@tiretrader.test / demo1234) ship publicly in this seed + were exposed on
+      // prod for weeks; admin:true handed anyone /admin moderator access. Non-admin only.
+      admin: false,
       sellerFreeUntil: freeUntil,
     },
   });
