@@ -6,10 +6,20 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { PrismaClient } from "@prisma/client";
 
 const PORT = 3399;
 const BASE = `http://localhost:${PORT}`;
+const DATABASE_URL = process.env.DATABASE_URL || "file:./dev.db";
 let server;
+
+// Direct DB handle for the one thing the HTTP surface deliberately won't do:
+// hand back an email-verification token (see app/api/auth/verify — the token
+// only ever leaves the server inside the sent email). There's no dev-only
+// email outbox yet (tracked as BACKLOG #3b), so the funnel test below bypasses
+// verification the same way the real /api/auth/verify route resolves it —
+// flipping emailVerified and clearing the token columns directly.
+const db = new PrismaClient({ datasources: { db: { url: DATABASE_URL } } });
 
 before(async () => {
   server = spawn(
@@ -19,7 +29,7 @@ before(async () => {
       env: {
         ...process.env,
         APP_SECRET: process.env.APP_SECRET || "e2e_test_secret_thirty_two_chars_minimum",
-        DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
+        DATABASE_URL,
         NODE_ENV: "production",
       },
       stdio: "ignore",
@@ -36,7 +46,10 @@ before(async () => {
   throw new Error("E2E: server did not become ready");
 });
 
-after(() => server?.kill());
+after(async () => {
+  server?.kill();
+  await db.$disconnect();
+});
 
 const req = (path, opts = {}) =>
   fetch(`${BASE}${path}`, {
@@ -44,6 +57,34 @@ const req = (path, opts = {}) =>
     redirect: "manual",
     ...opts,
   });
+
+// Pull the session cookie off a login response so later requests can carry it.
+function sessionCookie(res) {
+  const raw = res.headers.get("set-cookie") || "";
+  const m = raw.match(/tt_session=[^;]+/);
+  return m ? m[0] : null;
+}
+
+// Same-effect shortcut for what clicking the emailed verify link does.
+async function verifyByEmail(email) {
+  await db.user.updateMany({
+    where: { email },
+    data: { emailVerified: true, verifyTokenHash: null, verifyTokenExpiry: null },
+  });
+}
+
+async function signUpVerifiedAndLogin(email, password, role) {
+  await req("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ name: role === "seller" ? "E2E Seller" : "E2E Buyer", email, password, role, location: "Miami, FL" }),
+  });
+  await verifyByEmail(email);
+  const login = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  assert.equal(login.status, 200, `${role} logs in after verification`);
+  const cookie = sessionCookie(login);
+  assert.ok(cookie, `${role} session cookie issued`);
+  return cookie;
+}
 
 test("health endpoint reports DB up", async () => {
   const r = await req("/api/health");
@@ -122,4 +163,77 @@ test("resend-verification: 4th same-address request capped; response neutral for
   const existing = await post("demo@tiretrader.test");
   assert.equal(existing.status, 200);
   assert.deepEqual(await existing.json(), { ok: true });
+});
+
+// The core funnel (BACKLOG #4): signup -> verify -> list a tire -> a buyer
+// messages the seller -> negotiates an offer -> seller accepts -> the listing
+// is marked sold. Also exercises thread authorization (a non-participant is
+// denied) and the accept route's already-answered guard along the way.
+test("core funnel: seller lists a tire, buyer offers, seller accepts", async () => {
+  const stamp = Date.now();
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const sellerEmail = `e2eseller${stamp}@example.com`;
+  const buyerEmail = `e2ebuyer${stamp}@example.com`;
+  const strangerEmail = `e2estranger${stamp}@example.com`;
+
+  const sellerCookie = await signUpVerifiedAndLogin(sellerEmail, password, "seller");
+  const listingRes = await req("/api/listings", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4 }),
+  });
+  assert.equal(listingRes.status, 200, "seller creates a listing");
+  const { id: listingId } = await listingRes.json();
+  assert.ok(listingId, "listing id returned");
+
+  const buyerCookie = await signUpVerifiedAndLogin(buyerEmail, password, "buyer");
+  const threadRes = await req("/api/threads", {
+    method: "POST",
+    headers: { Cookie: buyerCookie },
+    body: JSON.stringify({ listingId, message: "Is this still available?" }),
+  });
+  assert.equal(threadRes.status, 200, "buyer opens a thread on the listing");
+  const { threadId } = await threadRes.json();
+  assert.ok(threadId, "thread id returned");
+
+  // Authorization: an unrelated verified user can't read this thread.
+  const strangerCookie = await signUpVerifiedAndLogin(strangerEmail, password, "buyer");
+  const strangerRead = await req(`/api/messages/${threadId}`, { headers: { Cookie: strangerCookie } });
+  assert.equal(strangerRead.status, 403, "non-participant is denied thread access");
+
+  const offerRes = await req(`/api/messages/${threadId}`, {
+    method: "POST",
+    headers: { Cookie: buyerCookie },
+    body: JSON.stringify({ kind: "offer", offerCents: 35000, body: "Would you take $350?" }),
+  });
+  assert.equal(offerRes.status, 200, "buyer sends an offer");
+  const { id: offerMessageId } = await offerRes.json();
+  assert.ok(offerMessageId, "offer message id returned");
+
+  const sellerRead = await req(`/api/messages/${threadId}`, { headers: { Cookie: sellerCookie } });
+  assert.equal(sellerRead.status, 200);
+  const sellerView = await sellerRead.json();
+  assert.equal(sellerView.isSeller, true, "seller side of the thread is flagged correctly");
+  const offerMsg = sellerView.messages.find((m) => m.id === offerMessageId);
+  assert.equal(offerMsg?.kind, "offer");
+  assert.equal(offerMsg?.offerStatus, "pending");
+
+  const acceptRes = await req("/api/offers", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ messageId: offerMessageId, action: "accept" }),
+  });
+  assert.equal(acceptRes.status, 200, "seller accepts the offer");
+
+  const sold = await db.listing.findUnique({ where: { id: listingId }, select: { status: true } });
+  assert.equal(sold?.status, "sold", "accepting an offer marks the listing sold");
+
+  // Atomic-transition guard: a second accept on the same, already-answered
+  // offer must not re-fire (prevents a double-sale race).
+  const doubleAccept = await req("/api/offers", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ messageId: offerMessageId, action: "accept" }),
+  });
+  assert.equal(doubleAccept.status, 409, "re-accepting an already-answered offer is rejected");
 });
