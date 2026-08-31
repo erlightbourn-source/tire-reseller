@@ -89,7 +89,68 @@ function hashCode(s) {
 }
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+/**
+ * SAFETY GUARD — refuse to seed anything that isn't an obviously-local database.
+ *
+ * This script is DESTRUCTIVE and it plants weak, publicly-documented credentials:
+ *   - it deleteMany()s every Message, Thread, Photo, Listing and User below;
+ *   - it then creates demo@ / buyer@ / mike@ / rosa@ / ken@ with the fixed
+ *     passwords demo1234 / buyer1234 / seller1234, which are published in
+ *     README.md and in the public docs/index.html demo.
+ *
+ * Both DEPLOY.md ("npx prisma db seed  # optional demo data") and GO-LIVE.md
+ * offer it as an ordinary optional step of a PRODUCTION deploy. One shell with a
+ * prod DATABASE_URL exported therefore wipes the live marketplace — every real
+ * user, listing and conversation — and repopulates it with sign-in-able accounts
+ * whose passwords are on the internet. That is exactly the exposure the
+ * 2026-08-27 demo-admin incident came from, so make it structurally impossible.
+ *
+ * scripts/neutralize-demo-admin.cjs already guards the same way (it refuses a
+ * local file: DB); this is the mirror image for the destructive direction.
+ *
+ * Escape hatch for a deliberate remote demo seed: ALLOW_REMOTE_SEED=1.
+ */
+function assertLocalDatabase() {
+  const url = process.env.DATABASE_URL || "file:./dev.db";
+
+  let local = false;
+  if (url.startsWith("file:")) {
+    local = true; // SQLite dev file
+  } else {
+    try {
+      const host = new URL(url).hostname.toLowerCase();
+      local = host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+    } catch {
+      local = false; // unparseable → treat as remote and refuse
+    }
+  }
+
+  if (local) return;
+
+  const shown = url.replace(/\/\/[^@]*@/, "//<redacted>@"); // never print credentials
+  if (process.env.ALLOW_REMOTE_SEED === "1") {
+    console.warn(
+      `⚠️  ALLOW_REMOTE_SEED=1 — seeding a REMOTE database (${shown}).\n` +
+        "   This ERASES all existing data and creates accounts with public passwords."
+    );
+    return;
+  }
+
+  console.error(
+    `\n❌ REFUSING TO SEED: DATABASE_URL points at a remote database (${shown}).\n\n` +
+      "   `prisma db seed` DELETES every user, listing, thread and message, then creates\n" +
+      "   demo accounts whose passwords are published in README.md and docs/index.html.\n" +
+      "   Running it against production would destroy live data and re-open the\n" +
+      "   public-credential hole fixed on 2026-08-27.\n\n" +
+      "   For local demo data, point DATABASE_URL at file:./dev.db (see .env.example).\n" +
+      "   If you REALLY intend to seed this remote database, re-run with ALLOW_REMOTE_SEED=1.\n"
+  );
+  process.exit(1);
+}
+
 async function main() {
+  assertLocalDatabase();
+
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
   console.log("Clearing existing data…");
