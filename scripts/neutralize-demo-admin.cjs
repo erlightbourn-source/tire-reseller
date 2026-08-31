@@ -1,18 +1,37 @@
 #!/usr/bin/env node
 /**
- * neutralize-demo-admin.cjs — one-shot PROD remediation (Dev, 2026-08-27).
+ * neutralize-demo-admin.cjs — one-shot PROD remediation.
  *
- * WHY: prisma/seed.js shipped demo@tiretrader.test / demo1234 with admin:true, and
- * those credentials were public for weeks. Merging PR #22 only hid the launch banner;
- * the seeded account is still LIVE, SIGNABLE, and ADMIN on prod. This neutralizes it
- * WITHOUT deleting it (the demo seller owns demo listings — a delete would cascade/orphan):
- *   - admin        -> false   (removes /admin moderator access)
- *   - passwordHash -> rotated to an UNGUESSABLE random value in the app's own scheme
- *                     (sha256 pre-hash -> bcryptjs cost 12, matching lib/auth.js / seed.js)
- *                     so the public "demo1234" no longer authenticates.
+ * 2026-08-27 (Dev): created to kill demo@tiretrader.test, which prisma/seed.js
+ *   shipped with admin:true and the public password "demo1234".
+ * 2026-08-31 (Dev): WIDENED — the original only covered demo@. The same seed run
+ *   creates FOUR more accounts whose passwords are equally public, and they were
+ *   left live:
+ *     - buyer@tiretrader.test / buyer1234   (README.md line 93 publishes it)
+ *     - mike@tiretrader.test  / seller1234  (pro seller)
+ *     - rosa@tiretrader.test  / seller1234  (founding seller)
+ *     - ken@tiretrader.test   / seller1234
+ *   docs/index.html line 264 — the PUBLIC GitHub Pages demo — literally publishes
+ *   the scheme (`email.startsWith('demo') ? 'demo1234' : email.startsWith('buyer')
+ *   ? 'buyer1234' : 'seller1234'`), so "seller1234" is derivable by anyone who
+ *   views source. mike/rosa/demo also carry seeded 4-5 star reviews, so taking one
+ *   over hands an attacker an established, well-reviewed seller identity to run
+ *   scams from on a live marketplace.
  *
- * Idempotent (safe to re-run). Refuses to run against a local `file:` (SQLite dev) DB so
- * nobody mistakes a dev run for prod remediation. Usage:
+ * WHAT IT DOES (per account, without deleting anything — these users own the demo
+ * listings/threads/reviews, so a delete would cascade or orphan them):
+ *   - admin        -> false   (removes any /admin moderator access)
+ *   - passwordHash -> rotated to an UNGUESSABLE random value in the app's own
+ *                     scheme (sha256 pre-hash -> bcryptjs cost 12, matching
+ *                     lib/auth.js and prisma/seed.js) so the public password
+ *                     stops authenticating.
+ *
+ * Idempotent: an account that is already non-admin AND whose public password no
+ * longer authenticates is reported "already-neutralized" and left untouched.
+ * Refuses a local `file:` (SQLite dev) DB so nobody mistakes a dev run for prod
+ * remediation.
+ *
+ * Usage:
  *   DATABASE_URL="<PROD neon url>" node scripts/neutralize-demo-admin.cjs [--dry]
  */
 const { PrismaClient } = require("@prisma/client");
@@ -20,69 +39,111 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const DRY = process.argv.includes("--dry");
-const EMAIL = "demo@tiretrader.test";
 const url = process.env.DATABASE_URL || "";
 
-function redactHash(h) { return h ? `${String(h).slice(0, 7)}…(${String(h).length} chars)` : "(none)"; }
+// Every account prisma/seed.js creates, with the public password it ships with.
+const SEEDED_ACCOUNTS = [
+  { email: "demo@tiretrader.test", publicPw: "demo1234" },
+  { email: "buyer@tiretrader.test", publicPw: "buyer1234" },
+  { email: "mike@tiretrader.test", publicPw: "seller1234" },
+  { email: "rosa@tiretrader.test", publicPw: "seller1234" },
+  { email: "ken@tiretrader.test", publicPw: "seller1234" },
+];
+
+const redactHash = (h) =>
+  h ? `${String(h).slice(0, 7)}…(${String(h).length} chars)` : "(none)";
+
+// Same scheme as lib/auth.js: SHA-256 pre-hash -> bcrypt cost 12.
+const prehash = (plain) =>
+  crypto.createHash("sha256").update(String(plain), "utf8").digest("base64");
+const authenticates = (plain, hash) => bcrypt.compareSync(prehash(plain), hash);
+
+async function neutralize(prisma, { email, publicPw }) {
+  const before = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true, role: true, admin: true, passwordHash: true },
+  });
+
+  if (!before) {
+    console.log(`  ${email}: not found — nothing to do (already deleted?).`);
+    return "absent";
+  }
+
+  const publicWorked = authenticates(publicPw, before.passwordHash);
+  console.log(
+    `  ${email}: role=${before.role} admin=${before.admin} ` +
+      `hash=${redactHash(before.passwordHash)} "${publicPw}" authenticates=${publicWorked}`
+  );
+
+  if (before.admin === false && !publicWorked) {
+    console.log("    -> already-neutralized, no mutation.");
+    return "already";
+  }
+
+  if (DRY) {
+    console.log("    -> DRY-RUN: would set admin=false and rotate the password.");
+    return "would-fix";
+  }
+
+  const newHash = bcrypt.hashSync(prehash(crypto.randomBytes(32).toString("hex")), 12);
+  await prisma.user.update({ where: { email }, data: { admin: false, passwordHash: newHash } });
+
+  const after = await prisma.user.findUnique({
+    where: { email },
+    select: { admin: true, passwordHash: true },
+  });
+  const stillWorks = authenticates(publicPw, after.passwordHash);
+  const ok = after.admin === false && after.passwordHash !== before.passwordHash && !stillWorks;
+  console.log(
+    `    -> AFTER admin=${after.admin} hash=${redactHash(after.passwordHash)} ` +
+      `"${publicPw}" authenticates=${stillWorks} ${ok ? "✅" : "❌"}`
+  );
+  return ok ? "fixed" : "failed";
+}
 
 (async () => {
-  if (!url) { console.error("ABORT: DATABASE_URL not set. Pass the PROD Neon url."); process.exit(2); }
+  if (!url) {
+    console.error("ABORT: DATABASE_URL not set. Pass the PROD Neon url.");
+    process.exit(2);
+  }
   if (url.startsWith("file:") && !process.argv.includes("--allow-dev")) {
-    console.error(`ABORT: DATABASE_URL is a local SQLite dev DB (${url}). This tool is for PROD only — point it at the Neon prod url (or pass --allow-dev to test locally).`);
+    console.error(
+      `ABORT: DATABASE_URL is a local SQLite dev DB (${url}). This tool is for PROD only — ` +
+        "point it at the Neon prod url (or pass --allow-dev to test locally)."
+    );
     process.exit(2);
   }
   const host = (url.match(/@([^/:?]+)/) || [])[1] || "unknown-host";
   console.log(`Target DB host: ${host}  (mode: ${DRY ? "DRY-RUN" : "LIVE WRITE"})`);
+  console.log(`Seeded accounts to check: ${SEEDED_ACCOUNTS.length}\n`);
 
   const prisma = new PrismaClient();
+  const results = [];
   try {
-    const before = await prisma.user.findUnique({
-      where: { email: EMAIL },
-      select: { id: true, email: true, role: true, admin: true, passwordHash: true },
-    });
-    if (!before) {
-      console.log(`No account with email ${EMAIL} found — nothing to neutralize (already deleted?). Exit 0.`);
-      process.exit(0);
+    for (const acct of SEEDED_ACCOUNTS) {
+      results.push([acct.email, await neutralize(prisma, acct)]);
     }
-    console.log("BEFORE:", { id: before.id, email: before.email, role: before.role,
-                             admin: before.admin, passwordHash: redactHash(before.passwordHash) });
-
-    if (before.admin === false) {
-      // Still rotate the password unless it's already been rotated — but we can't tell
-      // if it's still "demo1234" without the plaintext, so always rotate to be safe.
-      console.log("(admin already false — still rotating the password to be safe.)");
-    }
-
-    // rotate to an unguessable secret using the app's exact hashing scheme
-    const secret = crypto.randomBytes(32).toString("hex");
-    const newHash = bcrypt.hashSync(
-      crypto.createHash("sha256").update(secret, "utf8").digest("base64"), 12);
-
-    if (DRY) {
-      console.log("DRY-RUN: would set admin=false and rotate passwordHash to", redactHash(newHash));
-      process.exit(0);
-    }
-
-    await prisma.user.update({
-      where: { email: EMAIL },
-      data: { admin: false, passwordHash: newHash },
-    });
-
-    const after = await prisma.user.findUnique({
-      where: { email: EMAIL },
-      select: { id: true, email: true, role: true, admin: true, passwordHash: true },
-    });
-    console.log("AFTER: ", { id: after.id, email: after.email, role: after.role,
-                             admin: after.admin, passwordHash: redactHash(after.passwordHash) });
-
-    const ok = after.admin === false && after.passwordHash !== before.passwordHash;
-    // sanity: the old public password must no longer authenticate
-    const oldStillWorks = bcrypt.compareSync(
-      crypto.createHash("sha256").update("demo1234", "utf8").digest("base64"), after.passwordHash);
-    console.log(`VERIFY: admin==false: ${after.admin === false} | hash rotated: ${after.passwordHash !== before.passwordHash} | "demo1234" still authenticates: ${oldStillWorks}`);
-    if (ok && !oldStillWorks) { console.log("✅ NEUTRALIZED: demo account is non-admin and the public password no longer works."); process.exit(0); }
-    console.error("❌ VERIFY FAILED — inspect manually."); process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
-})().catch((e) => { console.error("ERROR:", e.message); process.exit(1); });
+
+  const tally = results.reduce((m, [, r]) => ((m[r] = (m[r] || 0) + 1), m), {});
+  console.log(
+    "\nSUMMARY:",
+    Object.entries(tally).map(([k, v]) => `${k}=${v}`).join(" ") || "(none)"
+  );
+
+  if (results.some(([, r]) => r === "failed")) {
+    console.error("❌ At least one account failed to neutralize — inspect manually.");
+    process.exit(1);
+  }
+  console.log(
+    DRY
+      ? "DRY-RUN complete — no changes written."
+      : "✅ All seeded demo accounts are non-admin and their public passwords no longer work."
+  );
+  process.exit(0);
+})().catch((e) => {
+  console.error("ERROR:", e.message);
+  process.exit(1);
+});
