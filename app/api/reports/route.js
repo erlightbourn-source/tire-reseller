@@ -11,7 +11,7 @@ export async function POST(req) {
   if (!user) return NextResponse.json({ error: "Log in to report." }, { status: 401 });
 
   // Rate-limit reporting so a few accounts can't spray takedowns.
-  const limited = await enforceRateLimit(req, `report:${user.id}`, { limit: 10, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "report", { key: user.id, limit: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const { listingId, reason } = await req.json();

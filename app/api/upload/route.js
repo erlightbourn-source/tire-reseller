@@ -49,7 +49,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `upload:${user.id}`, { limit: 40, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "upload", { key: user.id, limit: 40, windowMs: 60_000 });
   if (limited) return limited;
 
   // Reject an oversized multipart body BEFORE parsing it into memory (App Router
