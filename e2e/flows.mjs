@@ -132,6 +132,15 @@ test("cron endpoint fails closed without the secret", async () => {
   assert.equal(r.status, 401);
 });
 
+// /api/cron/alerts shares the same bearerMatches() fail-closed gate as
+// /api/cron/purge above, but only purge had a regression test locking the
+// behavior in — a change to lib/security.js could silently open the alerts
+// digest endpoint without either test noticing. Cover both call sites.
+test("cron alerts endpoint also fails closed without the secret", async () => {
+  const r = await req("/api/cron/alerts");
+  assert.equal(r.status, 401);
+});
+
 // Per-recipient email caps (3/hour, keyed on the normalized address) on the
 // reset/verification senders, so an IP-rotating attacker can't bomb one inbox.
 // Each test stays within its route's 5/min per-IP budget (exactly 5 requests).
