@@ -8,6 +8,10 @@ import Logo from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Browse by State — TireTrader",
+};
+
 export default async function StatesPage() {
   const [user, grouped, totalActive] = await Promise.all([
     getCurrentUser(),

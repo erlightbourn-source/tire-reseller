@@ -7,6 +7,10 @@ import PromoteButton from "@/components/PromoteButton";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Seller dashboard — TireTrader",
+};
+
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard");

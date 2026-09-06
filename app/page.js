@@ -16,6 +16,10 @@ import { brandSlug, SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 const TRUST = [
   { title: "Local tire inventory", body: "Browse new & used sets from resellers in your state.", icon: "pin" },
   { title: "Message sellers directly", body: "Ask questions and make offers without sharing your number.", icon: "chat" },
