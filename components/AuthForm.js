@@ -183,7 +183,7 @@ export default function AuthForm({ mode }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">City <span className="font-normal text-slate-400">(optional)</span></label>
-                  <input name="location" className="input" placeholder="Dallas" />
+                  <input name="location" className="input" placeholder="Fort Lauderdale" />
                 </div>
                 <div>
                   <label className="label">Your state</label>

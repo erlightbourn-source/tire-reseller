@@ -89,7 +89,7 @@ export default async function SubscribePage() {
 
           {expired ? (
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-slate-400">
-              {live ? "Secure checkout via Stripe (test mode)" : "⚙️ Dev mode: checkout is simulated until Stripe keys are added to .env"}
+              {live ? "Secure checkout via Stripe" : "⚙️ Dev mode: checkout is simulated until Stripe keys are added to .env"}
             </p>
           ) : (
             <p className="mt-3 text-center text-xs text-slate-400">
