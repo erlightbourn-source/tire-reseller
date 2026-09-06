@@ -4,6 +4,7 @@ import { CITIES, cityBySlug } from "@/lib/cities";
 import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 import EmailAlertForm from "@/components/EmailAlertForm";
+import { FOUNDING_SHORT } from "@/lib/pricing";
 
 // Fully static local landing pages — pre-rendered at build for every launch city.
 export function generateStaticParams() {
@@ -115,7 +116,7 @@ export default async function CityPage({ params }) {
           <p className="mt-2 text-sm text-slate-400">
             List free and get found by buyers searching your exact fitment — no per-listing fees, no
             cut of your sale. <Link href="/founding-seller" className="font-semibold text-brand-300 hover:text-brand-200">Founding Sellers</Link> get
-            a permanent badge and $10/mo locked for life.
+            a permanent badge and {FOUNDING_SHORT} locked for life.
           </p>
         </div>
       </section>

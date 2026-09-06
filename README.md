@@ -23,8 +23,10 @@
 </p>
 
 - **Buyers** browse & search listings and message sellers — **free**.
-- **Sellers** pay **$10/month** to list tires, with built-in messaging and an
-  activity dashboard.
+- **Sellers** list free during launch, then pay for ONE seller plan — the first
+  25 Founding Sellers lock **$10/month** for life, everyone after pays
+  **$25/month** (`lib/pricing.js` is the single source of truth). Built-in
+  messaging, an activity dashboard, and all perks are included.
 
 This is a runnable MVP foundation (web first; mobile app and production deploy
 come later).
@@ -109,7 +111,9 @@ To use **real Stripe (test mode)**, paste your own keys into **`.env`**
 ```env
 STRIPE_SECRET_KEY="sk_test_..."      # Stripe Dashboard ▸ Developers ▸ API keys
 STRIPE_PUBLISHABLE_KEY="pk_test_..." # Stripe Dashboard ▸ Developers ▸ API keys
-STRIPE_PRICE_ID="price_..."          # Create a $10/month recurring price, copy its ID
+STRIPE_PRICE_FOUNDING="price_..."    # $10/month recurring price (Founding Sellers)
+STRIPE_PRICE_STANDARD="price_..."    # $25/month recurring price (everyone else)
+STRIPE_PRICE_ID="price_..."          # legacy single price — fallback for either tier
 STRIPE_WEBHOOK_SECRET="whsec_..."    # From `stripe listen` (see below)
 ```
 
@@ -169,7 +173,7 @@ app/
   page.js                 Marketplace (search + filters)
   listings/[id]/          Listing detail (+ view tracking, message seller)
   sell/                   Create listing (subscription-gated) + /[id]/edit
-  subscribe/              $10/mo plan → Stripe Checkout (+ /success)
+  subscribe/              Seller plan → Stripe Checkout (+ /success)
   dashboard/              Seller activity tracker
   messages/               Inbox + /[threadId] chat (polling)
   login/  signup/         Auth pages

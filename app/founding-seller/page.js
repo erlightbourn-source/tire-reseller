@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { FoundingBadge } from "@/components/Badge";
+import { FOUNDING_SEATS, FOUNDING_LABEL, FOUNDING_SHORT, PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
+import { getFoundingClaimed } from "@/lib/founding";
+
+// Renders per request so the founding-seat counter is live (cached 60s in lib/founding.js).
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Founding Seller Program — TireTrader",
   description:
-    "Be one of the first 25 South Florida sellers on TireTrader. Permanent Founding Seller badge, free Pro perks, homepage spotlight, and $10/mo locked for life.",
+    `Be one of the first ${FOUNDING_SEATS} South Florida sellers on TireTrader. Permanent Founding Seller badge, every seller-plan perk included, homepage spotlight, and ${FOUNDING_SHORT} locked for life.`,
   alternates: { canonical: "/founding-seller" },
   openGraph: {
     title: "TireTrader Founding Seller Program — Be First, Stay Ahead",
     description:
-      "First 25 South Florida sellers: permanent badge, free Pro perks, price locked at $10/mo forever.",
+      `First ${FOUNDING_SEATS} South Florida sellers: permanent badge, every plan perk included, price locked at ${FOUNDING_SHORT} forever.`,
     type: "website",
     images: ["/opengraph-image"],
   },
@@ -17,13 +22,14 @@ export const metadata = {
 
 const PERKS = [
   ["Permanent Founding Seller badge", "On your profile, every listing, every card. It never goes away, even after the program closes."],
-  ["Free Pro-tier perks", "Priority search placement and a verified badge — normally a $25/mo upgrade, included at no charge for founders."],
-  ["Price locked at $10/mo — forever", "When standard pricing eventually changes, yours doesn't."],
+  ["Every seller-plan perk, included", "Priority search placement, the verified badge, and bulk listing — all part of the plan, at no extra cost for founders."],
+  [`Price locked at ${FOUNDING_LABEL} — forever`, "When standard pricing eventually changes, yours doesn't."],
   ["Homepage spotlight", "Featured placement while we build out inventory."],
   ["White-glove onboarding", "We'll personally help you shoot and upload your first batch of listings in Broward. Zero extra work on your end."],
 ];
 
-export default function FoundingSellerPage() {
+export default async function FoundingSellerPage() {
+  const spots = foundingSpotsLine(await getFoundingClaimed());
   return (
     <div className="space-y-8">
       <header>
@@ -35,14 +41,19 @@ export default function FoundingSellerPage() {
           Be First, Stay Ahead
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
-          We&apos;re launching TireTrader with 25 South Florida sellers, not 2,500. Get in as a
+          We&apos;re launching TireTrader with {FOUNDING_SEATS} South Florida sellers, not 2,500. Get in as a
           founder and the perks don&apos;t expire when we grow.
         </p>
         <p className="mt-4 max-w-2xl bg-brand-500/5 px-4 py-3 text-sm text-slate-300 ring-1 ring-inset ring-brand-400/20">
-          <span className="font-semibold text-white">Free to list during launch — no card required.</span>{" "}
-          The first 25 Founding Sellers lock in $10/mo for life after that; every seller after pays
-          $25/mo.
+          <span className="font-semibold text-white">{PLAN_COPY.launchFree}</span>{" "}
+          {PLAN_COPY.foundingStory}
         </p>
+        {spots && (
+          <p className="mt-3 inline-flex items-center gap-2 bg-white/5 px-3 py-1.5 text-xs font-semibold text-brand-200 ring-1 ring-inset ring-white/10">
+            <span className="h-1.5 w-1.5 bg-accent-400" />
+            {spots}
+          </p>
+        )}
         <div className="mt-5">
           <Link href="/sell-tires" className="btn-primary">Claim your Founding Seller spot</Link>
         </div>
@@ -85,7 +96,7 @@ export default function FoundingSellerPage() {
         <h2 className="font-display text-xl font-extrabold text-white">Ready to be a founder?</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">
           List free today and we&apos;ll help you get your first tires up. Founding spots are limited
-          to the first 25 South Florida sellers.
+          to the first {FOUNDING_SEATS} South Florida sellers.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link href="/sell-tires" className="btn-primary">Claim your spot</Link>

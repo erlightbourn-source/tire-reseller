@@ -15,7 +15,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
   if (!canSell(user)) return NextResponse.json({ error: "Become a seller first." }, { status: 402 });
-  if (!user.pro) return NextResponse.json({ error: "Bulk add is a Pro feature.", code: "pro_required" }, { status: 402 });
+  if (!isProSeller(user)) return NextResponse.json({ error: "Bulk add is included in the seller plan — subscribe to unlock it.", code: "pro_required" }, { status: 402 });
 
   const limited = await enforceRateLimit(req, `bulk:${user.id}`, { limit: 10, windowMs: 60_000 });
   if (limited) return limited;

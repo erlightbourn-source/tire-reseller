@@ -70,7 +70,7 @@ export async function POST(req) {
       location: location || null,
       state: isStateAbbr(state) ? state.toUpperCase() : null,
       role: isSeller ? "seller" : "buyer",
-      // Sellers get their first year free — no charge until this date.
+      // Sellers list free during launch — no charge until this date (lib/pricing.js).
       sellerFreeUntil: isSeller ? freeYearFromNow() : null,
       emailVerified: false,
       verifyTokenHash,

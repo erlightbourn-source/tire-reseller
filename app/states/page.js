@@ -48,7 +48,7 @@ export default async function StatesPage() {
               {user && selected ? (
                 <>Pick a state to browse. Your home state, <span className="font-semibold text-white">{stateName(selected)}</span>, is marked — choosing a new one updates your profile.</>
               ) : (
-                <>Pick your state to see new &amp; used tires for sale locally. Browsing is always free — sellers list for $10/month (first year on us).</>
+                <>Pick your state to see new &amp; used tires for sale locally. Browsing is always free — and sellers list free during launch, no card required.</>
               )}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">

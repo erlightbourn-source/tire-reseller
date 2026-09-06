@@ -14,14 +14,17 @@ async function activateForCustomer(customerId, { status, priceId, currentPeriodE
       subscriptionStatus: status,
       subscriptionPriceId: priceId ?? user.subscriptionPriceId,
       subscriptionCurrentEnd: currentPeriodEnd ? new Date(currentPeriodEnd * 1000) : user.subscriptionCurrentEnd,
-      // Pro can't outlive the subscription: clear it whenever billing lapses.
-      ...(status === "active" ? {} : { pro: false }),
+      // ONE plan: an active subscription includes the perks, and they can't
+      // outlive it — grant on activation, clear whenever billing lapses.
+      pro: status === "active",
     },
   });
-  if (status !== "active") {
-    // A founding seller keeps ranked placement even when billing lapses.
-    await prisma.listing.updateMany({ where: { sellerId: user.id }, data: { sellerPro: !!user.foundingSeller } });
-  }
+  // Mirror onto listings for DB-side ranked placement. A founding seller keeps
+  // placement even when billing lapses.
+  await prisma.listing.updateMany({
+    where: { sellerId: user.id },
+    data: { sellerPro: status === "active" || !!user.foundingSeller },
+  });
 }
 
 export async function POST(req) {

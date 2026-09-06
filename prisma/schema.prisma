@@ -21,8 +21,8 @@ model User {
 
   // Account type. Buyers browse free; sellers can list tires.
   role           String  @default("buyer") // buyer | seller
-  pro            Boolean @default(false) // Pro seller upgrade
-  // Founding-seller promo (launch): grants Pro-tier perks + ranked placement
+  pro            Boolean @default(false) // seller-plan perks active (set on subscription activation)
+  // Founding-seller promo (launch): grants the plan perks + ranked placement
   // for free (no Stripe). Mirrored onto Listing.sellerPro on write so it reuses
   // the existing [status, featured, sellerPro, createdAt] index — no index change.
   foundingSeller Boolean @default(false)
@@ -45,8 +45,9 @@ model User {
   verifyTokenExpiry DateTime?
   deletedAt         DateTime? // soft-delete: account scheduled for removal (7-day grace)
 
-  // Seller billing. The first year of selling is free for every seller;
-  // sellerFreeUntil is when that free promo ends (after which $10/mo applies).
+  // Seller billing. Listing is free during launch (no card); sellerFreeUntil is
+  // when that window ends, after which the ONE seller plan applies at the
+  // founding or standard price (lib/pricing.js; founders = foundingSeller).
   sellerFreeUntil        DateTime?
   stripeCustomerId       String?
   subscriptionStatus     String    @default("inactive") // inactive | active | canceled | past_due
