@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, sellerStatus } from "@/lib/auth";
 import { formatPrice, timeAgo } from "@/lib/format";
+import { priceFor, PLAN_COPY } from "@/lib/pricing";
+import { isProSeller } from "@/lib/seller";
 import PromoteButton from "@/components/PromoteButton";
 
 export const dynamic = "force-dynamic";
@@ -62,26 +64,30 @@ export default async function DashboardPage() {
   const status = sellerStatus(user); // none | free | paid | expired
   const isSeller = status === "free" || status === "paid";
   const freeEndsStr = user.sellerFreeUntil ? new Date(user.sellerFreeUntil).toLocaleDateString() : null;
+  // ONE plan, tier-aware price (lib/pricing.js): founders see their locked rate.
+  const plan = priceFor(user);
+  const perks = isProSeller(user); // paid plan OR founding seller
+  const rate = `${plan.label}${plan.locked ? " (locked for life)" : ""}`;
 
   const banner = {
     free: {
-      title: "Free seller year active 🎉",
-      sub: freeEndsStr ? `$0 until ${freeEndsStr} — then $10/month. No card on file.` : "Your first year of selling is free.",
+      title: "Free to list during launch 🎉",
+      sub: freeEndsStr ? `$0 until ${freeEndsStr} — no card on file. After that: ${rate}.` : `${PLAN_COPY.launchFree} After that: ${rate}.`,
       good: true,
     },
     paid: {
-      title: "Seller subscription active",
-      sub: user.subscriptionCurrentEnd ? `$10/month · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}` : "$10/month seller plan",
+      title: "Seller plan active",
+      sub: user.subscriptionCurrentEnd ? `${rate} · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}` : `${rate} seller plan`,
       good: true,
     },
     expired: {
-      title: "Free year ended",
-      sub: "Subscribe for $10/month to keep your listings live.",
+      title: "Launch listing period ended",
+      sub: `Subscribe for ${rate} to keep your listings live.`,
       good: false,
     },
     none: {
       title: "You're browsing as a buyer",
-      sub: "Become a seller to list tires — your first year is free.",
+      sub: `Become a seller to list tires. ${PLAN_COPY.launchFree}`,
       good: false,
     },
   }[status];
@@ -97,8 +103,8 @@ export default async function DashboardPage() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isSeller && user.pro && <Link href="/sell/bulk" className="btn-secondary">📥 Bulk add</Link>}
-          {isSeller && !user.pro && <Link href="/pro" className="btn-secondary">✨ Go Pro</Link>}
+          {isSeller && perks && <Link href="/sell/bulk" className="btn-secondary">📥 Bulk add</Link>}
+          {isSeller && !perks && <Link href="/pro" className="btn-secondary">✨ Plan perks</Link>}
           {isSeller ? (
             <Link href="/sell" className="btn-primary">+ New listing</Link>
           ) : (
@@ -124,7 +130,7 @@ export default async function DashboardPage() {
           </div>
           {!isSeller && (
             <Link href="/subscribe" className="btn bg-white text-slate-900 hover:bg-slate-100">
-              {status === "expired" ? "Subscribe — $10/mo" : "Start free year"}
+              {status === "expired" ? `Subscribe — ${plan.short}` : "Start selling free"}
             </Link>
           )}
         </div>

@@ -107,7 +107,7 @@ async function main() {
   // Must match lib/auth.js: SHA-256 pre-hash → bcrypt cost 12.
   const crypto = require("crypto");
   const pw = (p) => bcrypt.hashSync(crypto.createHash("sha256").update(String(p), "utf8").digest("base64"), 12);
-  // Every seller is in their free first year (no charge until this date).
+  // Every seeded seller is inside the launch listing window (no charge until this date).
   const freeUntil = new Date(Date.now() + 365 * 864e5);
 
   console.log("Creating users…");
@@ -323,7 +323,7 @@ async function main() {
 
   console.log("\n✅ Seed complete.");
   console.log(`   Users: ${sellers.length + 1}  Listings: ${listings.length}`);
-  console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (seller · free first year)");
+  console.log("\n   Demo seller:  demo@tiretrader.test  / demo1234   (seller · free launch window)");
   console.log("   Demo buyer:   buyer@tiretrader.test / buyer1234   (buyer)\n");
 }
 

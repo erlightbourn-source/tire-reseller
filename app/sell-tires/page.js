@@ -2,16 +2,17 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell } from "@/lib/auth";
 import { SELLER_BENEFITS } from "@/lib/content";
+import { PLAN_NAME, PLAN_COPY } from "@/lib/pricing";
 import Logo from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sell tires online for $10/month — TireTrader for resellers",
+  title: "Sell tires online — TireTrader for resellers",
   description:
-    "Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. First year free, then $10/month — cancel anytime.",
+    `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
   alternates: { canonical: "/sell-tires" },
-  openGraph: { title: "Sell tires on TireTrader — $10/month", type: "website" },
+  openGraph: { title: "Sell tires on TireTrader — free to list during launch", type: "website" },
 };
 
 const ICONS = {
@@ -50,11 +51,11 @@ export default async function SellTiresPage() {
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">
               List unlimited sets with real tire specs, reach buyers searching by size and vehicle, and
-              close deals in built-in messaging. Your first year is free.
+              close deals in built-in messaging. {PLAN_COPY.launchFree}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link href={ctaHref} className="btn-accent text-base">{ctaLabel}</Link>
-              <span className="text-sm text-slate-300"><strong className="text-white">$10/month</strong> after year one · cancel anytime</span>
+              <span className="text-sm text-slate-300">{PLAN_COPY.foundingStory}</span>
             </div>
           </div>
           <div className="hidden justify-center lg:flex">
@@ -90,8 +91,8 @@ export default async function SellTiresPage() {
         </div>
         <ol className="grid gap-5 sm:grid-cols-3">
           {[
-            ["Create your seller account", "Sign up as a seller. Your first year of listing is completely free."],
-            ["Post your tire sets", "Add size, tread, DOT year, condition, and photos. Bulk-add if you're a Pro."],
+            ["Create your seller account", `Sign up as a seller. ${PLAN_COPY.launchFree}`],
+            ["Post your tire sets", "Add size, tread, DOT year, condition, and photos. Bulk-add is included in the seller plan."],
             ["Message buyers & sell", "Field questions and offers in-app, then arrange local pickup."],
           ].map(([t, d], i) => (
             <li key={t} className="relative bg-white/[0.03] p-5 ring-1 ring-inset ring-white/10">
@@ -109,14 +110,14 @@ export default async function SellTiresPage() {
           <div className="relative overflow-hidden bg-ink-900 px-6 py-8 text-white">
             <div className="mesh absolute inset-0" />
             <div className="relative">
-              <p className="text-sm font-medium text-brand-200">TireTrader Seller</p>
-              <p className="mt-1 font-display text-5xl font-extrabold">$0<span className="text-lg font-medium text-slate-400"> for year one</span></p>
-              <p className="mt-1 text-sm text-slate-400">then $10/month · cancel anytime</p>
+              <p className="text-sm font-medium text-brand-200">{PLAN_NAME}</p>
+              <p className="mt-1 font-display text-5xl font-extrabold">$0<span className="text-lg font-medium text-slate-400"> today</span></p>
+              <p className="mt-1 text-sm text-slate-400">{PLAN_COPY.foundingStory} Cancel anytime.</p>
             </div>
           </div>
           <div className="p-6">
             <ul className="space-y-2 text-left text-sm text-slate-300">
-              {["Unlimited listings, no per-listing fees", "Built-in buyer messaging & offers", "Seller dashboard with views & analytics", "Verified Pro badge available"].map((t) => (
+              {["Unlimited listings, no per-listing fees", "Built-in buyer messaging & offers", "Seller dashboard with views & analytics", "Verified badge, priority placement & bulk add included"].map((t) => (
                 <li key={t} className="flex gap-2">
                   <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-emerald-400" aria-hidden="true"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>
                   {t}
@@ -133,8 +134,8 @@ export default async function SellTiresPage() {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-950/90 p-3 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="text-sm">
-            <p className="font-bold text-white">Sell tires — first year free</p>
-            <p className="text-xs text-slate-400">then $10/mo, cancel anytime</p>
+            <p className="font-bold text-white">Sell tires — free during launch</p>
+            <p className="text-xs text-slate-400">then {PLAN_COPY.tiersShort}</p>
           </div>
           <Link href={ctaHref} className="btn-accent shrink-0">{ctaLabel}</Link>
         </div>

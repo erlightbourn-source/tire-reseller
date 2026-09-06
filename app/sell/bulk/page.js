@@ -17,11 +17,11 @@ export default async function BulkPage() {
         <div className="card overflow-hidden text-center">
           <div className="relative overflow-hidden bg-brand-500/15 px-6 py-8 text-white">
             <span className="badge bg-brand-500 text-ink-950">PRO</span>
-            <h1 className="mt-3 font-display text-xl font-bold">Bulk add is a Pro feature</h1>
+            <h1 className="mt-3 font-display text-xl font-bold">Bulk add is part of the seller plan</h1>
           </div>
           <div className="p-6">
-            <p className="text-slate-400">List a whole batch of tires in one paste. Upgrade to Pro to unlock it.</p>
-            <Link href="/pro" className="btn-accent mt-4">See TireTrader Pro</Link>
+            <p className="text-slate-400">List a whole batch of tires in one paste. It unlocks as soon as your seller plan is active.</p>
+            <Link href="/pro" className="btn-accent mt-4">See the seller plan</Link>
           </div>
         </div>
       </div>

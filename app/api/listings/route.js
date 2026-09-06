@@ -6,6 +6,7 @@ import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
+import { priceFor, PLAN_COPY } from "@/lib/pricing";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 function tireAttrs(b) {
@@ -33,8 +34,8 @@ export async function POST(req) {
     return NextResponse.json(
       {
         error: expired
-          ? "Your free selling year has ended. Subscribe for $10/month to keep listing."
-          : "Create a seller account to list tires — your first year is free.",
+          ? `Your launch listing period has ended. Subscribe for ${priceFor(user).label} to keep listing.`
+          : `Create a seller account to list tires. ${PLAN_COPY.launchFree}`,
         code: expired ? "subscription_required" : "become_seller",
       },
       { status: 402 }

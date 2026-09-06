@@ -42,8 +42,9 @@ marketplace is not a same-day Cloudflare deploy.
    Postgres (Neon) reached via Hyperdrive. Then `prisma migrate deploy`.
 3. **Resend** — transactional email: API key + verified `EMAIL_FROM`
    (signup verification, offers, messaging all depend on it).
-4. **Stripe** — seller subscriptions: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`,
-   `STRIPE_WEBHOOK_SECRET`.
+4. **Stripe** — seller subscriptions: `STRIPE_SECRET_KEY`,
+   `STRIPE_PRICE_FOUNDING`, `STRIPE_PRICE_STANDARD`, `STRIPE_WEBHOOK_SECRET`
+   (see "Stripe prices" below).
 5. **App port** — the adapter + provider swaps in the table above.
 
 2–4 were required under Vercel too; the platform change doesn't remove them, it
@@ -57,9 +58,29 @@ moves where they're configured. #1 and #5 are the new Cloudflare-specific work.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - rate-limit binding (KV/DO) replacing `UPSTASH_REDIS_REST_URL/TOKEN`
 - `CRON_SECRET` (gates the cron endpoints)
-- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_FOUNDING`, `STRIPE_PRICE_STANDARD`,
+  `STRIPE_WEBHOOK_SECRET` (`STRIPE_PRICE_ID` = legacy fallback, see below)
 - R2 binding replacing `BLOB_READ_WRITE_TOKEN` (persistent uploads)
 - `ERROR_WEBHOOK_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (optional)
+
+## Stripe prices — ONE seller plan, two prices (decided 2026-09-06)
+TireTrader has a single seller plan; the price depends only on
+`User.foundingSeller` (`lib/pricing.js`): the first 25 Founding Sellers pay
+**$10/month for life**, everyone after pays **$25/month**. Perks (priority
+placement, verified badge, bulk add) are included — there is no separate "Pro"
+upgrade and no "first year free" tier.
+
+**Owner to-do (Stripe dashboard → Product catalog):** create two recurring
+prices on the seller product — **$10.00/month** and **$25.00/month** — then
+paste their `price_...` ids into Vercel → Settings → Environment Variables:
+- `STRIPE_PRICE_FOUNDING` = the $10/month price id
+- `STRIPE_PRICE_STANDARD` = the $25/month price id
+
+Backward-compatible: until both are set, checkout falls back to the existing
+`STRIPE_PRICE_ID` for either tier (and logs a non-fatal warning that both
+tiers are billing at one price). Founding status is admin-granted
+(`/api/admin`), so the counter on `/` and `/founding-seller` reflects the
+flag, not signups.
 
 ## Database
 - `npm run db:migrate:deploy` against the chosen store (applies `prisma/migrations`).

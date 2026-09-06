@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
 import { STATES } from "@/lib/states";
 import { track } from "@/lib/track";
+import { PLAN_COPY } from "@/lib/pricing";
 
 export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
@@ -83,11 +84,11 @@ export default function AuthForm({ mode }) {
               {isSignup ? "Turn your tire stash into a business." : "Welcome back to the lot."}
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Unlimited listings, built-in buyer messaging, and a real seller dashboard — for $10/month.
+              Unlimited listings, built-in buyer messaging, and a real seller dashboard — free to list during launch.
             </p>
           </div>
           <div className="relative flex gap-6 text-sm">
-            <div><p className="font-display text-2xl font-extrabold">$10</p><p className="text-slate-400">per month</p></div>
+            <div><p className="font-display text-2xl font-extrabold">$0</p><p className="text-slate-400">to list at launch</p></div>
             <div><p className="font-display text-2xl font-extrabold">∞</p><p className="text-slate-400">listings</p></div>
             <div><p className="font-display text-2xl font-extrabold">Free</p><p className="text-slate-400">to browse</p></div>
           </div>
@@ -150,14 +151,14 @@ export default function AuthForm({ mode }) {
                     active={role === "seller"}
                     onClick={() => setRole("seller")}
                     title="Sell tires"
-                    sub="1st year free, then $10/mo"
+                    sub="Free during launch"
                     icon="🏷️"
                   />
                 </div>
                 {role === "seller" && (
                   <p className="mt-2 flex items-center gap-1.5 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 ring-1 ring-inset ring-emerald-400/20">
                     <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 shrink-0 fill-current"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>
-                    Your first year of selling is on us — $0 today, no card required.
+                    {PLAN_COPY.launchFree} $0 today.
                   </p>
                 )}
               </div>

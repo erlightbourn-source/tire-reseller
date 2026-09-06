@@ -6,6 +6,7 @@ import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
 import Analytics from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
+import { PLAN_COPY } from "@/lib/pricing";
 
 // Brutalist headers/monospace; body uses Georgia (system serif) via globals.
 const courier = Courier_Prime({
@@ -20,8 +21,7 @@ export const metadata = {
   // instead of localhost (set NEXT_PUBLIC_SITE_URL in production).
   metadataBase: new URL(SITE_URL),
   title: "TireTrader — Buy & Sell Tires",
-  description:
-    "The marketplace built for tire resellers. Browse deals for free; sell for $10/month.",
+  description: PLAN_COPY.siteTagline,
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "TireTrader", statusBarStyle: "black-translucent" },
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
@@ -83,7 +83,7 @@ export default async function RootLayout({ children }) {
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Sell</span>
                 <Link href="/sell-tires" className="text-slate-300 hover:text-white">Sell tires</Link>
                 <Link href="/founding-seller" className="text-slate-300 hover:text-white">Founding Seller</Link>
-                <Link href="/pro" className="text-slate-300 hover:text-white">Go Pro</Link>
+                <Link href="/pro" className="text-slate-300 hover:text-white">Seller plan</Link>
                 <Link href="/dashboard" className="text-slate-300 hover:text-white">Seller dashboard</Link>
               </div>
               <div className="flex flex-col gap-2">
