@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { SITE_URL } from "@/lib/site";
 
-const APP_URL = process.env.APP_URL || "http://localhost:3000";
+// Stripe needs absolute success/cancel URLs. Prefer APP_URL, then the public
+// site URL — never a localhost default in production.
+const APP_URL = (process.env.APP_URL || SITE_URL).replace(/\/$/, "");
 
 export async function POST() {
   const user = await getCurrentUser();

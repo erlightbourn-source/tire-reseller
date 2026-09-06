@@ -53,6 +53,7 @@ moves where they're configured. #1 and #5 are the new Cloudflare-specific work.
 - `DATABASE_URL` (D1 binding or Hyperdrive/Neon Postgres URL)
 - `APP_SECRET` = `openssl rand -base64 32` (≥32 chars — required)
 - `NEXT_PUBLIC_SITE_URL` = `https://shoptiretrader.com`
+- `APP_URL` = `https://shoptiretrader.com` (absolute base for Stripe success/cancel redirects; falls back to `NEXT_PUBLIC_SITE_URL` if unset)
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - rate-limit binding (KV/DO) replacing `UPSTASH_REDIS_REST_URL/TOKEN`
 - `CRON_SECRET` (gates the cron endpoints)
