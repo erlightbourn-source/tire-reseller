@@ -17,7 +17,7 @@ export async function POST(req) {
   if (!canSell(user)) return NextResponse.json({ error: "Become a seller first." }, { status: 402 });
   if (!isProSeller(user)) return NextResponse.json({ error: "Bulk add is included in the seller plan — subscribe to unlock it.", code: "pro_required" }, { status: 402 });
 
-  const limited = await enforceRateLimit(req, `bulk:${user.id}`, { limit: 10, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "bulk", { key: user.id, limit: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const raw = await req.json();
