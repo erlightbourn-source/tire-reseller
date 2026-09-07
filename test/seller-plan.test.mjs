@@ -47,6 +47,20 @@ test("resolvePriceId: falls back to STRIPE_PRICE_ID when a tier id is unset or a
   assert.equal(priceConfigState({}), "none");
 });
 
+test("resolvePriceId/priceConfigState: 'mixed' config — one tier id set alongside the legacy id — silently bills the other tier at the legacy price (locks in the documented risk, doesn't fix it)", () => {
+  const foundingOnlyPlusLegacy = { STRIPE_PRICE_FOUNDING: "price_f", STRIPE_PRICE_ID: "price_legacy" };
+  assert.equal(priceConfigState(foundingOnlyPlusLegacy), "mixed");
+  assert.equal(resolvePriceId("founding", foundingOnlyPlusLegacy), "price_f");
+  // Standard has no id of its own, so it falls through to the legacy price —
+  // exactly the silent-mismatch scenario priceConfigState's "mixed" branch warns about.
+  assert.equal(resolvePriceId("standard", foundingOnlyPlusLegacy), "price_legacy");
+
+  const standardOnlyPlusLegacy = { STRIPE_PRICE_STANDARD: "price_s", STRIPE_PRICE_ID: "price_legacy" };
+  assert.equal(priceConfigState(standardOnlyPlusLegacy), "mixed");
+  assert.equal(resolvePriceId("standard", standardOnlyPlusLegacy), "price_s");
+  assert.equal(resolvePriceId("founding", standardOnlyPlusLegacy), "price_legacy");
+});
+
 test("foundingSpotsLine: renders the counter, caps at the seat count, null when unknown", () => {
   assert.equal(foundingSpotsLine(7), `7 of ${FOUNDING_SEATS} founding spots claimed`);
   assert.equal(foundingSpotsLine(0), `0 of ${FOUNDING_SEATS} founding spots claimed`);
