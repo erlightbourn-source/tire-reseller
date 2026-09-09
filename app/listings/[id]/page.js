@@ -314,6 +314,7 @@ export default async function ListingDetail({ params }) {
                 <div className="mt-1 h-2 overflow-hidden bg-white/10">
                   <div className={`h-full ${lifePct >= 60 ? "bg-emerald-500" : lifePct >= 30 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${Math.max(4, lifePct)}%` }} />
                 </div>
+                <p className="mt-1 text-[11px] text-slate-500">Based on the seller&apos;s stated tread — not measured or verified by TireTrader.</p>
               </div>
             )}
           </div>
@@ -332,6 +333,10 @@ export default async function ListingDetail({ params }) {
             <p className="mt-3 text-xs text-slate-400">
               Meet in a public place, inspect in daylight, and only pay once you&apos;re satisfied.{" "}
               <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">Full checklist</Link>
+            </p>
+            <p className="mt-2 border-t border-white/10 pt-2 text-xs leading-relaxed text-slate-300">
+              <span className="font-bold uppercase tracking-wide text-slate-200">Sold as-is by the seller.</span> TireTrader isn&apos;t a party to the sale and provides no guarantee — you buy at your own risk.{" "}
+              <Link href="/terms" className="font-semibold text-brand-300 hover:text-brand-200">Terms</Link>
             </p>
           </div>
 
