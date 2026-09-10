@@ -92,6 +92,23 @@ test("health endpoint reports DB up", async () => {
   assert.equal((await r.json()).ok, true);
 });
 
+// app/sellers/[id]/page.js used `include` (whole-row fetch) instead of `select`
+// on an anonymously-viewable page — passwordHash/resetTokenHash/email/
+// stripeCustomerId were fetched server-side but never actually rendered (RSC
+// only serializes fields the JSX reads), so this was latent, not a live leak;
+// confirmed this test passes on the pre-fix `include` code too. The `select`
+// fix is defense-in-depth: those columns are no longer fetched AT ALL, so a
+// future JSX change can no longer accidentally render one. This test doesn't
+// prove today's behavior changed — it guards against that future refactor.
+test("seller profile page never leaks passwordHash into the rendered page", async () => {
+  const seller = await db.user.findFirst({ where: { role: "seller" }, select: { id: true, passwordHash: true } });
+  assert.ok(seller, "at least one seeded seller exists");
+  const r = await req(`/sellers/${seller.id}`);
+  assert.equal(r.status, 200);
+  const html = await r.text();
+  assert.ok(!html.includes(seller.passwordHash), "passwordHash string is absent from the response body");
+});
+
 test("browse renders listings", async () => {
   const r = await req("/browse");
   assert.equal(r.status, 200);
