@@ -19,7 +19,8 @@ module.exports = {
       // Two-color brutalist palette: near-black + electric cobalt blue.
       // Accent kept in the same luminance band as the prior acid-yellow so
       // dark-text-on-accent fills and accent-text-on-black both stay legible
-      // (500 = 6.06:1 vs black, 4.1:1 vs white) — a pure #0047FF cobalt is too
+      // (500 = 6.06:1 on ink-950/#000 body, 5.53:1 on ink-900 cards, 3.47:1 on
+      // white — large/UI only, but the app has no white text surface) — a pure #0047FF cobalt is too
       // dark for the black-text-on-accent pattern used across the app.
       colors: {
         ink: {
