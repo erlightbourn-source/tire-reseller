@@ -14,10 +14,10 @@ export default function AuthForm({ mode }) {
   const [role, setRole] = useState(params.get("role") === "seller" ? "seller" : "buyer");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);          // signup → affirmative Terms acceptance (clickwrap)
   const [pending, setPending] = useState(false);       // signup → "check your email"
   const [unverified, setUnverified] = useState("");    // login of an unverified account → offer resend
   const [resent, setResent] = useState(false);
-  const [agreed, setAgreed] = useState(false);        // signup → Terms consent gate
 
   async function resend() {
     if (!unverified) return;
@@ -202,26 +202,27 @@ export default function AuthForm({ mode }) {
               </div>
             )}
             {isSignup && (
-              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-400">
-                <input
-                  type="checkbox"
-                  name="agreedToTerms"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  required
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
-                />
-                <span>
-                  I agree to TireTrader&apos;s{" "}
-                  <Link href="/terms" target="_blank" className="font-semibold text-brand-300 hover:underline">Terms of Service</Link>{" "}
-                  and{" "}
-                  <Link href="/privacy" target="_blank" className="font-semibold text-brand-300 hover:underline">Privacy Policy</Link>. I understand TireTrader is a marketplace, not a party to any transaction, and that I buy and sell at my own risk.
+              <label className="flex items-start gap-2 text-sm leading-relaxed text-slate-300">
+                <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500" />
+                <span>I agree to the{" "}
+                  <Link href="/terms" className="font-semibold text-brand-300 underline">Terms</Link>{" "}
+                  — which include an <span className="font-semibold text-white">as-is / no-warranty</span> disclaimer and a{" "}
+                  <span className="font-semibold text-white">binding arbitration &amp; class-action waiver</span> — and the{" "}
+                  <Link href="/privacy" className="font-semibold text-brand-300 underline">Privacy Policy</Link>.
                 </span>
               </label>
             )}
             <button disabled={loading || (isSignup && !agreed)} className="btn-primary w-full">
               {loading ? "Please wait…" : isSignup ? "Create account" : "Log in"}
             </button>
+            {!isSignup && (
+              <p className="text-center text-sm leading-relaxed text-slate-300">
+                By logging in, you agree to our{" "}
+                <Link href="/terms" className="font-semibold text-brand-300 underline">Terms</Link>{" "}
+                (including a binding arbitration &amp; class-action waiver) and{" "}
+                <Link href="/privacy" className="font-semibold text-brand-300 underline">Privacy Policy</Link>.
+              </p>
+            )}
           </form>
 
           {!isSignup && process.env.NODE_ENV !== "production" && (

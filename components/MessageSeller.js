@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
 import { SAFETY_WARNING, detectOffPlatform } from "@/lib/safety";
@@ -8,6 +9,7 @@ export default function MessageSeller({ listingId, loggedIn }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("Hi! Is this set still available?");
+  const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -58,8 +60,13 @@ export default function MessageSeller({ listingId, loggedIn }) {
         {offPlatform.flagged && <span className="font-semibold">⚠ Keep this deal on TireTrader. </span>}
         {SAFETY_WARNING}
       </div>
+      <label className="flex items-start gap-2 text-xs text-slate-300">
+        <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500" />
+        <span>I understand these tires are sold <span className="font-semibold text-slate-200">as-is by the seller</span> and I&apos;m buying at my own risk.{" "}
+          <Link href="/terms" className="font-semibold text-brand-300 hover:text-brand-200">Terms</Link></span>
+      </label>
       <div className="flex gap-2">
-        <button onClick={send} disabled={busy} className="btn-primary flex-1">
+        <button onClick={send} disabled={busy || !ack} className="btn-primary flex-1">
           {busy ? "Sending…" : "Send message"}
         </button>
         <button onClick={() => setOpen(false)} className="btn-secondary">Cancel</button>
