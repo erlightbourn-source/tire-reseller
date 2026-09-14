@@ -26,6 +26,17 @@ test("stateFromLocation resolves mid-string state (Google-Places / zip formats)"
   assert.equal(stateFromLocation("Florida"), "FL");
 });
 
+test("stateFromLocation prefers the real trailing state over a city 'La ...' token", () => {
+  // Regression: a forward token scan matched "LA" inside "La Mesa" before the
+  // real trailing "CA". Exact whole-segment match must win first.
+  assert.equal(stateFromLocation("La Mesa, CA"), "CA");
+  assert.equal(stateFromLocation("La Crosse, WI"), "WI");
+  assert.equal(stateFromLocation("La Grange, IL"), "IL");
+  assert.equal(stateFromLocation("La Jolla, CA"), "CA");
+  // ZIP-guarded pass still resolves a city-token'd state when ZIP-followed.
+  assert.equal(stateFromLocation("La Jolla, CA 92037, United States"), "CA");
+});
+
 test("userStateOf prefers saved state then falls back to location", () => {
   assert.equal(userStateOf({ state: "tx" }), "TX");
   assert.equal(userStateOf({ location: "Miami, FL" }), "FL");
