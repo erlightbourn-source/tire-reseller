@@ -31,8 +31,12 @@ export async function POST(req) {
   const cleanQuery = new URLSearchParams(params).toString();
   const label = describeSearch(params, stateName);
 
+  // Neutral response on an existing (email, query) pair — matching the
+  // enumeration-safe symmetry already used by forgot/resend-verify (BACKLOG
+  // #1): an anonymous caller must not learn whether an email is already
+  // registered for a given search from the response shape.
   const existing = await prisma.emailAlert.findUnique({ where: { email_query: { email: addr, query: cleanQuery } } }).catch(() => null);
-  if (existing) return NextResponse.json({ ok: true, duplicate: true });
+  if (existing) return NextResponse.json({ ok: true });
 
   // Double opt-in: store UNCONFIRMED and send a confirmation request. The cron
   // only mails confirmed alerts, so we never send digests to an address that

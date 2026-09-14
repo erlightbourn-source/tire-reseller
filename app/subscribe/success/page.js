@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { priceFor, resolvePriceId } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -30,12 +31,15 @@ export default async function SuccessPage({ searchParams }) {
           data: {
             subscriptionStatus: "active",
             stripeCustomerId: session.customer || user.stripeCustomerId,
-            subscriptionPriceId: sub?.items?.data?.[0]?.price?.id || process.env.STRIPE_PRICE_ID,
+            subscriptionPriceId: sub?.items?.data?.[0]?.price?.id || resolvePriceId(priceFor(user).tier),
             subscriptionCurrentEnd: sub?.current_period_end
               ? new Date(sub.current_period_end * 1000)
               : null,
+            // ONE plan: paying includes the perks (mirrors the webhook).
+            pro: true,
           },
         });
+        await prisma.listing.updateMany({ where: { sellerId: user.id }, data: { sellerPro: true } });
       }
     } catch {
       // fall through — webhook will reconcile

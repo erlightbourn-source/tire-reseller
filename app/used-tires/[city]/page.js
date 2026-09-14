@@ -4,6 +4,7 @@ import { CITIES, cityBySlug } from "@/lib/cities";
 import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 import EmailAlertForm from "@/components/EmailAlertForm";
+import { FOUNDING_SHORT } from "@/lib/pricing";
 
 // Fully static local landing pages — pre-rendered at build for every launch city.
 export function generateStaticParams() {
@@ -86,8 +87,9 @@ export default async function CityPage({ params }) {
           markup, no lowball DMs about a couch you&apos;re not selling.
         </p>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">{c.note}</p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={browseHref} className="btn-primary">Browse {c.name} tires</Link>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Link href="#size-alert" className="btn-primary">Set a size alert</Link>
+          <Link href={browseHref} className="btn-secondary">Browse {c.name} tires</Link>
           <Link href="/sell-tires" className="font-semibold text-brand-300 hover:underline">
             List your tires in {c.name} →
           </Link>
@@ -114,12 +116,12 @@ export default async function CityPage({ params }) {
           <p className="mt-2 text-sm text-slate-400">
             List free and get found by buyers searching your exact fitment — no per-listing fees, no
             cut of your sale. <Link href="/founding-seller" className="font-semibold text-brand-300 hover:text-brand-200">Founding Sellers</Link> get
-            a permanent badge and $10/mo locked for life.
+            a permanent badge and {FOUNDING_SHORT} locked for life.
           </p>
         </div>
       </section>
 
-      <section className="card px-6 py-6">
+      <section id="size-alert" className="card px-6 py-6 scroll-mt-24">
         <div className="grid items-center gap-4 sm:grid-cols-[1.4fr_1fr]">
           <div>
             <h2 className="font-display text-xl font-extrabold text-white">No stock in your size yet?</h2>

@@ -3,7 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
-import { stripJpegMetadata } from "@/lib/image";
+import { stripMetadata } from "@/lib/image";
 
 // Photo upload. Persistence backend is chosen at runtime:
 //   1. Cloudflare R2 (prod on CF) — via the OpenNext `UPLOADS_BUCKET` binding.
@@ -59,7 +59,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `upload:${user.id}`, { limit: 40, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "upload", { key: user.id, limit: 40, windowMs: 60_000 });
   if (limited) return limited;
 
   // Reject an oversized multipart body BEFORE parsing it into memory (App Router
@@ -85,8 +85,9 @@ export async function POST(req) {
     if (!ext) {
       return NextResponse.json({ error: "Only JPG, PNG, GIF, or WEBP images are allowed." }, { status: 415 });
     }
-    // Remove Exif/GPS metadata from JPEGs so uploads don't leak location.
-    if (ext === "jpg") bytes = stripJpegMetadata(bytes);
+    // Remove Exif/GPS metadata (JPEG APP1/APP13, PNG eXIf/text, WebP EXIF/XMP)
+    // so an upload can never leak the seller's home address.
+    bytes = stripMetadata(bytes, ext);
     const fname = `${user.id.slice(0, 6)}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
     try {
       urls.push(r2 ? await storeR2(r2, bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));

@@ -11,7 +11,7 @@ export default async function sitemap() {
 
   const staticPages = [
     "/", "/browse", "/locations", "/states", "/guide", "/sell-tires",
-    "/how-it-works", "/founding-seller", "/trust-safety", "/about", "/app", "/pro",
+    "/how-it-works", "/founding-seller", "/trust-safety", "/about", "/app",
   ].map((p) => ({
     url: url(p),
     lastModified: now,
@@ -27,18 +27,28 @@ export default async function sitemap() {
     priority: 0.7,
   }));
 
-  // Per-state browse pages
-  const statePages = STATES.map((s) => ({
-    url: url(`/browse?state=${s.abbr}`),
-    lastModified: now,
-    changeFrequency: "daily",
-    priority: 0.6,
-  }));
-
+  let statePages = [];
   let brandPages = [];
   let sizePages = [];
   let listingPages = [];
   try {
+    // Per-state browse pages — only states with at least one active listing,
+    // so we don't hand crawlers 50 empty result pages. One grouped count query
+    // (same shape /states uses), filtered to the same visibility rules as the
+    // listing/brand/size entries below.
+    const grouped = await prisma.listing.groupBy({
+      by: ["state"],
+      where: { status: "active", hidden: false, seller: { deletedAt: null } },
+      _count: { _all: true },
+    });
+    const populated = new Set(grouped.filter((g) => g.state && g._count._all > 0).map((g) => g.state));
+    statePages = STATES.filter((s) => populated.has(s.abbr)).map((s) => ({
+      url: url(`/browse?state=${s.abbr}`),
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.6,
+    }));
+
     const brands = await prisma.listing.findMany({
       where: { status: "active", hidden: false, seller: { deletedAt: null } },
       select: { brand: true },
@@ -77,7 +87,7 @@ export default async function sitemap() {
       priority: 0.5,
     }));
   } catch {
-    // DB unavailable at build time — static pages are still emitted.
+    // DB unavailable at build time — static + city pages are still emitted.
   }
 
   return [...staticPages, ...cityPages, ...statePages, ...brandPages, ...sizePages, ...listingPages];

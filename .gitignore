@@ -12,4 +12,6 @@ public/uploads/*
 npm-debug.log*
 
 # Cloudflare/OpenNext build output
+.vercel
+.env*
 .open-next/

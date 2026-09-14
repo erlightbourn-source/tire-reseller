@@ -30,11 +30,11 @@ export default function OpengraphImage() {
               justifyContent: "center",
               width: "84px",
               height: "84px",
-              background: "#e5ff00",
+              background: "#4d84ff",
               color: "#000000",
               fontSize: "52px",
               fontWeight: 800,
-              border: "4px solid #e5ff00",
+              border: "4px solid #4d84ff",
             }}
           >
             T
@@ -48,7 +48,7 @@ export default function OpengraphImage() {
           <div
             style={{
               display: "flex",
-              color: "#e5ff00",
+              color: "#4d84ff",
               fontSize: "84px",
               fontWeight: 800,
               lineHeight: 1.05,
@@ -69,7 +69,7 @@ export default function OpengraphImage() {
           <div
             style={{
               display: "flex",
-              background: "#e5ff00",
+              background: "#4d84ff",
               color: "#000000",
               fontSize: "30px",
               fontWeight: 800,

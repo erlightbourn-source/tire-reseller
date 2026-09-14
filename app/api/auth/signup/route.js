@@ -7,6 +7,7 @@ import { isPasswordPwned } from "@/lib/breach";
 import { sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { logAudit } from "@/lib/audit";
+import { LAST_UPDATED } from "@/lib/legal";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -17,6 +18,16 @@ export async function POST(req) {
 
   const body = await req.json();
   const { password, role, state } = body;
+
+  // Click-through consent gate: require explicit agreement to the Terms of
+  // Service + Privacy Policy before an account can be created. Enforced here on
+  // the server — the signup form's checkbox is UX, never the security boundary.
+  if (body.agreedToTerms !== true) {
+    return NextResponse.json(
+      { error: "Please agree to the Terms of Service and Privacy Policy to create an account." },
+      { status: 400 }
+    );
+  }
 
   let email, name, location;
   try {
@@ -70,7 +81,7 @@ export async function POST(req) {
       location: location || null,
       state: isStateAbbr(state) ? state.toUpperCase() : null,
       role: isSeller ? "seller" : "buyer",
-      // Sellers get their first year free — no charge until this date.
+      // Sellers list free during launch — no charge until this date (lib/pricing.js).
       sellerFreeUntil: isSeller ? freeYearFromNow() : null,
       emailVerified: false,
       verifyTokenHash,
@@ -83,7 +94,13 @@ export async function POST(req) {
     subject: "Confirm your TireTrader account",
     text: `Welcome to TireTrader! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
   });
-  await logAudit("signup", { userId: user.id, ip: clientIp(req), meta: { role: user.role } });
+  // Record the consent event (who/when/which terms version) for a defensible
+  // click-through trail without a schema change — it lives in the audit log.
+  await logAudit("signup", {
+    userId: user.id,
+    ip: clientIp(req),
+    meta: { role: user.role, agreedToTerms: true, termsVersion: LAST_UPDATED },
+  });
   // In dev (no email provider) surface the link so the flow is testable.
   const devLink = process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY
     ? `${SITE_URL}/api/auth/verify?token=${verifyToken}`

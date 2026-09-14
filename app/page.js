@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
@@ -12,14 +13,20 @@ import Logo from "@/components/Logo";
 import EmailAlertForm from "@/components/EmailAlertForm";
 import { BUYER_FAQ } from "@/lib/content";
 import { brandSlug, SITE_URL } from "@/lib/site";
+import { PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
+import { getFoundingClaimed } from "@/lib/founding";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  alternates: { canonical: "/" },
+};
 
 const TRUST = [
   { title: "Local tire inventory", body: "Browse new & used sets from resellers in your state.", icon: "pin" },
   { title: "Message sellers directly", body: "Ask questions and make offers without sharing your number.", icon: "chat" },
   { title: "Save searches", body: "Get notified when matching tires are listed near you.", icon: "bell" },
-  { title: "Verified Pro sellers", body: "Ratings, reviews, and trusted-seller badges you can vet.", icon: "shield" },
+  { title: "Verified sellers", body: "Ratings, reviews, and trusted-seller badges you can vet.", icon: "shield" },
 ];
 
 const ICONS = {
@@ -29,46 +36,70 @@ const ICONS = {
   shield: '<path d="M10 2 3 5v5c0 4 3 6.5 7 8 4-1.5 7-4 7-8V5l-7-3Z"/>',
 };
 
+// Homepage data is identical for every visitor in the same state (the only
+// personalization is which state's listings lead the showcase), so cache it
+// briefly. With Neon's pooled connection_limit=1 these six queries serialize
+// on one connection and dominate TTFB; nothing here reads Date methods after
+// serialization (ListingCard renders scalars only).
+const getHomeData = (homeState) =>
+  unstable_cache(
+    async () => {
+      const [totalActive, grouped, recent, brandRows, founders] = await Promise.all([
+        prisma.listing.count({ where: { status: "active", hidden: false, seller: { deletedAt: null } } }),
+        prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
+        prisma.listing.findMany({
+          where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
+          orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
+          take: 4,
+          include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
+        }),
+        prisma.listing.findMany({
+          where: { status: "active", hidden: false, seller: { deletedAt: null } },
+          select: { brand: true },
+          distinct: ["brand"],
+          orderBy: { brand: "asc" },
+        }),
+        // Founding-seller spotlight: launch-cohort sellers with live inventory.
+        // Degrades to an empty array (section hidden) when there are none yet.
+        prisma.user.findMany({
+          where: { foundingSeller: true, deletedAt: null, listings: { some: { status: "active", hidden: false } } },
+          select: { id: true, name: true, location: true, state: true, ratingAvg: true, ratingCount: true },
+          orderBy: [{ ratingCount: "desc" }, { createdAt: "asc" }],
+          take: 8,
+        }),
+      ]);
+
+      // Fall back to nationwide recent listings if the user's state has none yet.
+      const showcase = recent.length
+        ? recent
+        : await prisma.listing.findMany({
+            where: { status: "active", hidden: false, seller: { deletedAt: null } },
+            orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
+            take: 4,
+            include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
+          });
+
+      // nearYou: the showcase really is the visitor's state (vs. the nationwide fallback).
+      return { totalActive, grouped, showcase, brandRows, founders, nearYou: recent.length > 0 };
+    },
+    ["home-data", homeState || "all"],
+    { revalidate: 60 }
+  )();
+
+// Below this many live sets, the "N tire sets across N states" stat reads as
+// emptiness, not traction — swap it for the launch story instead of the number.
+const STAT_BADGE_MIN = 25;
+
 export default async function Home() {
   const user = await getCurrentUser();
   const homeState = userStateOf(user);
 
-  const [totalActive, grouped, recent, brandRows, founders] = await Promise.all([
-    prisma.listing.count({ where: { status: "active", hidden: false, seller: { deletedAt: null } } }),
-    prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
-    prisma.listing.findMany({
-      where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
-      orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
-      take: 4,
-      include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
-    }),
-    prisma.listing.findMany({
-      where: { status: "active", hidden: false, seller: { deletedAt: null } },
-      select: { brand: true },
-      distinct: ["brand"],
-      orderBy: { brand: "asc" },
-    }),
-    // Founding-seller spotlight: launch-cohort sellers with live inventory.
-    // Degrades to an empty array (section hidden) when there are none yet.
-    prisma.user.findMany({
-      where: { foundingSeller: true, deletedAt: null, listings: { some: { status: "active", hidden: false } } },
-      select: { id: true, name: true, location: true, state: true, ratingAvg: true, ratingCount: true },
-      orderBy: [{ ratingCount: "desc" }, { createdAt: "asc" }],
-      take: 8,
-    }),
-  ]);
+  const { totalActive, grouped, showcase, brandRows, founders, nearYou } = await getHomeData(homeState);
   const stateCount = grouped.filter((g) => g.state).length;
   const brands = brandRows.map((b) => b.brand);
-
-  // Fall back to nationwide recent listings if the user's state has none yet.
-  const showcase = recent.length
-    ? recent
-    : await prisma.listing.findMany({
-        where: { status: "active", hidden: false, seller: { deletedAt: null } },
-        orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
-        take: 4,
-        include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
-      });
+  const launchMode = totalActive < STAT_BADGE_MIN;
+  // Live founding-seat counter for the launch banner (null → banner renders without it).
+  const foundingSpots = launchMode ? foundingSpotsLine(await getFoundingClaimed()) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -103,7 +134,9 @@ export default async function Home() {
           <div className="max-w-2xl animate-fade-up">
             <span className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
               <span className="h-1.5 w-1.5 bg-accent-400" />
-              {totalActive} tire sets listed across {stateCount} states
+              {launchMode
+                ? "Now live in South Florida"
+                : `${totalActive} tire sets listed across ${stateCount} states`}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
               Find tire sets from{" "}
@@ -120,6 +153,19 @@ export default async function Home() {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300">
+            {launchMode && (
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <Link href="/founding-seller"
+                  className="inline-flex items-center gap-2 bg-brand-500 px-3.5 py-1.5 font-bold text-black shadow-soft transition hover:bg-black hover:text-brand-500">
+                  {PLAN_COPY.foundingBanner} →
+                </Link>
+                {foundingSpots && (
+                  <span className="bg-white/10 px-2.5 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
+                    {foundingSpots}
+                  </span>
+                )}
+              </span>
+            )}
             <Link href={homeState ? `/browse?state=${homeState}` : "/browse"} className="font-semibold text-white underline-offset-4 hover:underline">
               {homeState ? `Browse ${stateName(homeState)} tires →` : "Browse all listings →"}
             </Link>
@@ -150,7 +196,7 @@ export default async function Home() {
           <div>
             <p className="eyebrow">Fresh inventory</p>
             <h2 className="font-display text-2xl font-extrabold text-white">
-              {homeState && recent.length ? `New near you in ${stateName(homeState)}` : "Recently listed"}
+              {homeState && nearYou ? `New near you in ${stateName(homeState)}` : "Recently listed"}
             </h2>
           </div>
           <Link href={homeState ? `/browse?state=${homeState}` : "/browse"} className="btn-secondary shrink-0">View all</Link>
@@ -199,15 +245,15 @@ export default async function Home() {
         <div className="relative flex flex-col items-start gap-5 px-6 py-9 sm:flex-row sm:items-center sm:justify-between sm:px-10">
           <div className="max-w-xl">
             <p className="text-sm font-semibold text-brand-100">For resellers</p>
-            <h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">Sell tire inventory for $10/month</h2>
+            <h2 className="mt-1 font-display text-2xl font-extrabold sm:text-3xl">One seller plan. Free to list during launch.</h2>
             <p className="mt-2 text-black/80">
               Move sets faster without the Facebook Marketplace chaos. List unlimited tires, message buyers,
-              and track your sales. <span className="font-semibold text-white">First year free.</span>
+              and track your sales. <span className="font-semibold text-white">{PLAN_COPY.foundingStory}</span>
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:items-end">
             <Link href="/sell-tires" className="btn bg-white text-ink-950 hover:bg-slate-100">Start selling</Link>
-            <span className="text-xs text-black/70">$10/month · cancel anytime</span>
+            <span className="text-xs text-black/70">{PLAN_COPY.standardAfterLaunch}</span>
           </div>
         </div>
       </section>

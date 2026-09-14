@@ -9,7 +9,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!isAdmin(user)) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
 
-  const limited = await enforceRateLimit(req, `admin:${user.id}`, { limit: 60, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "admin", { key: user.id, limit: 60, windowMs: 60_000 });
   if (limited) return limited;
 
   const { action, id } = await req.json();
