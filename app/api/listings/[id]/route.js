@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { stateFromLocation } from "@/lib/states";
+import { resolveState } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
@@ -33,8 +33,9 @@ export async function PATCH(req, { params }) {
     if (b.location !== undefined) {
       const loc = cleanStr(b.location, LIMITS.location, { required: true, field: "Location" });
       data.location = loc;
-      data.state = stateFromLocation(loc);
-      const coords = geocodeCity(loc) || {};
+      const st = resolveState(b.state, loc);
+      data.state = st;
+      const coords = geocodeCity(loc, st) || {};
       data.lat = coords.lat ?? null;
       data.lng = coords.lng ?? null;
     }

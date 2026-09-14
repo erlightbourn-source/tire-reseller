@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { STATES } from "@/lib/states";
+
+// Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
+const STATE_OPTIONS = [...STATES].sort((a, b) => a.name.localeCompare(b.name));
 
 export default function ListingForm({ initial }) {
   const router = useRouter();
@@ -96,9 +100,19 @@ export default function ListingForm({ initial }) {
             placeholder="320"
           />
         </div>
-        <div className="sm:col-span-2">
-          <label className="label">Location</label>
-          <input name="location" required defaultValue={initial?.location} className="input" placeholder="Dallas, TX" />
+        <div>
+          <label className="label">City / location</label>
+          <input name="location" required defaultValue={initial?.location} className="input" placeholder="Coral Springs" />
+        </div>
+        <div>
+          <label className="label">State</label>
+          <select name="state" required defaultValue={initial?.state || ""} className="input">
+            <option value="" disabled>Select a state…</option>
+            {STATE_OPTIONS.map((s) => (
+              <option key={s.abbr} value={s.abbr}>{s.name}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-400">Buyers filter by state — required so your listing shows up.</p>
         </div>
         <div className="sm:col-span-2">
           <label className="label">Description <span className="text-slate-400">(optional)</span></label>
