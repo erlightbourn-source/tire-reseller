@@ -16,7 +16,11 @@ module.exports = {
         display: ["var(--font-display)", '"Courier New"', "ui-monospace", "monospace"],
         mono: ["var(--font-display)", '"Courier New"', "monospace"],
       },
-      // Two-color brutalist palette: near-black + acid yellow.
+      // Two-color brutalist palette: near-black + electric cobalt blue.
+      // Accent kept in the same luminance band as the prior acid-yellow so
+      // dark-text-on-accent fills and accent-text-on-black both stay legible
+      // (500 = 6.06:1 vs black, 4.1:1 vs white) — a pure #0047FF cobalt is too
+      // dark for the black-text-on-accent pattern used across the app.
       colors: {
         ink: {
           800: "#1a1a1a",
@@ -24,21 +28,21 @@ module.exports = {
           950: "#000000",
         },
         brand: {
-          50: "#fbffcc",
-          100: "#f6ff99",
-          200: "#f1ff66",
-          300: "#ecff33",
-          400: "#e5ff00",
-          500: "#e5ff00",
-          600: "#c9e000",
-          700: "#a8bd00",
-          800: "#7d8c00",
-          900: "#525c00",
+          50: "#eef3ff",
+          100: "#d6e2ff",
+          200: "#b3caff",
+          300: "#85a9ff",
+          400: "#6b98ff",
+          500: "#4d84ff",
+          600: "#3d74ff",
+          700: "#2f61e0",
+          800: "#2450b8",
+          900: "#1a3c8a",
         },
         accent: {
-          400: "#e5ff00",
-          500: "#e5ff00",
-          600: "#c9e000",
+          400: "#6b98ff",
+          500: "#4d84ff",
+          600: "#3d74ff",
         },
       },
       // Brutalist hard offset shadows (no blur) — was soft/blurred, which
@@ -46,7 +50,7 @@ module.exports = {
       boxShadow: {
         soft: "4px 4px 0 #000",
         lift: "6px 6px 0 #000",
-        glow: "6px 6px 0 #e5ff00",
+        glow: "6px 6px 0 #4d84ff",
       },
       borderRadius: {
         "2xl": "1rem",
