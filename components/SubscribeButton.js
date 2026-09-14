@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function SubscribeButton() {
+export default function SubscribeButton({ label = "Subscribe to the seller plan" }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -29,7 +29,7 @@ export default function SubscribeButton() {
     <>
       {err && <div className="mb-2 bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
       <button onClick={go} disabled={busy} className="btn-primary w-full">
-        {busy ? "Starting checkout…" : "Subscribe for $10/month"}
+        {busy ? "Starting checkout…" : label}
       </button>
     </>
   );

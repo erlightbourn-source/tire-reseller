@@ -9,7 +9,7 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!isAdmin(user)) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
 
-  const limited = await enforceRateLimit(req, `admin:${user.id}`, { limit: 60, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "admin", { key: user.id, limit: 60, windowMs: 60_000 });
   if (limited) return limited;
 
   const { action, id } = await req.json();
@@ -34,6 +34,19 @@ export async function POST(req) {
     case "unbanUser":
       await prisma.user.update({ where: { id }, data: { deletedAt: null } });
       break;
+    case "makeFounding":
+      // Grant founding status + mirror onto the seller's listings so the badge
+      // and ranked placement (sellerPro) apply immediately without a re-list.
+      await prisma.user.update({ where: { id }, data: { foundingSeller: true } });
+      await prisma.listing.updateMany({ where: { sellerId: id }, data: { sellerFounding: true, sellerPro: true } });
+      break;
+    case "unmakeFounding": {
+      await prisma.user.update({ where: { id }, data: { foundingSeller: false } });
+      // Revert placement to the seller's paid-Pro status, not a hard false.
+      const target = await prisma.user.findUnique({ where: { id }, select: { pro: true } });
+      await prisma.listing.updateMany({ where: { sellerId: id }, data: { sellerFounding: false, sellerPro: !!target?.pro } });
+      break;
+    }
     default:
       return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   }

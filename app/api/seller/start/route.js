@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, freeYearFromNow, sellerStatus } from "@/lib/auth";
 
-// Upgrade a buyer into a seller and start their free first year.
-// No payment is taken — the $10/month only applies after the free year ends.
+// Upgrade a buyer into a seller and open their launch listing window (free, no
+// card). No payment is taken — the seller plan (lib/pricing.js) only applies
+// once that window ends.
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
@@ -18,7 +19,7 @@ export async function POST() {
     where: { id: user.id },
     data: {
       role: "seller",
-      // Only grant a fresh free year if they've never had one.
+      // Only grant a fresh launch window if they've never had one.
       sellerFreeUntil: user.sellerFreeUntil ?? freeYearFromNow(),
     },
   });

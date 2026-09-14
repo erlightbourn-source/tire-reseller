@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
+import { priceFor } from "@/lib/pricing";
 import ListingForm from "@/components/ListingForm";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export default async function SellPage() {
 
   if (!canSell(user)) {
     const expired = sellerStatus(user) === "expired";
+    const plan = priceFor(user);
     return (
       <div className="mx-auto max-w-lg">
         <div className="card overflow-hidden text-center">
@@ -20,19 +22,19 @@ export default async function SellPage() {
               {expired ? "🔒" : "🏷️"}
             </span>
             <h1 className="relative mt-3 font-display text-xl font-bold">
-              {expired ? "Your free year has ended" : "Become a seller to list tires"}
+              {expired ? "Your launch listing period has ended" : "Become a seller to list tires"}
             </h1>
           </div>
           <div className="p-6">
             <p className="text-slate-400">
               {expired ? (
-                <>Continue listing, messaging buyers, and tracking activity for <strong className="text-white">$10/month</strong>.</>
+                <>Continue listing, messaging buyers, and tracking activity for <strong className="text-white">{plan.label}</strong>{plan.locked ? ", locked for life" : ""}.</>
               ) : (
-                <>List unlimited tires, message buyers, and track your activity — <strong className="text-white">free for your first year</strong>, then $10/month.</>
+                <>List unlimited tires, message buyers, and track your activity — <strong className="text-white">free to list during launch</strong>, then {plan.label}.</>
               )}
             </p>
             <Link href="/subscribe" className="btn-accent mt-4">
-              {expired ? "Subscribe — $10/mo" : "Start selling free"}
+              {expired ? `Subscribe — ${plan.short}` : "Start selling free"}
             </Link>
           </div>
         </div>

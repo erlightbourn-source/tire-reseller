@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function BecomeSeller({ expired }) {
+// `label` = the tier-aware monthly price string from lib/pricing.js (server-resolved).
+export default function BecomeSeller({ expired, label }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -12,7 +13,7 @@ export default function BecomeSeller({ expired }) {
     setErr("");
 
     if (expired) {
-      // Free year is over → take payment via Stripe (or simulated dev mode).
+      // Launch listing window is over → take payment via Stripe (or simulated dev mode).
       const res = await fetch("/api/stripe/checkout", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
@@ -28,7 +29,7 @@ export default function BecomeSeller({ expired }) {
       return;
     }
 
-    // First year free → just flip the account to a seller, no payment.
+    // Free to list during launch → just flip the account to a seller, no payment.
     const res = await fetch("/api/seller/start", { method: "POST" });
     const data = await res.json();
     setBusy(false);
@@ -41,7 +42,7 @@ export default function BecomeSeller({ expired }) {
     <>
       {err && <div className="mb-2 bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-red-400/30">{err}</div>}
       <button onClick={start} disabled={busy} className="btn-primary w-full">
-        {busy ? "One sec…" : expired ? "Subscribe for $10/month" : "Start selling free for a year"}
+        {busy ? "One sec…" : expired ? `Subscribe for ${label || "the seller plan"}` : "Start selling free"}
       </button>
     </>
   );

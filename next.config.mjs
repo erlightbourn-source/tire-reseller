@@ -13,11 +13,28 @@ const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "off" },
 ];
 
+// The pre-app static site lived at *.html URLs. Keep those links (search
+// results, old outreach, bookmarks) alive with permanent redirects to the
+// app-router equivalents instead of 404s.
+const legacyRedirects = [
+  { source: "/index.html", destination: "/", permanent: true },
+  { source: "/about.html", destination: "/about", permanent: true },
+  { source: "/how-it-works.html", destination: "/how-it-works", permanent: true },
+  { source: "/sell-your-tires.html", destination: "/sell-tires", permanent: true },
+  { source: "/founding-seller.html", destination: "/founding-seller", permanent: true },
+  { source: "/trust-safety.html", destination: "/trust-safety", permanent: true },
+  { source: "/locations.html", destination: "/locations", permanent: true },
+  { source: "/browse-listings.html", destination: "/browse", permanent: true },
+];
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // don't advertise the framework/version
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  async redirects() {
+    return legacyRedirects;
   },
 };
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit, cleanStr, ValidationError, LIMITS } from "@/lib/security";
+import { notifyNewMessage } from "@/lib/notify";
 
 async function loadThread(threadId, userId) {
   const thread = await prisma.thread.findUnique({ where: { id: threadId } });
@@ -50,7 +51,7 @@ export async function POST(req, { params }) {
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
   // Throttle message spam.
-  const limited = await enforceRateLimit(req, `msg:${user.id}`, { limit: 30, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "msg", { key: user.id, limit: 30, windowMs: 60_000 });
   if (limited) return limited;
 
   const { thread, code } = await loadThread(threadId, user.id);
@@ -64,6 +65,31 @@ export async function POST(req, { params }) {
     select: { id: true },
   });
   if (blocked) return NextResponse.json({ error: "Messaging is unavailable in this conversation." }, { status: 403 });
+
+  // Email-notify the recipient only when they're "caught up" — i.e. they have
+  // no unread message from us in this thread yet. Computed BEFORE inserting the
+  // new row, so a burst yields at most one email until they read (see notify.js).
+  const recipientCaughtUp =
+    (await prisma.message.count({
+      where: { threadId: thread.id, senderId: { not: other }, readAt: null },
+    })) === 0;
+
+  // Fetch recipient + listing label once, only when we'll actually notify.
+  async function notifyRecipient({ isOffer = false, cents = null } = {}) {
+    if (!recipientCaughtUp) return;
+    const [recipient, listing] = await Promise.all([
+      prisma.user.findUnique({ where: { id: other }, select: { email: true } }),
+      prisma.listing.findUnique({ where: { id: thread.listingId }, select: { brand: true, size: true } }),
+    ]);
+    await notifyNewMessage({
+      recipientEmail: recipient?.email,
+      senderName: user.name,
+      listingTitle: listing ? `${listing.brand} ${listing.size}` : null,
+      threadId: thread.id,
+      isOffer,
+      offerCents: cents,
+    });
+  }
 
   const { body, kind, offerCents } = await req.json();
 
@@ -88,6 +114,7 @@ export async function POST(req, { params }) {
       },
     });
     await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
+    await notifyRecipient({ isOffer: true, cents });
     return NextResponse.json({ ok: true, id: msg.id });
   }
 
@@ -98,5 +125,6 @@ export async function POST(req, { params }) {
     data: { threadId: thread.id, senderId: user.id, body: text },
   });
   await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
+  await notifyRecipient();
   return NextResponse.json({ ok: true, id: msg.id });
 }

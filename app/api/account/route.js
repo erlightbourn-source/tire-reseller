@@ -11,7 +11,7 @@ export async function PATCH(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `acct:${user.id}`, { limit: 10, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "acct", { key: user.id, limit: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const { action, current, next } = await req.json();
@@ -55,7 +55,7 @@ export async function GET(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `export:${user.id}`, { limit: 5, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "export", { key: user.id, limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
   const [listings, favorites, savedSearches, reviewsWritten, reviewsReceived, threads] = await Promise.all([
@@ -108,7 +108,7 @@ export async function DELETE(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `del:${user.id}`, { limit: 5, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "del", { key: user.id, limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
   const { password } = await req.json().catch(() => ({}));

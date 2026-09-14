@@ -9,11 +9,25 @@ const TONES = {
   slate: "bg-white/5 text-slate-300 ring-1 ring-inset ring-white/10",
   featured: "bg-accent-500 text-ink-950",
   pro: "bg-brand-500 text-ink-950",
+  founding: "bg-gradient-to-r from-amber-300 to-brand-400 text-ink-950",
   sold: "bg-ink-900/90 text-white ring-1 ring-inset ring-white/10",
 };
 
 export default function Badge({ tone = "slate", className = "", children }) {
   return <span className={`badge ${TONES[tone] || TONES.slate} ${className}`}>{children}</span>;
+}
+
+// Founding-seller promo mark. Distinct from PRO so the launch cohort reads as
+// special on the profile + listing detail.
+export function FoundingBadge({ className = "" }) {
+  return (
+    <Badge tone="founding" className={className}>
+      <svg viewBox="0 0 20 20" className="h-3 w-3 fill-current" aria-hidden="true">
+        <path d="M10 1l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9 4.8 17.2l1-5.8L1.5 7.2l5.9-.9L10 1z" />
+      </svg>
+      Founding Seller
+    </Badge>
+  );
 }
 
 // Small inline "verified pro" mark used on seller cards.

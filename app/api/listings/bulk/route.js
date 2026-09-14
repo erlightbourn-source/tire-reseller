@@ -4,6 +4,7 @@ import { getCurrentUser, canSell } from "@/lib/auth";
 import { stateFromLocation } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
+import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
 
 const MAX_LINES = 50;
@@ -14,9 +15,9 @@ export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
   if (!canSell(user)) return NextResponse.json({ error: "Become a seller first." }, { status: 402 });
-  if (!user.pro) return NextResponse.json({ error: "Bulk add is a Pro feature.", code: "pro_required" }, { status: 402 });
+  if (!isProSeller(user)) return NextResponse.json({ error: "Bulk add is included in the seller plan — subscribe to unlock it.", code: "pro_required" }, { status: 402 });
 
-  const limited = await enforceRateLimit(req, `bulk:${user.id}`, { limit: 10, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "bulk", { key: user.id, limit: 10, windowMs: 60_000 });
   if (limited) return limited;
 
   const raw = await req.json();
@@ -52,7 +53,8 @@ export async function POST(req) {
           state: stateFromLocation(location),
           lat: coords.lat ?? null,
           lng: coords.lng ?? null,
-          sellerPro: !!user.pro,
+          sellerPro: isProSeller(user),
+          sellerFounding: !!user.foundingSeller,
           ...deriveListingColumns({ size, treadDepth: null, priceCents, quantity }),
         },
       });

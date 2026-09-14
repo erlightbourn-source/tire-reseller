@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── BRUTALIST THEME: near-black + acid yellow, Georgia body / Courier headers,
+/* ── BRUTALIST THEME: near-black + electric cobalt blue, Georgia body / Courier headers,
    raw square edges, hard offset shadows, instant color-invert hovers. ── */
 :root {
   color-scheme: dark;
@@ -22,7 +22,7 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid #e5ff00;
+  outline: 3px solid #4d84ff;
   outline-offset: 2px;
 }
 
@@ -70,11 +70,11 @@ main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
     transition: none;
   }
   .btn-primary { @apply btn bg-brand-500 text-black; border-color: #000; box-shadow: 5px 5px 0 #000; }
-  .btn-primary:hover { @apply bg-black text-brand-500; border-color: #e5ff00; box-shadow: 5px 5px 0 #e5ff00; transform: translate(1px, 1px); }
-  .btn-secondary { @apply btn bg-black text-brand-400; border-color: #e5ff00; box-shadow: 4px 4px 0 #e5ff00; }
+  .btn-primary:hover { @apply bg-black text-brand-500; border-color: #4d84ff; box-shadow: 5px 5px 0 #4d84ff; transform: translate(1px, 1px); }
+  .btn-secondary { @apply btn bg-black text-brand-400; border-color: #4d84ff; box-shadow: 4px 4px 0 #4d84ff; }
   .btn-secondary:hover { @apply bg-brand-500 text-black; border-color: #000; box-shadow: 4px 4px 0 #000; transform: translate(1px, 1px); }
   .btn-accent { @apply btn bg-brand-500 text-black; border-color: #000; box-shadow: 5px 5px 0 #000; }
-  .btn-accent:hover { @apply bg-black text-brand-500; border-color: #e5ff00; box-shadow: 5px 5px 0 #e5ff00; transform: translate(1px, 1px); }
+  .btn-accent:hover { @apply bg-black text-brand-500; border-color: #4d84ff; box-shadow: 5px 5px 0 #4d84ff; transform: translate(1px, 1px); }
   .btn-danger { @apply btn bg-[#ff2b2b] text-white; border-color: #000; box-shadow: 4px 4px 0 #000; }
   .btn-danger:hover { @apply bg-black text-[#ff2b2b]; border-color: #ff2b2b; box-shadow: 4px 4px 0 #ff2b2b; }
   .btn-ghost { @apply btn bg-transparent text-brand-400; border-color: transparent; box-shadow: none; }
@@ -86,7 +86,7 @@ main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
     border: 2px solid #3a3a3a;
     transition: none;
   }
-  .input:focus { border-color: #e5ff00; box-shadow: 3px 3px 0 #e5ff00; }
+  .input:focus { border-color: #4d84ff; box-shadow: 3px 3px 0 #4d84ff; }
   .input option { @apply bg-black text-slate-100; }
   .label { @apply mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-300 font-display; }
 
@@ -94,7 +94,7 @@ main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
   .card { @apply bg-ink-900; border: 2px solid #2a2a2a; box-shadow: 6px 6px 0 #000; }
   .glass { @apply bg-ink-900; border: 2px solid #2a2a2a; }
   .card-hover { transition: none; }
-  .card-hover:hover { border-color: #e5ff00; box-shadow: 8px 8px 0 #e5ff00; transform: translate(-2px, -2px); }
+  .card-hover:hover { border-color: #4d84ff; box-shadow: 8px 8px 0 #4d84ff; transform: translate(-2px, -2px); }
 
   /* Badges — square, mono, bordered. */
   .badge { @apply inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide font-display; border: 2px solid currentColor; }
@@ -106,12 +106,12 @@ main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
 }
 
 @layer utilities {
-  .tread { background-image: repeating-linear-gradient(90deg, rgba(229, 255, 0, 0.14) 0 2px, transparent 2px 13px); }
-  /* "mesh" repurposed as a hard yellow grid (no gradients). */
+  .tread { background-image: repeating-linear-gradient(90deg, rgba(77, 132, 255, 0.14) 0 2px, transparent 2px 13px); }
+  /* "mesh" repurposed as a hard cobalt grid (no gradients). */
   .mesh {
     background-image:
-      repeating-linear-gradient(0deg, rgba(229, 255, 0, 0.10) 0 1px, transparent 1px 38px),
-      repeating-linear-gradient(90deg, rgba(229, 255, 0, 0.10) 0 1px, transparent 1px 38px);
+      repeating-linear-gradient(0deg, rgba(77, 132, 255, 0.10) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(90deg, rgba(77, 132, 255, 0.10) 0 1px, transparent 1px 38px);
   }
   .text-balance { text-wrap: balance; }
   .no-scrollbar::-webkit-scrollbar { display: none; }

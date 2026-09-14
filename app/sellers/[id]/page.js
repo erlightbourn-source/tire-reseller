@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
+import { FoundingBadge } from "@/components/Badge";
 import Stars from "@/components/Stars";
 import ReviewForm from "@/components/ReviewForm";
 import BlockSeller from "@/components/BlockSeller";
@@ -15,9 +16,20 @@ const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("")
 export default async function SellerProfile({ params }) {
   const { id } = await params;
   const me = await getCurrentUser();
+  // Explicit select — this page renders to anonymous visitors, so it must never
+  // pull passwordHash / resetTokenHash / email / stripeCustomerId / tokenVersion
+  // etc. onto the server-render payload. `include` would fetch the whole row.
   const seller = await prisma.user.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      role: true,
+      deletedAt: true,
+      name: true,
+      foundingSeller: true,
+      pro: true,
+      location: true,
+      createdAt: true,
       listings: {
         where: { status: "active", hidden: false },
         orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
@@ -50,7 +62,9 @@ export default async function SellerProfile({ params }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-extrabold text-white">{seller.name}</h1>
-            {seller.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
+            {seller.foundingSeller
+              ? <FoundingBadge />
+              : seller.pro && <span className="badge bg-brand-500 text-ink-950">PRO</span>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
             <Stars value={avg} />

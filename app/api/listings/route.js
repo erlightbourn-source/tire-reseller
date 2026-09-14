@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser, canSell, sellerStatus } from "@/lib/auth";
-import { stateFromLocation } from "@/lib/states";
+import { resolveState } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
+import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
+import { priceFor, PLAN_COPY } from "@/lib/pricing";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
-function tireAttrs(b) {
-  const coords = geocodeCity(b.location) || {};
+function tireAttrs(b, state) {
+  const coords = geocodeCity(b.location, state) || {};
   const dot = b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null;
   return {
     season: SEASONS.includes(b.season) ? b.season : null,
@@ -32,15 +34,15 @@ export async function POST(req) {
     return NextResponse.json(
       {
         error: expired
-          ? "Your free selling year has ended. Subscribe for $10/month to keep listing."
-          : "Create a seller account to list tires — your first year is free.",
+          ? `Your launch listing period has ended. Subscribe for ${priceFor(user).label} to keep listing.`
+          : `Create a seller account to list tires. ${PLAN_COPY.launchFree}`,
         code: expired ? "subscription_required" : "become_seller",
       },
       { status: 402 }
     );
   }
 
-  const limited = await enforceRateLimit(req, `listing:${user.id}`, { limit: 30, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "listing", { key: user.id, limit: 30, windowMs: 60_000 });
   if (limited) return limited;
 
   const b = await req.json();
@@ -66,6 +68,7 @@ export async function POST(req) {
 
   const quantity = clampInt(b.quantity, { min: 1, max: 100, fallback: 1 });
   const priceCents = Math.round(price * 100);
+  const state = resolveState(b.state, location);
   const listing = await prisma.listing.create({
     data: {
       sellerId: user.id,
@@ -76,11 +79,12 @@ export async function POST(req) {
       treadDepth,
       priceCents,
       location,
-      state: stateFromLocation(location),
+      state,
       description,
-      sellerPro: !!user.pro,
+      sellerPro: isProSeller(user),
+      sellerFounding: !!user.foundingSeller,
       ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
-      ...tireAttrs(b),
+      ...tireAttrs(b, state),
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),
       },

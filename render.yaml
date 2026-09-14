@@ -1,0 +1,95 @@
+# =====================================================================
+# STAGED — NOT deployed. TireTrader Vercel → Render fallback blueprint.
+# Author: Dev, 2026-08-22 (Miles ask). Execute ONLY if Evan picks "migrate"
+# or the Vercel Pro trial lapses to Hobby (Sun 2026-08-23 20:55 EDT) and the
+# commercial-ToS/limits become a problem. No spend to stage this file.
+#
+# Why Render (not Netlify): TireTrader is a full Next.js 15 server app
+# (API routes, middleware, Prisma). Render runs the Node server directly
+# (`next build` / `next start`) — a near-drop-in for Vercel's model, and
+# commercial use is allowed on the free tier. Netlify would need the Next
+# runtime adapter + functions split = more surface, more risk in a 35h window.
+#
+# WHAT CARRIES OVER UNCHANGED (external SaaS, host-independent — reuse the exact
+# values from the Vercel project's env): Neon (DATABASE_URL), Resend
+# (RESEND_API_KEY/EMAIL_FROM), Stripe (STRIPE_*), Upstash (UPSTASH_*).
+# The DB does NOT move — Neon is independent of Vercel.
+#
+# THE ONLY REAL MIGRATION ITEMS (all handled below):
+#   1. Uploads: app/api/upload uses @vercel/blob ONLY when BLOB_READ_WRITE_TOKEN
+#      is set (else it falls back to local /uploads, which is EPHEMERAL on Render
+#      → photos lost on redeploy). Keeping the token = zero-code cutover, uploads
+#      persist via Vercel Blob cross-host. Durable follow-up = swap to R2/S3.
+#   2. Security/cookies: lib/auth.js + lib/security.js gate on NODE_ENV===
+#      "production" OR VERCEL_ENV. NODE_ENV=production (set below) satisfies both,
+#      so VERCEL_ENV is NOT needed and behavior is preserved with zero code change.
+#   3. Crons: vercel.json crons do NOT carry over — recreated as Render Cron Jobs
+#      hitting the same CRON_SECRET-Bearer-gated endpoints on identical schedules.
+# =====================================================================
+services:
+  - type: web
+    name: tiretrader
+    runtime: node
+    plan: free                 # commercial use OK on Render free (idle spin-down;
+                               # upgrade to Starter if cold-starts hurt conversion)
+    branch: main               # deploy source = main (render.yaml applied from main)
+    buildCommand: npm ci && npm run build
+    startCommand: npx next start -p $PORT   # Render injects $PORT; bypass the
+                                            # package.json's hardcoded -p 3000
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_URL
+        value: https://shoptiretrader.com
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://shoptiretrader.com
+      # --- copy these values verbatim from the Vercel project env (Evan/Dev) ---
+      - key: DATABASE_URL              # Neon postgres:// URL
+        sync: false
+      - key: APP_SECRET               # MUST be 32+ chars (auth.js enforces on deploy)
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET    # NOTE: Stripe webhook endpoint URL is host-based
+        sync: false                   # — re-point the Stripe webhook to the Render URL
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: ERROR_WEBHOOK_URL
+        sync: false
+      - key: BLOB_READ_WRITE_TOKEN    # keep = uploads persist via Vercel Blob
+        sync: false                   # (cross-host); unset only after an R2/S3 swap
+
+  # --- vercel.json crons recreated (Bearer-gated: bearerMatches(req, CRON_SECRET)) ---
+  - type: cron
+    name: tiretrader-cron-alerts
+    runtime: node
+    plan: free
+    branch: main
+    schedule: "0 14 * * *"          # identical to vercel.json
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://shoptiretrader.com/api/cron/alerts'
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+  - type: cron
+    name: tiretrader-cron-purge
+    runtime: node
+    plan: free
+    branch: main
+    schedule: "0 3 * * *"           # identical to vercel.json
+    buildCommand: "true"
+    startCommand: 'curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://shoptiretrader.com/api/cron/purge'
+    envVars:
+      - key: CRON_SECRET
+        sync: false

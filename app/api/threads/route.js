@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit, cleanStr, ValidationError, LIMITS } from "@/lib/security";
+import { notifyNewMessage } from "@/lib/notify";
 
 // Create (or fetch existing) a buyer↔seller thread for a listing.
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in to message sellers." }, { status: 401 });
 
-  const limited = await enforceRateLimit(req, `thread:${user.id}`, { limit: 20, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "thread", { key: user.id, limit: 20, windowMs: 60_000 });
   if (limited) return limited;
 
   const raw = await req.json();
@@ -39,10 +40,25 @@ export async function POST(req) {
   });
 
   if (message) {
+    // Notify the seller of first contact, but only if they're caught up on this
+    // thread (burst-safe; see lib/notify.js). Computed before inserting the row.
+    const sellerCaughtUp =
+      (await prisma.message.count({
+        where: { threadId: thread.id, senderId: { not: listing.sellerId }, readAt: null },
+      })) === 0;
     await prisma.message.create({
       data: { threadId: thread.id, senderId: user.id, body: message },
     });
     await prisma.thread.update({ where: { id: thread.id }, data: { updatedAt: new Date() } });
+    if (sellerCaughtUp) {
+      const seller = await prisma.user.findUnique({ where: { id: listing.sellerId }, select: { email: true } });
+      await notifyNewMessage({
+        recipientEmail: seller?.email,
+        senderName: user.name,
+        listingTitle: `${listing.brand} ${listing.size}`,
+        threadId: thread.id,
+      });
+    }
   }
 
   return NextResponse.json({ ok: true, threadId: thread.id });

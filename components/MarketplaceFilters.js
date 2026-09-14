@@ -164,7 +164,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
 
       {nearActive && (
         <Field label="Search radius">
-          <select className="input" value={sel("radius")} onChange={(e) => apply({ radius: e.target.value })}>
+          <select aria-label="Search radius" className="input" value={sel("radius")} onChange={(e) => apply({ radius: e.target.value })}>
             <option value="25">25 miles</option>
             <option value="50">50 miles</option>
             <option value="100">100 miles</option>
@@ -183,7 +183,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       )}
 
       <Field label="Sort by">
-        <select className="input" value={sel("sort")} onChange={(e) => apply({ sort: e.target.value })}>
+        <select aria-label="Sort by" className="input" value={sel("sort")} onChange={(e) => apply({ sort: e.target.value })}>
           <option value="">Newest first</option>
           <option value="price_asc">Price: Low → High</option>
           <option value="price_desc">Price: High → Low</option>
@@ -202,26 +202,26 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       </Field>
 
       <Field label="Brand">
-        <select className="input" value={sel("brand")} onChange={(e) => apply({ brand: e.target.value })}>
+        <select aria-label="Brand" className="input" value={sel("brand")} onChange={(e) => apply({ brand: e.target.value })}>
           <option value="">All brands</option>
           {brands.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
       </Field>
 
       <Field label="Tire size">
-        <input className="input" placeholder="e.g. 225/45R17 or R17" defaultValue={sel("size")}
+        <input aria-label="Tire size" className="input" placeholder="e.g. 225/45R17 or R17" defaultValue={sel("size")}
           onBlur={(e) => apply({ size: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), apply({ size: e.currentTarget.value }))} />
       </Field>
 
       <Field label="Max price">
-        <input className="input" type="number" min="0" placeholder="Any" defaultValue={sel("maxPrice")}
+        <input aria-label="Max price" className="input" type="number" min="0" placeholder="Any" defaultValue={sel("maxPrice")}
           onBlur={(e) => apply({ maxPrice: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), apply({ maxPrice: e.currentTarget.value }))} />
       </Field>
 
       <Field label="Min tread depth">
-        <select className="input" value={sel("minTread")} onChange={(e) => apply({ minTread: e.target.value })}>
+        <select aria-label="Min tread depth" className="input" value={sel("minTread")} onChange={(e) => apply({ minTread: e.target.value })}>
           <option value="">Any tread</option>
           <option value="4">4/32" or more</option>
           <option value="6">6/32" or more</option>
@@ -230,7 +230,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       </Field>
 
       <Field label="Min DOT year">
-        <select className="input" value={sel("minYear")} onChange={(e) => apply({ minYear: e.target.value })}>
+        <select aria-label="Min DOT year" className="input" value={sel("minYear")} onChange={(e) => apply({ minYear: e.target.value })}>
           <option value="">Any year</option>
           <option value="2020">2020 or newer</option>
           <option value="2021">2021 or newer</option>
@@ -240,7 +240,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       </Field>
 
       <Field label="Quantity">
-        <select className="input" value={sel("qty")} onChange={(e) => apply({ qty: e.target.value })}>
+        <select aria-label="Quantity" className="input" value={sel("qty")} onChange={(e) => apply({ qty: e.target.value })}>
           <option value="">Any quantity</option>
           <option value="2">2 or more</option>
           <option value="4">Full set (4+)</option>
@@ -248,7 +248,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       </Field>
 
       <Field label="Seller rating">
-        <select className="input" value={sel("minRating")} onChange={(e) => apply({ minRating: e.target.value })}>
+        <select aria-label="Seller rating" className="input" value={sel("minRating")} onChange={(e) => apply({ minRating: e.target.value })}>
           <option value="">Any rating</option>
           <option value="3">3★ or higher</option>
           <option value="4">4★ or higher</option>
@@ -262,7 +262,7 @@ function FilterForm({ apply, sel, params, brands, router, pathname, setDrawer, d
       </label>
 
       <Field label="Season">
-        <select className="input" value={sel("season")} onChange={(e) => apply({ season: e.target.value })}>
+        <select aria-label="Season" className="input" value={sel("season")} onChange={(e) => apply({ season: e.target.value })}>
           <option value="">Any season</option>
           <option value="all-season">All-season</option>
           <option value="summer">Summer</option>
