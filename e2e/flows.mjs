@@ -76,7 +76,7 @@ async function verifyByEmail(email) {
 async function signUpVerifiedAndLogin(email, password, role) {
   await req("/api/auth/signup", {
     method: "POST",
-    body: JSON.stringify({ name: role === "seller" ? "E2E Seller" : "E2E Buyer", email, password, role, location: "Miami, FL" }),
+    body: JSON.stringify({ name: role === "seller" ? "E2E Seller" : "E2E Buyer", email, password, role, location: "Miami, FL", agreedToTerms: true }),
   });
   await verifyByEmail(email);
   const login = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
@@ -123,11 +123,20 @@ test("seeded (verified) user can log in", async () => {
 test("signup is neutral and login is blocked until verified", async () => {
   const email = `e2e${Date.now()}@example.com`;
   const password = "Zx9-e2e-uncommon-pass-7q";
-  const s = await req("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: "E2E", email, password, role: "buyer" }) });
+  const s = await req("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: "E2E", email, password, role: "buyer", agreedToTerms: true }) });
   assert.equal(s.status, 200, "signup returns neutral 200");
   const l = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
   assert.equal(l.status, 403, "unverified login blocked");
   assert.equal((await l.json()).code, "verify_email");
+});
+
+test("signup without agreeing to terms is rejected", async () => {
+  const email = `e2e${Date.now()}-noconsent@example.com`;
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const s = await req("/api/auth/signup", { method: "POST", body: JSON.stringify({ name: "E2E", email, password, role: "buyer" }) });
+  assert.equal(s.status, 400, "signup blocked without agreedToTerms");
+  const l = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  assert.equal(l.status, 401, "no account was created");
 });
 
 test("wrong password is rejected", async () => {
