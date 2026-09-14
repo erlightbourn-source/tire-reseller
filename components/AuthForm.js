@@ -17,6 +17,7 @@ export default function AuthForm({ mode }) {
   const [pending, setPending] = useState(false);       // signup → "check your email"
   const [unverified, setUnverified] = useState("");    // login of an unverified account → offer resend
   const [resent, setResent] = useState(false);
+  const [agreed, setAgreed] = useState(false);        // signup → Terms consent gate
 
   async function resend() {
     if (!unverified) return;
@@ -35,7 +36,10 @@ export default function AuthForm({ mode }) {
     setLoading(true);
     const form = new FormData(e.currentTarget);
     const body = Object.fromEntries(form.entries());
-    if (isSignup) body.role = role;
+    if (isSignup) {
+      body.role = role;
+      body.agreedToTerms = agreed;
+    }
     const res = await fetch(`/api/auth/${isSignup ? "signup" : "login"}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -197,7 +201,25 @@ export default function AuthForm({ mode }) {
                 </div>
               </div>
             )}
-            <button disabled={loading} className="btn-primary w-full">
+            {isSignup && (
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-400">
+                <input
+                  type="checkbox"
+                  name="agreedToTerms"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  required
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
+                />
+                <span>
+                  I agree to TireTrader&apos;s{" "}
+                  <Link href="/terms" target="_blank" className="font-semibold text-brand-300 hover:underline">Terms of Service</Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-brand-300 hover:underline">Privacy Policy</Link>. I understand TireTrader is a marketplace, not a party to any transaction, and that I buy and sell at my own risk.
+                </span>
+              </label>
+            )}
+            <button disabled={loading || (isSignup && !agreed)} className="btn-primary w-full">
               {loading ? "Please wait…" : isSignup ? "Create account" : "Log in"}
             </button>
           </form>
