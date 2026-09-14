@@ -16,9 +16,20 @@ const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("")
 export default async function SellerProfile({ params }) {
   const { id } = await params;
   const me = await getCurrentUser();
+  // Explicit select — this page renders to anonymous visitors, so it must never
+  // pull passwordHash / resetTokenHash / email / stripeCustomerId / tokenVersion
+  // etc. onto the server-render payload. `include` would fetch the whole row.
   const seller = await prisma.user.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      role: true,
+      deletedAt: true,
+      name: true,
+      foundingSeller: true,
+      pro: true,
+      location: true,
+      createdAt: true,
       listings: {
         where: { status: "active", hidden: false },
         orderBy: [{ featured: "desc" }, { createdAt: "desc" }],

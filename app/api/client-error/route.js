@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/security";
+import { buildWebhookPayload } from "@/lib/errorWebhook";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +28,14 @@ export async function POST(req) {
   const hook = process.env.ERROR_WEBHOOK_URL;
   if (hook) {
     try {
+      // buildWebhookPayload picks fields explicitly — `data` is unauthenticated
+      // client input, and spreading it into the outbound payload would let an
+      // attacker inject arbitrary Slack fields (`blocks`, `channel`,
+      // `attachments`) or poison a Logtail/Sentry webhook's schema.
       await fetch(hook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: line, ...data }),
+        body: JSON.stringify(buildWebhookPayload(line, data)),
       });
     } catch {
       /* webhook is best-effort */
