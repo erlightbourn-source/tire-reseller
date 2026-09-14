@@ -36,13 +36,23 @@ test("clampInt clamps, rounds, and falls back", () => {
   assert.equal(clampInt(4.6, { min: 1, max: 10 }), 5);
 });
 
-test("isAllowedPhotoUrl accepts uploads/data/blob and rejects remote", () => {
+test("isAllowedPhotoUrl accepts uploads/data/r2/blob and rejects remote", () => {
   assert.ok(isAllowedPhotoUrl("/uploads/abc.jpg"));
   assert.ok(isAllowedPhotoUrl("data:image/png;base64,xxxx"));
+  assert.ok(isAllowedPhotoUrl("https://pub-abc123.r2.dev/uploads/x.jpg"));
   assert.ok(isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("https://evil.example/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("javascript:alert(1)"));
   assert.ok(!isAllowedPhotoUrl(42));
+});
+
+test("isAllowedPhotoUrl honors a configured R2 custom base and rejects lookalikes", () => {
+  const prev = process.env.R2_PUBLIC_BASE_URL;
+  process.env.R2_PUBLIC_BASE_URL = "https://uploads.shoptiretrader.com";
+  assert.ok(isAllowedPhotoUrl("https://uploads.shoptiretrader.com/uploads/x.jpg"));
+  assert.ok(!isAllowedPhotoUrl("https://uploads.shoptiretrader.com.evil.example/x.jpg"));
+  if (prev === undefined) delete process.env.R2_PUBLIC_BASE_URL;
+  else process.env.R2_PUBLIC_BASE_URL = prev;
 });
 
 test("rateLimit allows up to the limit then blocks", () => {
