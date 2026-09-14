@@ -4,7 +4,7 @@ A short record of the non-obvious design choices, so future work doesn't undo
 them by accident.
 
 ## Brand & the two implementations
-- **Brand: brutalist** — near-black + acid yellow (`#e5ff00`), Georgia body /
+- **Brand: brutalist** — near-black + electric cobalt blue (`#4d84ff`), Georgia body /
   Courier headers, square edges, hard offset shadows, instant color-invert
   hovers. This is the deliberate, canonical identity. Defined centrally in
   `app/globals.css` + `tailwind.config.js` (the whole app reskins from there).
