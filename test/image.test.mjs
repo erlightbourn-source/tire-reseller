@@ -10,6 +10,7 @@ import {
   stripPngMetadata,
   stripWebpMetadata,
   stripMetadata,
+  stripDataUriMetadata,
 } from "../lib/image.js";
 
 // A recognizable GPS-ish payload we can search for in the raw bytes.
@@ -174,4 +175,45 @@ test("stripJpegMetadata still removes APP1 (regression guard)", () => {
   assert.equal(clean[0], 0xff);
   assert.equal(clean[1], 0xd8, "SOI preserved");
   assert.ok(clean.includes(Buffer.from([0xff, 0xd9])), "EOI preserved");
+});
+
+test("stripDataUriMetadata strips Exif from a raw data-URI photo (bypasses /api/upload)", () => {
+  const dirtyPng = makePng([["eXIf", SECRET]]);
+  const dirtyUri = `data:image/png;base64,${dirtyPng.toString("base64")}`;
+  assert.ok(Buffer.from(dirtyUri.split(",")[1], "base64").includes(SECRET), "fixture should contain the secret");
+
+  const cleanUri = stripDataUriMetadata(dirtyUri);
+  assert.match(cleanUri, /^data:image\/png;base64,/);
+  const cleanBuf = Buffer.from(cleanUri.split(",")[1], "base64");
+  assert.ok(!cleanBuf.includes(SECRET), "GPS/metadata payload must be gone from the data URI");
+  assert.ok(cleanBuf.includes("IHDR") && cleanBuf.includes("IEND"), "image bytes still decode as PNG");
+});
+
+test("stripDataUriMetadata normalizes image/jpg to image/jpeg and strips APP1", () => {
+  const app1Payload = Buffer.from(`Exif\0\0${SECRET}`);
+  const app1Len = Buffer.alloc(2);
+  app1Len.writeUInt16BE(app1Payload.length + 2);
+  const dirtyJpeg = Buffer.concat([
+    Buffer.from([0xff, 0xd8]),
+    Buffer.from([0xff, 0xe1]),
+    app1Len,
+    app1Payload,
+    Buffer.from([0xff, 0xda, 0x00, 0x02]),
+    Buffer.from([0x11, 0x22, 0x33]),
+    Buffer.from([0xff, 0xd9]),
+  ]);
+  const dirtyUri = `data:image/jpg;base64,${dirtyJpeg.toString("base64")}`;
+
+  const cleanUri = stripDataUriMetadata(dirtyUri);
+  assert.match(cleanUri, /^data:image\/jpeg;base64,/, "image/jpg is normalized to image/jpeg");
+  const cleanBuf = Buffer.from(cleanUri.split(",")[1], "base64");
+  assert.ok(!cleanBuf.includes(SECRET), "APP1/Exif must be removed");
+});
+
+test("stripDataUriMetadata passes through non-data-URI and malformed input unchanged", () => {
+  assert.equal(stripDataUriMetadata("/uploads/abc.jpg"), "/uploads/abc.jpg");
+  assert.equal(stripDataUriMetadata("https://example.com/x.png"), "https://example.com/x.png");
+  assert.equal(stripDataUriMetadata("data:image/png;base64,not-valid-base64!!!"), "data:image/png;base64,not-valid-base64!!!");
+  assert.equal(stripDataUriMetadata(undefined), undefined);
+  assert.equal(stripDataUriMetadata(42), 42);
 });
