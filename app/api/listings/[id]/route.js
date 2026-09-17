@@ -5,6 +5,7 @@ import { resolveState } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
+import { stripDataUriMetadata } from "@/lib/image";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -75,10 +76,11 @@ export async function PATCH(req, { params }) {
     }));
   }
 
-  // Replace photos if provided — only host-served or data-URI images.
+  // Replace photos if provided — only host-served or data-URI images. Data-URI
+  // photos bypass the /api/upload Exif-stripping pipeline, so strip them here too.
   if (Array.isArray(b.photos)) {
     await prisma.photo.deleteMany({ where: { listingId: listing.id } });
-    const photos = b.photos.filter(isAllowedPhotoUrl).slice(0, 6);
+    const photos = b.photos.filter(isAllowedPhotoUrl).slice(0, 6).map(stripDataUriMetadata);
     data.photos = { create: photos.map((url, i) => ({ url, sort: i })) };
   }
 
