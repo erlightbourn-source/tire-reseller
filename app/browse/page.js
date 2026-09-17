@@ -9,7 +9,7 @@ import { stateName, isStateAbbr } from "@/lib/states";
 import { milesBetween } from "@/lib/geo";
 import { perTire } from "@/lib/tire";
 import { parseTireSize } from "@/lib/tiresize";
-import { buildListingWhere } from "@/lib/listingFilter";
+import { buildListingWhere, CI } from "@/lib/listingFilter";
 import { priceContextFromStats } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
@@ -43,10 +43,10 @@ async function getListings(sp, blockedIds = [], page = 1, pageSize = 24) {
   if (sp.q) {
     AND.push({
       OR: [
-        { brand: { contains: sp.q } },
-        { size: { contains: sp.q } },
-        { location: { contains: sp.q } },
-        { description: { contains: sp.q } },
+        { brand: { contains: sp.q, ...CI } },
+        { size: { contains: sp.q, ...CI } },
+        { location: { contains: sp.q, ...CI } },
+        { description: { contains: sp.q, ...CI } },
       ],
     });
   }
