@@ -44,7 +44,7 @@ export default async function RootLayout({ children }) {
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
-              <span className="font-display text-xl font-extrabold tracking-tight text-white">
+              <span className="hidden font-display text-xl font-extrabold tracking-tight text-white sm:inline">
                 Tire<span className="text-brand-400">Trader</span>
               </span>
             </Link>

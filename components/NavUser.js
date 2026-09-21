@@ -34,8 +34,8 @@ export default function NavUser({ user }) {
         <Link href="/browse" className="hidden px-2 text-sm font-medium text-slate-300 hover:text-white sm:block">
           Browse
         </Link>
-        <Link href="/login" className="btn-secondary">Log in</Link>
-        <Link href="/signup" className="btn-primary">Get started</Link>
+        <Link href="/login" className="btn-secondary whitespace-nowrap px-2.5 sm:px-4">Log in</Link>
+        <Link href="/signup" className="btn-primary whitespace-nowrap px-2.5 sm:px-4">Get started</Link>
       </nav>
     );
   }
