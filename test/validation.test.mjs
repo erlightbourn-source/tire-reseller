@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanStr, clampInt, isEmail, ValidationError, rateLimit, isAllowedPhotoUrl } from "../lib/validation.js";
+import {
+  cleanStr,
+  clampInt,
+  isEmail,
+  ValidationError,
+  rateLimit,
+  isAllowedPhotoUrl,
+  sanitizePhotoUrl,
+} from "../lib/validation.js";
 
 test("cleanStr trims and returns the value", () => {
   assert.equal(cleanStr("  hi  ", 10), "hi");
@@ -53,6 +61,46 @@ test("isAllowedPhotoUrl honors a configured R2 custom base and rejects lookalike
   assert.ok(!isAllowedPhotoUrl("https://uploads.shoptiretrader.com.evil.example/x.jpg"));
   if (prev === undefined) delete process.env.R2_PUBLIC_BASE_URL;
   else process.env.R2_PUBLIC_BASE_URL = prev;
+});
+
+// Minimal real JPEG (SOI + APP1/Exif carrying a GPS-ish secret + SOS + EOI),
+// same construction as test/image.test.mjs's APP1 regression test.
+function makeJpegWithSecret(secret) {
+  const app1Payload = Buffer.from(`Exif\0\0${secret}`);
+  const app1Len = Buffer.alloc(2);
+  app1Len.writeUInt16BE(app1Payload.length + 2);
+  return Buffer.concat([
+    Buffer.from([0xff, 0xd8]),
+    Buffer.from([0xff, 0xe1]),
+    app1Len,
+    app1Payload,
+    Buffer.from([0xff, 0xda, 0x00, 0x02]),
+    Buffer.from([0x11, 0x22, 0x33]),
+    Buffer.from([0xff, 0xd9]),
+  ]);
+}
+
+test("sanitizePhotoUrl strips embedded GPS/Exif from an inline data-URI photo", () => {
+  const secret = "GPSHOMEADDRESS-26.2379,-80.2506";
+  const jpeg = makeJpegWithSecret(secret);
+  const dataUrl = `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+  const cleaned = sanitizePhotoUrl(dataUrl);
+
+  assert.match(cleaned, /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/);
+  const decoded = Buffer.from(cleaned.split(",")[1], "base64");
+  assert.ok(!decoded.includes(secret), "Exif payload (and its embedded GPS secret) must be stripped");
+  // Still a decodable JPEG: SOI header intact.
+  assert.equal(decoded[0], 0xff);
+  assert.equal(decoded[1], 0xd8);
+});
+
+test("sanitizePhotoUrl leaves non-data-URI photo URLs untouched (already stripped at upload)", () => {
+  assert.equal(sanitizePhotoUrl("/uploads/abc.jpg"), "/uploads/abc.jpg");
+  assert.equal(
+    sanitizePhotoUrl("https://pub-abc123.r2.dev/uploads/x.jpg"),
+    "https://pub-abc123.r2.dev/uploads/x.jpg"
+  );
+  assert.equal(sanitizePhotoUrl(42), 42);
 });
 
 test("rateLimit allows up to the limit then blocks", () => {
