@@ -25,6 +25,26 @@ export const metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "TireTrader", statusBarStyle: "black-translucent" },
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  // Default social-share cards, inherited by every route that doesn't set its
+  // own. The site had NO twitter tags at all (0 pages) and no root-level
+  // openGraph, so pages without a bespoke block shipped no preview. A page that
+  // declares its own openGraph overrides this one wholesale (Next replaces the
+  // field, it does not deep-merge) — so no double-tagging. Image reuses the
+  // existing dynamic app/opengraph-image.js route.
+  openGraph: {
+    type: "website",
+    siteName: "TireTrader",
+    title: "TireTrader — Buy & Sell Tires",
+    description: PLAN_COPY.siteTagline,
+    url: "/",
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TireTrader — Buy & Sell Tires",
+    description: PLAN_COPY.siteTagline,
+    images: ["/opengraph-image"],
+  },
 };
 
 export const viewport = {
