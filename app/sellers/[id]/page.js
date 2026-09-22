@@ -13,6 +13,31 @@ export const dynamic = "force-dynamic";
 
 const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
+// Public seller profile — anonymous-visible, so it warrants real per-seller SEO
+// (it had none). Minimal own query (name/location + the same visibility guard
+// the page uses) so a deleted/non-seller id returns a noindex not-found rather
+// than leaking a title. Matches the generateMetadata idiom used by the city/size
+// landing pages.
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const seller = await prisma.user.findUnique({
+    where: { id },
+    select: { name: true, location: true, role: true, deletedAt: true },
+  });
+  if (!seller || seller.role !== "seller" || seller.deletedAt) {
+    return { title: "Seller not found — TireTrader", robots: { index: false } };
+  }
+  const where = seller.location ? ` in ${seller.location}` : "";
+  const title = `${seller.name} — tires for sale${where} | TireTrader`;
+  const description = `Browse tires listed by ${seller.name}${where} on TireTrader. See condition, tread depth, DOT year and per-tire price, read reviews, and message the seller directly.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/sellers/${id}` },
+    openGraph: { title, description, type: "profile", images: ["/opengraph-image"] },
+  };
+}
+
 export default async function SellerProfile({ params }) {
   const { id } = await params;
   const me = await getCurrentUser();

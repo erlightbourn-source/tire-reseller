@@ -9,6 +9,16 @@ import SubscribeButton from "@/components/SubscribeButton";
 
 export const dynamic = "force-dynamic";
 
+// This page is login-gated (redirects anonymous visitors to /login), so it is
+// NOT a public indexable surface — mark it noindex rather than give it SEO
+// metadata. The title/description still serve the browser tab and any logged-in
+// share. (robots.js doesn't disallow /pro, so this is the belt-and-suspenders.)
+export const metadata = {
+  title: "Seller plan — go Pro | TireTrader",
+  description: "Upgrade to the TireTrader seller plan: priority placement, a verified badge, bulk listing, unlimited featured listings, and priority support.",
+  robots: { index: false },
+};
+
 // ONE seller plan. This page describes what the plan includes, tier-aware:
 // a founding seller sees their locked founding price, everyone else standard.
 const PERKS = [
