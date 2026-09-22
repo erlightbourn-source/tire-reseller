@@ -24,7 +24,12 @@ export async function generateMetadata({ searchParams }) {
     title,
     description: `Browse new & used ${brand}tire sets ${where} from trusted local resellers. Filter by size, vehicle, condition, and price.`,
     alternates: { canonical: state ? `/browse?state=${state}` : "/browse" },
-    openGraph: { title, type: "website" },
+    openGraph: {
+      title,
+      description: `Browse new & used ${brand}tire sets ${where} from trusted local resellers. Filter by size, vehicle, condition, and price.`,
+      url: state ? `/browse?state=${state}` : "/browse",
+      type: "website",
+    },
   };
 }
 

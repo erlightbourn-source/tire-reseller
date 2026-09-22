@@ -10,7 +10,13 @@ export const metadata = {
   description:
     "What to check before buying used tires: tread depth in 32nds, DOT manufacture date, even wear, and damage. Plus a tire condition glossary and FAQ.",
   alternates: { canonical: "/guide" },
-  openGraph: { title: "Used tire buying guide — TireTrader", type: "article" },
+  openGraph: {
+    title: "Used tire buying guide — TireTrader",
+    description:
+      "What to check before buying used tires: tread depth in 32nds, DOT manufacture date, even wear, and damage. Plus a tire condition glossary and FAQ.",
+    url: "/guide",
+    type: "article",
+  },
 };
 
 const faqJsonLd = {

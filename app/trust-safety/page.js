@@ -9,6 +9,7 @@ export const metadata = {
     title: "Built for Honest, Face-to-Face Deals — TireTrader Trust & Safety",
     description:
       "Structured listings, scam warnings, seller ratings, and a safe-meetup checklist for local tire deals.",
+    url: "/trust-safety",
     type: "website",
     images: ["/opengraph-image"],
   },

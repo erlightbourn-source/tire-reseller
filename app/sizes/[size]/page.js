@@ -28,7 +28,7 @@ export async function generateMetadata({ params }) {
     title,
     description,
     alternates: { canonical: `/sizes/${sizeSlug(s.label)}` },
-    openGraph: { title, description, type: "website", images: ["/opengraph-image"] },
+    openGraph: { title, description, url: `/sizes/${sizeSlug(s.label)}`, type: "website", images: ["/opengraph-image"] },
   };
 }
 

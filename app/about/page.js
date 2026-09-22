@@ -17,6 +17,7 @@ export const metadata = {
   openGraph: {
     title: "About TireTrader",
     description: "Built in Broward, for South Florida drivers. A no-markup local tire marketplace.",
+    url: "/about",
     type: "website",
     images: ["/opengraph-image"],
   },

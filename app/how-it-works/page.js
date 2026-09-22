@@ -11,6 +11,7 @@ export const metadata = {
     title: "How TireTrader Works",
     description:
       "Search by size, message direct, inspect in person, pay the seller. The honest local tire marketplace.",
+    url: "/how-it-works",
     type: "website",
     images: ["/opengraph-image"],
   },

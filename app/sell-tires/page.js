@@ -12,7 +12,12 @@ export const metadata = {
   description:
     `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
   alternates: { canonical: "/sell-tires" },
-  openGraph: { title: "Sell tires on TireTrader — free to list during launch", type: "website" },
+  openGraph: {
+    title: "Sell tires on TireTrader — free to list during launch",
+    description: `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
+    url: "/sell-tires",
+    type: "website",
+  },
 };
 
 const ICONS = {
