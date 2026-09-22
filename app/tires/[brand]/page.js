@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { brandSlug } from "@/lib/site";
+import { brandSlug, SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 import { formatPrice } from "@/lib/format";
 import ListingCard from "@/components/ListingCard";
@@ -56,22 +56,35 @@ export default async function BrandPage({ params }) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: `${brand} tires for sale`,
-    description: `New & used ${brand} tires from local resellers on TireTrader.`,
-    ...(listings.length
-      ? {
-          mainEntity: {
-            "@type": "ItemList",
-            numberOfItems: listings.length,
-            itemListElement: listings.slice(0, 20).map((l, i) => ({
-              "@type": "ListItem",
-              position: i + 1,
-              name: `${l.brand} ${l.size}`,
-            })),
-          },
-        }
-      : {}),
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: `${brand} tires for sale`,
+        description: `New & used ${brand} tires from local resellers on TireTrader.`,
+        url: `${SITE_URL}/tires/${brandSlug(brand)}`,
+        ...(listings.length
+          ? {
+              mainEntity: {
+                "@type": "ItemList",
+                numberOfItems: listings.length,
+                itemListElement: listings.slice(0, 20).map((l, i) => ({
+                  "@type": "ListItem",
+                  position: i + 1,
+                  name: `${l.brand} ${l.size}`,
+                })),
+              },
+            }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Tires", item: `${SITE_URL}/browse` },
+          { "@type": "ListItem", position: 3, name: brand, item: `${SITE_URL}/tires/${brandSlug(brand)}` },
+        ],
+      },
+    ],
   };
 
   return (

@@ -6,6 +6,15 @@ import ListingForm from "@/components/ListingForm";
 
 export const dynamic = "force-dynamic";
 
+// Login-gated (redirects to /login when signed out) — noindex, matching /pro.
+// The title/description still serve the browser tab and any logged-in share.
+export const metadata = {
+  title: "List Your Tires — TireTrader",
+  description:
+    "Post a tire set for sale on TireTrader: add photos, size, condition, and price, then message buyers directly. Free to list during launch.",
+  robots: { index: false },
+};
+
 export default async function SellPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/sell");

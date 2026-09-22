@@ -7,6 +7,15 @@ import BecomeSeller from "@/components/BecomeSeller";
 
 export const dynamic = "force-dynamic";
 
+// Login-gated (redirects to /login when signed out) — noindex, matching /pro.
+// The public seller-plan pitch lives at /pro; this is the checkout surface.
+export const metadata = {
+  title: "Become a Seller — TireTrader",
+  description:
+    "Start selling tires on TireTrader: list unlimited sets, message buyers, and track your sales. Cancel anytime — free to list during launch.",
+  robots: { index: false },
+};
+
 const FEATURES = [
   ["List unlimited tire sets", "No per-listing fees, ever."],
   ["Built-in buyer messaging", "Negotiate without sharing your number."],

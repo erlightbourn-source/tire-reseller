@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
+import { SITE_URL } from "@/lib/site";
+import { jsonLdHtml } from "@/lib/jsonld";
 import ListingCard from "@/components/ListingCard";
 import { FoundingBadge } from "@/components/Badge";
 import Stars from "@/components/Stars";
@@ -78,8 +80,48 @@ export default async function SellerProfile({ params }) {
     ? !!(await prisma.block.findUnique({ where: { blockerId_blockedId: { blockerId: me.id, blockedId: seller.id } } }))
     : false;
 
+  const sellerUrl = `${SITE_URL}/sellers/${seller.id}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        url: sellerUrl,
+        mainEntity: {
+          "@type": "Person",
+          name: seller.name,
+          url: sellerUrl,
+          ...(seller.location ? { address: { "@type": "PostalAddress", addressLocality: seller.location } } : {}),
+          // Only emit a rating when real reviews exist — never fabricate one.
+          ...(reviews.length
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: Number(avg.toFixed(1)),
+                  reviewCount: reviews.length,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
+        },
+      },
+      {
+        // No sellers-index page exists, so a 2-level crumb (Home → this seller)
+        // rather than inventing an intermediate "Sellers" node pointing elsewhere.
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: seller.name, item: sellerUrl },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="space-y-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
+
       <div className="card flex flex-wrap items-center gap-4 p-5">
         <span className="grid h-16 w-16 shrink-0 place-items-center bg-brand-500 text-xl font-bold text-black">
           {initials(seller.name)}

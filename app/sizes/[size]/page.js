@@ -46,15 +46,28 @@ export default async function SizePage({ params }) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: `${s.label} tires`,
-    numberOfItems: listings.length,
-    itemListElement: listings.slice(0, 20).map((l, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      url: `${SITE_URL}/listings/${l.id}`,
-      name: `${l.brand} ${l.size}`,
-    })),
+    "@graph": [
+      {
+        "@type": "ItemList",
+        name: `${s.label} tires`,
+        url: `${SITE_URL}/sizes/${sizeSlug(s.label)}`,
+        numberOfItems: listings.length,
+        itemListElement: listings.slice(0, 20).map((l, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          url: `${SITE_URL}/listings/${l.id}`,
+          name: `${l.brand} ${l.size}`,
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Tires", item: `${SITE_URL}/browse` },
+          { "@type": "ListItem", position: 3, name: s.label, item: `${SITE_URL}/sizes/${sizeSlug(s.label)}` },
+        ],
+      },
+    ],
   };
 
   return (

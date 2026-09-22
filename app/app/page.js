@@ -3,7 +3,20 @@ import Logo from "@/components/Logo";
 import NotifyApp from "@/components/NotifyApp";
 import InstallApp from "@/components/InstallApp";
 
-export const metadata = { title: "TireTrader app — coming soon" };
+export const metadata = {
+  title: "TireTrader App — Coming Soon",
+  description:
+    "The TireTrader mobile app is coming soon: snap and list tires in seconds, get instant buyer message alerts, and browse local inventory on the go.",
+  alternates: { canonical: "/app" },
+  openGraph: {
+    title: "TireTrader App — Coming Soon",
+    description:
+      "Snap and list tires in seconds, get instant buyer alerts, and browse local inventory on the go.",
+    url: "/app",
+    type: "website",
+    images: ["/opengraph-image"],
+  },
+};
 
 const FEATURES = [
   ["📸", "Snap & list in seconds", "Photograph a tire and post it before the buyer leaves the lot."],
