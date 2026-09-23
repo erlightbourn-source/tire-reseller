@@ -26,7 +26,7 @@ const TRUST = [
   { title: "Local tire inventory", body: "Browse new & used sets from resellers in your state.", icon: "pin" },
   { title: "Message sellers directly", body: "Ask questions and make offers without sharing your number.", icon: "chat" },
   { title: "Save searches", body: "Get notified when matching tires are listed near you.", icon: "bell" },
-  { title: "Verified sellers", body: "Ratings, reviews, and trusted-seller badges you can vet.", icon: "shield" },
+  { title: "Seller ratings", body: "Buyers review sellers, and verified sellers carry a badge you can check.", icon: "shield" },
 ];
 
 const ICONS = {
@@ -135,16 +135,31 @@ export default async function Home() {
             <span className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 text-xs font-semibold text-brand-100 ring-1 ring-inset ring-white/15">
               <span className="h-1.5 w-1.5 bg-accent-400" />
               {launchMode
-                ? "Now live in South Florida"
+                ? "Founding sellers wanted in South Florida"
                 : `${totalActive} tire sets listed across ${stateCount} states`}
             </span>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl">
-              Find tire sets from{" "}
-              <span className="text-brand-500">trusted local resellers</span>.
+              {launchMode ? (
+                <>
+                  Buy and sell tire sets{" "}
+                  <span className="text-brand-500">locally</span>, without the Marketplace chaos.
+                </>
+              ) : (
+                <>
+                  Find tire sets from{" "}
+                  <span className="text-brand-500">trusted local resellers</span>.
+                </>
+              )}
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-300">
-              New and used tires from real sellers near you — searchable by size, vehicle, or location.
-              Browsing is always free.
+              {launchMode ? (
+                "Search by size, vehicle, or location. Browsing is free, and listing is free during launch."
+              ) : (
+                <>
+                  New and used tires from real sellers near you — searchable by size, vehicle, or location.
+                  Browsing is always free.
+                </>
+              )}
             </p>
           </div>
 
