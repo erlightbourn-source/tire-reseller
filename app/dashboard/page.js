@@ -6,6 +6,8 @@ import { formatPrice, timeAgo } from "@/lib/format";
 import { priceFor, PLAN_COPY } from "@/lib/pricing";
 import { isProSeller } from "@/lib/seller";
 import PromoteButton from "@/components/PromoteButton";
+import ManagePlanButton from "@/components/ManagePlanButton";
+import { getStripe, stripeConfigured } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +71,21 @@ export default async function DashboardPage() {
   const perks = isProSeller(user); // paid plan OR founding seller
   const rate = `${plan.label}${plan.locked ? " (locked for life)" : ""}`;
 
+  // Self-serve billing. A seller who cancels in the Stripe portal keeps the plan until the
+  // period ends (status stays "active"), so ask Stripe whether it's set to cancel rather than
+  // telling them it "renews". Best-effort: any Stripe error falls back to the stored date.
+  const hasBilling = !!user.stripeCustomerId && !!user.subscriptionStatus && user.subscriptionStatus !== "inactive";
+  let cancelsAt = null;
+  if (hasBilling && user.subscriptionStatus === "active" && stripeConfigured()) {
+    try {
+      const subs = await getStripe().subscriptions.list({ customer: user.stripeCustomerId, status: "active", limit: 1 });
+      const sub = subs.data[0];
+      if (sub?.cancel_at_period_end) cancelsAt = new Date(sub.current_period_end * 1000);
+    } catch (err) {
+      console.error("[stripe] dashboard subscription lookup failed:", err.message);
+    }
+  }
+
   const banner = {
     free: {
       title: "Free to list during launch 🎉",
@@ -77,7 +94,11 @@ export default async function DashboardPage() {
     },
     paid: {
       title: "Seller plan active",
-      sub: user.subscriptionCurrentEnd ? `${rate} · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}` : `${rate} seller plan`,
+      sub: cancelsAt
+        ? `${rate} · canceled — active until ${cancelsAt.toLocaleDateString()}, no further charges`
+        : user.subscriptionCurrentEnd
+          ? `${rate} · renews ${new Date(user.subscriptionCurrentEnd).toLocaleDateString()}`
+          : `${rate} seller plan`,
       good: true,
     },
     expired: {
@@ -133,6 +154,7 @@ export default async function DashboardPage() {
               {status === "expired" ? `Subscribe — ${plan.short}` : "Start selling free"}
             </Link>
           )}
+          {hasBilling && <ManagePlanButton />}
         </div>
       </div>
 
