@@ -18,6 +18,16 @@ function Avatar({ name }) {
   );
 }
 
+const GUEST_LINKS = [
+  { href: "/browse", label: "Browse tires" },
+  { href: "/locations", label: "Locations" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/guide", label: "Buying guide" },
+  { href: "/sell-tires", label: "Sell tires" },
+  { href: "/founding-seller", label: "Founding Seller" },
+  { href: "/trust-safety", label: "Trust & Safety" },
+];
+
 export default function NavUser({ user }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -36,6 +46,35 @@ export default function NavUser({ user }) {
         </Link>
         <Link href="/login" className="btn-secondary whitespace-nowrap px-2.5 sm:px-4">Log in</Link>
         <Link href="/signup" className="btn-primary whitespace-nowrap px-2.5 sm:px-4">Get started</Link>
+        {/* Phones: the header has no room for page links, so they live in this menu. */}
+        <div className="relative sm:hidden">
+          <button
+            type="button"
+            aria-label="Menu"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((o) => !o)}
+            onBlur={() => setTimeout(() => setOpen(false), 150)}
+            className="grid h-10 w-10 place-items-center text-slate-200 transition hover:bg-white/10"
+          >
+            <svg viewBox="0 0 20 20" className="h-5 w-5 fill-current" aria-hidden="true">
+              {open ? (
+                <path d="M5.3 4 10 8.7 14.7 4 16 5.3 11.3 10l4.7 4.7-1.3 1.3L10 11.3 5.3 16 4 14.7 8.7 10 4 5.3Z" />
+              ) : (
+                <path d="M3 5h14v2H3zm0 4h14v2H3zm0 4h14v2H3z" />
+              )}
+            </svg>
+          </button>
+          {open && (
+            <div id="mobile-menu" className="glass absolute right-0 mt-2 w-56 overflow-hidden py-1 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.9)]">
+              {GUEST_LINKS.map((l) => (
+                <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm text-slate-200 hover:bg-white/5">
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </nav>
     );
   }
@@ -89,6 +128,9 @@ export default function NavUser({ user }) {
               <p className="text-sm font-semibold text-white">{user.name}</p>
               <p className="text-xs text-slate-400">{user.role === "seller" ? "Seller" : "Buyer"}</p>
             </div>
+            <Link href="/browse" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Browse</Link>
+            <Link href="/favorites" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Saved</Link>
+            <Link href="/saved" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Alerts</Link>
             <Link href="/dashboard" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Dashboard</Link>
             <Link href="/messages" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5 md:hidden">Messages</Link>
             <Link href="/settings" className="block px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Settings</Link>
