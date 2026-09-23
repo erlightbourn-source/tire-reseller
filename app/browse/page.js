@@ -29,6 +29,7 @@ export async function generateMetadata({ searchParams }) {
       description: `Browse new & used ${brand}tire sets ${where} from trusted local resellers. Filter by size, vehicle, condition, and price.`,
       url: state ? `/browse?state=${state}` : "/browse",
       type: "website",
+      images: ["/opengraph-image"],
     },
   };
 }
