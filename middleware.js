@@ -29,8 +29,10 @@ function buildCsp(nonce) {
     // plausible.io is allowed for the optional, env-flagged analytics: the script
     // host (loaded via next/script, trusted transitively by strict-dynamic) and
     // the event beacon it POSTs to (connect-src). Harmless when analytics is off.
-    `script-src ${scriptSrc} https://plausible.io`,
-    "connect-src 'self' https://plausible.io",
+    // Same pattern for Cloudflare Web Analytics (script on static.cloudflareinsights.com,
+    // RUM beacon POSTs to cloudflareinsights.com/cdn-cgi/rum).
+    `script-src ${scriptSrc} https://plausible.io https://static.cloudflareinsights.com`,
+    "connect-src 'self' https://plausible.io https://cloudflareinsights.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
