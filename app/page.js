@@ -11,6 +11,7 @@ import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
 import Logo from "@/components/Logo";
 import EmailAlertForm from "@/components/EmailAlertForm";
+import NewsletterForm from "@/components/NewsletterForm";
 import { BUYER_FAQ } from "@/lib/content";
 import { brandSlug, SITE_URL } from "@/lib/site";
 import { PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
@@ -292,13 +293,23 @@ export default async function Home() {
       )}
 
       {/* Demand capture — get an email when matching tires list (no account needed) */}
-      <section className="card px-6 py-8 text-center">
+      <section id="alerts" className="card scroll-mt-24 px-6 py-8 text-center">
         <p className="eyebrow">Not seeing your size?</p>
         <h2 className="mt-1 font-display text-2xl font-extrabold text-white">Get an email when matching tires list</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
           Tell us your email and we&apos;ll send a heads-up when new sets go up near you.
         </p>
         <div className="mt-4"><EmailAlertForm /></div>
+      </section>
+
+      {/* Newsletter — TireKind news list (MailerLite, double opt-in) */}
+      <section id="newsletter" className="card scroll-mt-24 px-6 py-8 text-center">
+        <p className="eyebrow">Stay in the loop</p>
+        <h2 className="mt-1 font-display text-2xl font-extrabold text-white">Get TireKind news</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+          New sets listed near you, tips for selling the ones in your garage, and what&apos;s changing on TireKind.
+        </p>
+        <div className="mt-4"><NewsletterForm source="home" /></div>
       </section>
 
       {/* FAQ */}
