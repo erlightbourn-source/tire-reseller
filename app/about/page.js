@@ -2,10 +2,9 @@ import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 
-// Branded contact address. NOTE (Dev): the hello@ → real-inbox forward must be
-// wired + confirmed working before this page is published publicly (Miles open
-// item #3). Until then this is repo-only copy, not a live promise.
-const CONTACT_EMAIL = "hello@shoptiretrader.com";
+// Branded contact address. hello@tirekind.com forwards to the owner inbox via
+// Cloudflare Email Routing (live 2026-09-24; CF activity log shows it Forwarded).
+const CONTACT_EMAIL = "hello@tirekind.com";
 const IG = "tire_trader";
 const TIKTOK = "tirekind";  // @tire.trader renamed @tirekind 2026-09-23 (TireKind rebrand)
 

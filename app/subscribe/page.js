@@ -4,6 +4,7 @@ import { getCurrentUser, sellerStatus } from "@/lib/auth";
 import { stripeConfigured } from "@/lib/stripe";
 import { priceFor, PLAN_NAME, PLAN_COPY } from "@/lib/pricing";
 import BecomeSeller from "@/components/BecomeSeller";
+import RenewalDisclosure from "@/components/RenewalDisclosure";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,7 @@ export default async function SubscribePage() {
           </ul>
 
           <div className="mt-6">
+            {expired && <RenewalDisclosure plan={plan} />}
             <BecomeSeller expired={expired} label={plan.label} />
           </div>
 

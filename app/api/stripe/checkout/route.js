@@ -62,6 +62,14 @@ export async function POST() {
     line_items: [{ price: resolvePriceId(tier), quantity: 1 }],
     client_reference_id: user.id,
     metadata: { userId: user.id, tier },
+    // Affirmative renewal consent at the moment of charge (ROSCA / CA ARL; Quinn 9/24).
+    // Needs the ToS URL in Stripe public details (set; verified in test mode 9/24).
+    consent_collection: { terms_of_service: "required" },
+    custom_text: {
+      terms_of_service_acceptance: {
+        message: `I agree to the [TireKind Terms](${APP_URL}/terms), including automatic monthly renewal until I cancel.`,
+      },
+    },
     success_url: `${APP_URL}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${APP_URL}/subscribe?canceled=1`,
   });

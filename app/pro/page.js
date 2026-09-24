@@ -6,6 +6,7 @@ import { stripeConfigured } from "@/lib/stripe";
 import { priceFor, PLAN_NAME, PLAN_COPY } from "@/lib/pricing";
 import ProButton from "@/components/ProButton";
 import SubscribeButton from "@/components/SubscribeButton";
+import RenewalDisclosure from "@/components/RenewalDisclosure";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +79,10 @@ export default async function ProPage() {
               <Link href="/subscribe" className="btn-accent w-full justify-center">Become a seller first</Link>
             ) : status === "expired" ? (
               // Launch window ended and not paying: the plan is the way back in.
-              <SubscribeButton label={`Subscribe — ${plan.label}`} />
+              <>
+                <RenewalDisclosure plan={plan} />
+                <SubscribeButton label={`Subscribe — ${plan.label}`} />
+              </>
             ) : status === "free" ? (
               // Launch-window seller: promised "no card required" — never bill here.
               <div className="bg-slate-500/10 px-4 py-3 text-center text-sm text-slate-300 ring-1 ring-inset ring-slate-400/20">
@@ -94,7 +98,10 @@ export default async function ProPage() {
               // were bundled into the plan) — one click repairs it.
               <ProButton label="Activate plan perks" />
             ) : (
-              <SubscribeButton label={`Subscribe — ${plan.label}`} />
+              <>
+                <RenewalDisclosure plan={plan} />
+                <SubscribeButton label={`Subscribe — ${plan.label}`} />
+              </>
             )}
           </div>
           {eligible && !perksActive && (
