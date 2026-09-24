@@ -16,7 +16,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
   return (
     <div className="card card-hover group relative flex flex-col overflow-hidden">
       <FavoriteButton listingId={listing.id} initial={favorited} className="absolute right-2.5 top-2.5 z-10" />
-      <Link href={`/listings/${listing.id}`} className="flex flex-1 flex-col" aria-label={`${listing.brand} ${listing.size} — ${formatPrice(listing.priceCents)}`}>
+      <Link href={`/listings/${listing.id}`} className="flex flex-1 flex-col">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
