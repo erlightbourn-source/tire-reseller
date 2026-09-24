@@ -4,6 +4,7 @@ import path from "path";
 import { getCurrentUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
 import { stripMetadata } from "@/lib/image";
+import { buildR2Url } from "@/lib/r2Url";
 
 // Photo upload. Persistence backend is chosen at runtime:
 //   1. Cloudflare R2 (prod on CF) — via the OpenNext `UPLOADS_BUCKET` binding.
@@ -46,12 +47,16 @@ async function getR2Bucket() {
 }
 
 async function storeR2(bucket, bytes, fname, contentType) {
-  await bucket.put(`uploads/${fname}`, bytes, { httpMetadata: { contentType } });
   // Objects are served from the bucket's public base (R2 public dev URL or a
-  // custom domain), configured via R2_PUBLIC_BASE_URL.
-  const base = (process.env.R2_PUBLIC_BASE_URL || "").replace(/\/+$/, "");
-  return `${base}/uploads/${fname}`;
+  // custom domain), configured via R2_PUBLIC_BASE_URL. Check BEFORE writing so a
+  // misconfigured base never orphans objects behind a broken URL.
+  const url = buildR2Url(process.env.R2_PUBLIC_BASE_URL, fname);
+  if (!url) throw new R2ConfigError();
+  await bucket.put(`uploads/${fname}`, bytes, { httpMetadata: { contentType } });
+  return url;
 }
+
+class R2ConfigError extends Error {}
 
 const MIME = { jpg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" };
 
@@ -92,7 +97,11 @@ export async function POST(req) {
     try {
       urls.push(r2 ? await storeR2(r2, bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));
     } catch (e) {
-      // If the R2 store isn't reachable/configured, fall back to local rather than 500.
+      if (e instanceof R2ConfigError) {
+        console.error("[upload] R2 bucket bound but R2_PUBLIC_BASE_URL is unset or not https");
+        return NextResponse.json({ error: "Photo storage is temporarily unavailable." }, { status: 503 });
+      }
+      // If the R2 store isn't reachable, fall back to local rather than 500.
       urls.push(await storeLocal(bytes, fname));
     }
   }
