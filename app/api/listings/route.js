@@ -7,6 +7,7 @@ import { deriveListingColumns } from "@/lib/tiresize";
 import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 import { priceFor, PLAN_COPY } from "@/lib/pricing";
+import { stripDataUriMetadata } from "@/lib/image";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 function tireAttrs(b, state) {
@@ -64,7 +65,12 @@ export async function POST(req) {
   }
 
   // Accept only host-served / data / Vercel Blob image URLs; reject arbitrary remote URLs.
-  const photos = (Array.isArray(b.photos) ? b.photos : []).filter(isAllowedPhotoUrl).slice(0, 6);
+  // Data-URI photos bypass the /api/upload Exif-stripping pipeline, so strip them here too
+  // (a raw phone-camera data URI can otherwise leak the seller's GPS location verbatim).
+  const photos = (Array.isArray(b.photos) ? b.photos : [])
+    .filter(isAllowedPhotoUrl)
+    .slice(0, 6)
+    .map(stripDataUriMetadata);
 
   const quantity = clampInt(b.quantity, { min: 1, max: 100, fallback: 1 });
   const priceCents = Math.round(price * 100);
