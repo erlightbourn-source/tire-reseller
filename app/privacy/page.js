@@ -2,8 +2,8 @@ import Link from "next/link";
 import { PRIVACY, LAST_UPDATED } from "@/lib/legal";
 
 export const metadata = {
-  title: "Privacy Policy — TireTrader",
-  description: "What data TireTrader collects, how it's used, and your controls.",
+  title: "Privacy Policy — TireKind",
+  description: "What data TireKind collects, how it's used, and your controls.",
   alternates: { canonical: "/privacy" },
 };
 

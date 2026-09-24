@@ -41,10 +41,10 @@ export async function generateMetadata({ params }) {
     where: { id },
     select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, hidden: true, seller: { select: { deletedAt: true } }, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
   });
-  if (!l || l.hidden || l.seller?.deletedAt) return { title: "Listing not found — TireTrader" };
+  if (!l || l.hidden || l.seller?.deletedAt) return { title: "Listing not found — TireKind" };
   const cond = conditionMeta(l.condition).label;
-  const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireTrader`;
-  const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)} in ${l.location}. Message the seller directly on TireTrader.`;
+  const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireKind`;
+  const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)} in ${l.location}. Message the seller directly on TireKind.`;
   return {
     title,
     description,
@@ -314,7 +314,7 @@ export default async function ListingDetail({ params }) {
                 <div className="mt-1 h-2 overflow-hidden bg-white/10">
                   <div className={`h-full ${lifePct >= 60 ? "bg-emerald-500" : lifePct >= 30 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${Math.max(4, lifePct)}%` }} />
                 </div>
-                <p className="mt-1 text-[11px] text-slate-500">Based on the seller&apos;s stated tread — not measured or verified by TireTrader.</p>
+                <p className="mt-1 text-[11px] text-slate-500">Based on the seller&apos;s stated tread — not measured or verified by TireKind.</p>
               </div>
             )}
           </div>
@@ -335,7 +335,7 @@ export default async function ListingDetail({ params }) {
               <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">Full checklist</Link>
             </p>
             <p className="mt-2 border-t border-white/10 pt-2 text-xs leading-relaxed text-slate-300">
-              <span className="font-bold uppercase tracking-wide text-slate-200">Sold as-is by the seller.</span> TireTrader isn&apos;t a party to the sale and provides no guarantee — you buy at your own risk.{" "}
+              <span className="font-bold uppercase tracking-wide text-slate-200">Sold as-is by the seller.</span> TireKind isn&apos;t a party to the sale and provides no guarantee — you buy at your own risk.{" "}
               <Link href="/terms" className="font-semibold text-brand-300 hover:text-brand-200">Terms</Link>
             </p>
           </div>

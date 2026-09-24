@@ -4,12 +4,12 @@ import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 
 export const metadata = {
-  title: "Used Tires in South Florida — City by City | TireTrader",
+  title: "Used Tires in South Florida — City by City | TireKind",
   description:
     "Buy and sell used tires across Broward County — Fort Lauderdale, Pompano Beach, Hollywood, Coral Springs, Pembroke Pines and more. Local pickup, inspect before you pay.",
   alternates: { canonical: "/locations" },
   openGraph: {
-    title: "Used Tires in South Florida — City by City | TireTrader",
+    title: "Used Tires in South Florida — City by City | TireKind",
     description:
       "Buy and sell used tires across Broward County. Local pickup, inspect before you pay.",
     type: "website",
@@ -21,7 +21,7 @@ export default function LocationsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "TireTrader South Florida cities",
+    name: "TireKind South Florida cities",
     numberOfItems: CITIES.length,
     itemListElement: CITIES.map((c, i) => ({
       "@type": "ListItem",
@@ -38,7 +38,7 @@ export default function LocationsPage() {
       <header>
         <p className="eyebrow">Locations</p>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-white sm:text-4xl">
-          TireTrader — South Florida, City by City
+          TireKind — South Florida, City by City
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
           Broward County first, then Miami-Dade and Palm Beach. If you don&apos;t see your city yet,

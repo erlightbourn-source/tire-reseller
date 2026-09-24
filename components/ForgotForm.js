@@ -27,7 +27,7 @@ export default function ForgotForm() {
     <div className="mx-auto max-w-md">
       <div className="mb-5 flex items-center gap-2.5">
         <Logo className="h-9 w-9" />
-        <span className="font-display text-xl font-extrabold text-white">Tire<span className="text-brand-400">Trader</span></span>
+        <span className="font-display text-xl font-extrabold text-white">Tire<span className="text-brand-400">Kind</span></span>
       </div>
       <div className="card p-6">
         <h1 className="font-display text-2xl font-bold text-white">Reset your password</h1>

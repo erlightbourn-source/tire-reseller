@@ -12,8 +12,8 @@ const CONSPICUOUS = new Set([
 ]);
 
 export const metadata = {
-  title: "Terms of Service — TireTrader",
-  description: "The terms that govern using the TireTrader marketplace.",
+  title: "Terms of Service — TireKind",
+  description: "The terms that govern using the TireKind marketplace.",
   alternates: { canonical: "/terms" },
 };
 

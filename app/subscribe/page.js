@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 // Login-gated (redirects to /login when signed out) — noindex, matching /pro.
 // The public seller-plan pitch lives at /pro; this is the checkout surface.
 export const metadata = {
-  title: "Become a Seller — TireTrader",
+  title: "Become a Seller — TireKind",
   description:
-    "Start selling tires on TireTrader: list unlimited sets, message buyers, and track your sales. Cancel anytime — free to list during launch.",
+    "Start selling tires on TireKind: list unlimited sets, message buyers, and track your sales. Cancel anytime — free to list during launch.",
   robots: { index: false },
 };
 
@@ -43,7 +43,7 @@ export default async function SubscribePage() {
       <div className="mb-5 text-center">
         <p className="eyebrow">Seller plan</p>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-white">
-          {expired ? "Keep selling on TireTrader" : "Start selling — free during launch"}
+          {expired ? "Keep selling on TireKind" : "Start selling — free during launch"}
         </h1>
         <p className="mt-2 text-slate-400">
           {expired

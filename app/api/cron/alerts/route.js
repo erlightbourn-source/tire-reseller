@@ -58,7 +58,7 @@ export async function GET(req) {
     });
     await sendEmail({
       to: email,
-      subject: "New tire matches on TireTrader",
+      subject: "New tire matches on TireKind",
       text: `Hi ${safeName},\n\nNew listings matching your saved searches:\n\n${lines.join("\n\n")}\n\nBrowse them: ${SITE_URL}/browse\n\nManage alerts: ${SITE_URL}/saved`,
     });
     emailed++;

@@ -12,7 +12,7 @@ import { getStripe, stripeConfigured } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Seller dashboard — TireTrader",
+  title: "Seller dashboard — TireKind",
 };
 
 export default async function DashboardPage() {

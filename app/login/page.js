@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
 export const metadata = {
-  title: "Log in — TireTrader",
+  title: "Log in — TireKind",
 };
 
 export default function LoginPage() {

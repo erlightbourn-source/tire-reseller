@@ -9,12 +9,12 @@ import Logo from "@/components/Logo";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Browse Tires by State — TireTrader",
+  title: "Browse Tires by State — TireKind",
   description:
     "Find new & used tires for sale by state. Browse local tire resellers across the country and filter by size, condition, and price.",
   alternates: { canonical: "/states" },
   openGraph: {
-    title: "Browse Tires by State — TireTrader",
+    title: "Browse Tires by State — TireKind",
     description:
       "Find new & used tires for sale by state, from trusted local resellers.",
     url: "/states",

@@ -40,7 +40,27 @@ function buildCsp(nonce) {
   ].join("; ");
 }
 
+// TireKind rebrand (Dev 2026-09-23, row 648): 301 the old domain to tirekind.com, path + query preserved.
+// INERT until TIREKIND_REDIRECT=1 is set in the host env, so it can ship before DNS/hosting for tirekind.com
+// is live. Page GET/HEAD only: /api/* is never redirected (Stripe's webhook and form POSTs still target
+// shoptiretrader.com until they are repointed; a 301 would turn a POST into a failed GET).
+const OLD_HOSTS = new Set(["shoptiretrader.com", "www.shoptiretrader.com"]);
+const NEW_ORIGIN = "https://tirekind.com";
+
+function tirekindRedirect(req) {
+  if (process.env.TIREKIND_REDIRECT !== "1") return null;
+  if (req.method !== "GET" && req.method !== "HEAD") return null;
+  const host = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").toLowerCase().split(":")[0];
+  if (!OLD_HOSTS.has(host)) return null;
+  const { pathname, search } = req.nextUrl;
+  if (pathname.startsWith("/api/")) return null;
+  return NextResponse.redirect(`${NEW_ORIGIN}${pathname}${search}`, 301);
+}
+
 export function middleware(req) {
+  const moved = tirekindRedirect(req);
+  if (moved) return moved;
+
   // 1) CSRF check on mutating requests.
   if (!SAFE.has(req.method)) {
     const origin = req.headers.get("origin");

@@ -4,7 +4,7 @@ import AccountSettings from "@/components/AccountSettings";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Account settings — TireTrader" };
+export const metadata = { title: "Account settings — TireKind" };
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();

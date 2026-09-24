@@ -6,7 +6,7 @@ export default function ShareListing({ brand, size }) {
 
   async function share() {
     const url = typeof window !== "undefined" ? window.location.href : "";
-    const data = { title: `${brand} ${size} on TireTrader`, text: `Check out these ${brand} ${size} tires`, url };
+    const data = { title: `${brand} ${size} on TireKind`, text: `Check out these ${brand} ${size} tires`, url };
     if (navigator.share) {
       try { await navigator.share(data); } catch {}
       return;

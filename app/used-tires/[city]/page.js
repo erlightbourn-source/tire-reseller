@@ -16,8 +16,8 @@ export const dynamicParams = false; // only the curated city list is valid
 export async function generateMetadata({ params }) {
   const { city } = await params;
   const c = cityBySlug(city);
-  if (!c) return { title: "City not found — TireTrader" };
-  const title = `Used Tires in ${c.name}, FL — Buy & Sell Local | TireTrader`;
+  if (!c) return { title: "City not found — TireKind" };
+  const title = `Used Tires in ${c.name}, FL — Buy & Sell Local | TireKind`;
   const description = `Find used tires in ${c.name}, FL. Search local sellers by size and brand, see tread depth and DOT year up front, message direct, and inspect before you pay. ${c.name}-area sellers list free.`;
   return {
     title,
@@ -48,7 +48,7 @@ export default async function CityPage({ params }) {
         areaServed: { "@type": "City", name: `${c.name}, Florida` },
         provider: {
           "@type": "Organization",
-          name: "TireTrader",
+          name: "TireKind",
           url: SITE_URL,
         },
         url: `${SITE_URL}/used-tires/${c.slug}`,
@@ -82,7 +82,7 @@ export default async function CityPage({ params }) {
           Used Tires in {c.name}, FL
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
-          TireTrader connects {c.name} drivers with local tire sellers — search used tires near you
+          TireKind connects {c.name} drivers with local tire sellers — search used tires near you
           by size and vehicle, message direct, and meet up to inspect before you pay. No dealer
           markup, no lowball DMs about a couch you&apos;re not selling.
         </p>

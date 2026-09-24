@@ -31,7 +31,7 @@ export async function POST(req) {
     });
     await sendEmail({
       to: addr,
-      subject: "Confirm your TireTrader account",
+      subject: "Confirm your TireKind account",
       text: `Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${token}\n\nThis link expires in 24 hours.`,
     });
   }

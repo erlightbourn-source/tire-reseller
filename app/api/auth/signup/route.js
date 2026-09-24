@@ -65,7 +65,7 @@ export async function POST(req) {
     // Tell the real owner someone tried to sign up — don't leak existence to the requester.
     await sendEmail({
       to: email,
-      subject: "You already have a TireTrader account",
+      subject: "You already have a TireKind account",
       text: `Someone tried to sign up with this email. You already have an account — just log in:\n\n${SITE_URL}/login\n\nForgot your password? ${SITE_URL}/forgot`,
     });
     return NEUTRAL;
@@ -91,8 +91,8 @@ export async function POST(req) {
 
   await sendEmail({
     to: email,
-    subject: "Confirm your TireTrader account",
-    text: `Welcome to TireTrader! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
+    subject: "Confirm your TireKind account",
+    text: `Welcome to TireKind! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
   });
   // Record the consent event (who/when/which terms version) for a defensible
   // click-through trail without a schema change — it lives in the audit log.

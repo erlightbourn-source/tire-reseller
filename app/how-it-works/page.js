@@ -3,12 +3,12 @@ import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
 
 export const metadata = {
-  title: "How TireTrader Works — Buy & Sell Used Tires Locally",
+  title: "How TireKind Works — Buy & Sell Used Tires Locally",
   description:
-    "How TireTrader works: search used tires by size and fitment, message sellers directly, inspect in person, and pay the seller when you're satisfied. No escrow, no markup.",
+    "How TireKind works: search used tires by size and fitment, message sellers directly, inspect in person, and pay the seller when you're satisfied. No escrow, no markup.",
   alternates: { canonical: "/how-it-works" },
   openGraph: {
-    title: "How TireTrader Works",
+    title: "How TireKind Works",
     description:
       "Search by size, message direct, inspect in person, pay the seller. The honest local tire marketplace.",
     url: "/how-it-works",
@@ -20,7 +20,7 @@ export const metadata = {
 const BUYER_STEPS = [
   ["Search", "By size, vehicle fitment, brand, or city."],
   ["Compare", "Every listing shows tread depth, DOT age, condition, and a fair-price signal — you're comparing real data, not guesswork."],
-  ["Message the seller", "Built-in messaging, no phone number required to start. TireTrader flags off-platform payment requests as a scam risk."],
+  ["Message the seller", "Built-in messaging, no phone number required to start. TireKind flags off-platform payment requests as a scam risk."],
   ["Inspect and pay in person", "Meet the seller, check the tires yourself, and pay them directly when you're satisfied."],
 ];
 
@@ -51,7 +51,7 @@ export default function HowItWorksPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "HowTo",
-    name: "How to buy used tires on TireTrader",
+    name: "How to buy used tires on TireKind",
     step: BUYER_STEPS.map(([title, body], i) => ({
       "@type": "HowToStep",
       position: i + 1,
@@ -68,7 +68,7 @@ export default function HowItWorksPage() {
       <header>
         <p className="eyebrow">How it works</p>
         <h1 className="mt-1 font-display text-3xl font-extrabold text-white sm:text-4xl">
-          How TireTrader Works
+          How TireKind Works
         </h1>
       </header>
 
@@ -85,7 +85,7 @@ export default function HowItWorksPage() {
       <section className="card px-6 py-6">
         <h2 className="font-display text-xl font-extrabold text-white">An honest, in-person model</h2>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
-          TireTrader is the marketplace and trust layer — structured listings, messaging, ratings,
+          TireKind is the marketplace and trust layer — structured listings, messaging, ratings,
           and scam warnings. It is <strong className="text-slate-200">not</strong> an escrow or
           guarantee service. Buyers inspect in person and pay the seller directly, same as any
           trustworthy local deal — we just make it easier to find the right one.

@@ -21,8 +21,8 @@ function resolve(slug) {
 export async function generateMetadata({ params }) {
   const { size } = await params;
   const s = resolve(size);
-  if (!s) return { title: "Tire size not found — TireTrader" };
-  const title = `${s.label} tires for sale — new & used | TireTrader`;
+  if (!s) return { title: "Tire size not found — TireKind" };
+  const title = `${s.label} tires for sale — new & used | TireKind`;
   const description = `Browse ${s.label} tires from local resellers. Compare condition, tread depth, DOT year, and per-tire price, then message sellers directly.`;
   return {
     title,

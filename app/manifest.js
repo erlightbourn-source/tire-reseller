@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: "TireTrader — Buy & Sell Tires",
-    short_name: "TireTrader",
+    name: "TireKind — Buy & Sell Tires",
+    short_name: "TireKind",
     description: "The marketplace built for tire resellers.",
     start_url: "/",
     display: "standalone",

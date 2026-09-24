@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import ResetForm from "@/components/ResetForm";
 
-export const metadata = { title: "Set a new password — TireTrader" };
+export const metadata = { title: "Set a new password — TireKind" };
 
 export default function ResetPage() {
   return (

@@ -58,7 +58,7 @@ export async function POST(req) {
 
   await sendEmail({
     to: addr,
-    subject: "Confirm your TireTrader tire alerts",
+    subject: "Confirm your TireKind tire alerts",
     text:
       `Confirm you want alerts when new tires match: ${label}\n\n` +
       `Confirm: ${SITE_URL}/api/email-alerts/confirm?token=${confirm.token}\n\n` +

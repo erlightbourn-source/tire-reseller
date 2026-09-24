@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Trust & Safety — Buying and Selling Tires Safely | TireTrader",
+  title: "Trust & Safety — Buying and Selling Tires Safely | TireKind",
   description:
-    "How TireTrader makes local, in-person tire deals safer: structured listings, fair-price signal, built-in messaging, scam warnings, seller ratings, and a meet-up checklist.",
+    "How TireKind makes local, in-person tire deals safer: structured listings, fair-price signal, built-in messaging, scam warnings, seller ratings, and a meet-up checklist.",
   alternates: { canonical: "/trust-safety" },
   openGraph: {
-    title: "Built for Honest, Face-to-Face Deals — TireTrader Trust & Safety",
+    title: "Built for Honest, Face-to-Face Deals — TireKind Trust & Safety",
     description:
       "Structured listings, scam warnings, seller ratings, and a safe-meetup checklist for local tire deals.",
     url: "/trust-safety",
@@ -19,7 +19,7 @@ const TOOLS = [
   ["Structured details", "Size, tread depth, DOT year, condition — so you know what you're looking at before you message anyone."],
   ["Fair-price signal", "A quick read on whether a listing is priced in line with comparable tires."],
   ["Built-in messaging", "Negotiate without handing out your phone number."],
-  ["Scam warnings", "TireTrader flags requests to pay off-platform or before you've inspected the tires."],
+  ["Scam warnings", "TireKind flags requests to pay off-platform or before you've inspected the tires."],
   ["Seller ratings", "A track record that builds with every completed deal."],
 ];
 
@@ -27,7 +27,7 @@ const MEETUP = [
   "Meet in a public, well-lit location — a shopping center or shop parking lot works well.",
   "Inspect the tires in person before paying — check tread depth, sidewall condition, and DOT date against the listing.",
   "Bring a friend if you can, especially for a first-time meetup.",
-  "Pay only once you're satisfied. TireTrader doesn't process payment — you pay the seller directly, in person.",
+  "Pay only once you're satisfied. TireKind doesn't process payment — you pay the seller directly, in person.",
 ];
 
 export default function TrustSafetyPage() {
@@ -39,7 +39,7 @@ export default function TrustSafetyPage() {
           Built for Honest, Face-to-Face Deals
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
-          TireTrader isn&apos;t an escrow service or a guarantee — it&apos;s the tools that make a
+          TireKind isn&apos;t an escrow service or a guarantee — it&apos;s the tools that make a
           local, in-person deal safer and easier to get right.
         </p>
       </header>

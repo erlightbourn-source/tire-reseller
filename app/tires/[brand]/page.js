@@ -27,9 +27,9 @@ async function resolveBrand(slug) {
 export async function generateMetadata({ params }) {
   const { brand: brandParam } = await params;
   const { brand } = await resolveBrand(brandParam);
-  if (!brand) return { title: "Brand not found — TireTrader" };
-  const title = `${brand} tires for sale — new & used | TireTrader`;
-  const description = `Browse ${brand} tires from local resellers. Compare sizes, tread depth, DOT year, and prices, then message sellers directly on TireTrader.`;
+  if (!brand) return { title: "Brand not found — TireKind" };
+  const title = `${brand} tires for sale — new & used | TireKind`;
+  const description = `Browse ${brand} tires from local resellers. Compare sizes, tread depth, DOT year, and prices, then message sellers directly on TireKind.`;
   return {
     title,
     description,
@@ -60,7 +60,7 @@ export default async function BrandPage({ params }) {
       {
         "@type": "CollectionPage",
         name: `${brand} tires for sale`,
-        description: `New & used ${brand} tires from local resellers on TireTrader.`,
+        description: `New & used ${brand} tires from local resellers on TireKind.`,
         url: `${SITE_URL}/tires/${brandSlug(brand)}`,
         ...(listings.length
           ? {

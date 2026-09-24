@@ -46,8 +46,8 @@ export async function POST(req) {
 
   await sendEmail({
     to: addr,
-    subject: "Reset your TireTrader password",
-    text: `Someone requested a password reset for your TireTrader account.\n\nReset it here (valid for 1 hour):\n${link}\n\nIf this wasn't you, you can ignore this email.`,
+    subject: "Reset your TireKind password",
+    text: `Someone requested a password reset for your TireKind account.\n\nReset it here (valid for 1 hour):\n${link}\n\nIf this wasn't you, you can ignore this email.`,
   });
 
   // In dev (no email provider), surface the link so the flow is testable.

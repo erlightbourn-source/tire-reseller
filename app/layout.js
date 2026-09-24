@@ -20,10 +20,10 @@ export const metadata = {
   // Resolves relative canonical/OG/Twitter image URLs against the real host
   // instead of localhost (set NEXT_PUBLIC_SITE_URL in production).
   metadataBase: new URL(SITE_URL),
-  title: "TireTrader — Buy & Sell Tires",
+  title: "TireKind — Buy & Sell Tires",
   description: PLAN_COPY.siteTagline,
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "TireTrader", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "TireKind", statusBarStyle: "black-translucent" },
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
   // Default social-share cards, inherited by every route that doesn't set its
   // own. The site had NO twitter tags at all (0 pages) and no root-level
@@ -33,15 +33,15 @@ export const metadata = {
   // existing dynamic app/opengraph-image.js route.
   openGraph: {
     type: "website",
-    siteName: "TireTrader",
-    title: "TireTrader — Buy & Sell Tires",
+    siteName: "TireKind",
+    title: "TireKind — Buy & Sell Tires",
     description: PLAN_COPY.siteTagline,
     url: "/",
     images: ["/opengraph-image"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TireTrader — Buy & Sell Tires",
+    title: "TireKind — Buy & Sell Tires",
     description: PLAN_COPY.siteTagline,
     images: ["/opengraph-image"],
   },
@@ -65,7 +65,7 @@ export default async function RootLayout({ children }) {
             <Link href="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
               <span className="hidden font-display text-xl font-extrabold tracking-tight text-white sm:inline">
-                Tire<span className="text-brand-400">Trader</span>
+                Tire<span className="text-brand-400">Kind</span>
               </span>
             </Link>
             <NavUser
@@ -85,7 +85,7 @@ export default async function RootLayout({ children }) {
             <div>
               <div className="flex items-center gap-2.5">
                 <Logo className="h-7 w-7" />
-                <span className="font-display font-bold text-slate-200">TireTrader</span>
+                <span className="font-display font-bold text-slate-200">TireKind</span>
               </div>
               <p className="mt-2 max-w-xs text-sm text-slate-400">
                 Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.

@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 // Login-gated (redirects to /login when signed out) — noindex, matching /pro.
 // The title/description still serve the browser tab and any logged-in share.
 export const metadata = {
-  title: "List Your Tires — TireTrader",
+  title: "List Your Tires — TireKind",
   description:
-    "Post a tire set for sale on TireTrader: add photos, size, condition, and price, then message buyers directly. Free to list during launch.",
+    "Post a tire set for sale on TireKind: add photos, size, condition, and price, then message buyers directly. Free to list during launch.",
   robots: { index: false },
 };
 

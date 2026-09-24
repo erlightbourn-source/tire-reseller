@@ -57,7 +57,7 @@ export default function MessageSeller({ listingId, loggedIn }) {
       <p className="text-sm font-semibold text-slate-200">Send a message</p>
       <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className="input" />
       <div className={`px-3 py-2 text-xs ${offPlatform.flagged ? "bg-amber-500/15 text-amber-200" : "bg-slate-500/10 text-slate-400"}`}>
-        {offPlatform.flagged && <span className="font-semibold">⚠ Keep this deal on TireTrader. </span>}
+        {offPlatform.flagged && <span className="font-semibold">⚠ Keep this deal on TireKind. </span>}
         {SAFETY_WARNING}
       </div>
       <label className="flex items-start gap-2 text-xs text-slate-300">

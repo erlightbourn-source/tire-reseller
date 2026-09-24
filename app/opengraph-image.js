@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 // Default branded social card (1200×630) used when a route doesn't supply its
 // own. Brutalist brand: black canvas, acid-yellow accent, hard offset block.
 export const runtime = "nodejs";
-export const alt = "TireTrader — buy & sell tires locally";
+export const alt = "TireKind — buy & sell tires locally";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

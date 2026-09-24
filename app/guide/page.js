@@ -6,12 +6,12 @@ import { CONDITIONS } from "@/lib/tire";
 import { jsonLdHtml } from "@/lib/jsonld";
 
 export const metadata = {
-  title: "How to buy used tires safely — TireTrader buying guide",
+  title: "How to buy used tires safely — TireKind buying guide",
   description:
     "What to check before buying used tires: tread depth in 32nds, DOT manufacture date, even wear, and damage. Plus a tire condition glossary and FAQ.",
   alternates: { canonical: "/guide" },
   openGraph: {
-    title: "Used tire buying guide — TireTrader",
+    title: "Used tire buying guide — TireKind",
     description:
       "What to check before buying used tires: tread depth in 32nds, DOT manufacture date, even wear, and damage. Plus a tire condition glossary and FAQ.",
     url: "/guide",

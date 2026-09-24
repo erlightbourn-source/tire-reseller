@@ -7,12 +7,12 @@ import { getFoundingClaimed } from "@/lib/founding";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Founding Seller Program — TireTrader",
+  title: "Founding Seller Program — TireKind",
   description:
-    `Be one of the first ${FOUNDING_SEATS} South Florida sellers on TireTrader. Permanent Founding Seller badge, every seller-plan perk included, homepage spotlight, and ${FOUNDING_SHORT} locked for life.`,
+    `Be one of the first ${FOUNDING_SEATS} South Florida sellers on TireKind. Permanent Founding Seller badge, every seller-plan perk included, homepage spotlight, and ${FOUNDING_SHORT} locked for life.`,
   alternates: { canonical: "/founding-seller" },
   openGraph: {
-    title: "TireTrader Founding Seller Program — Be First, Stay Ahead",
+    title: "TireKind Founding Seller Program — Be First, Stay Ahead",
     description:
       `First ${FOUNDING_SEATS} South Florida sellers: permanent badge, every plan perk included, price locked at ${FOUNDING_SHORT} forever.`,
     type: "website",
@@ -41,7 +41,7 @@ export default async function FoundingSellerPage() {
           Be First, Stay Ahead
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-slate-300">
-          We&apos;re launching TireTrader with {FOUNDING_SEATS} South Florida sellers, not 2,500. Get in as a
+          We&apos;re launching TireKind with {FOUNDING_SEATS} South Florida sellers, not 2,500. Get in as a
           founder and the perks don&apos;t expire when we grow.
         </p>
         <p className="mt-4 max-w-2xl bg-brand-500/5 px-4 py-3 text-sm text-slate-300 ring-1 ring-inset ring-brand-400/20">

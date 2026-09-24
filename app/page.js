@@ -106,13 +106,13 @@ export default async function Home() {
     "@graph": [
       {
         "@type": "Organization",
-        name: "TireTrader",
+        name: "TireKind",
         url: SITE_URL,
         description: "Marketplace to buy & sell new and used tires with trusted local resellers.",
       },
       {
         "@type": "WebSite",
-        name: "TireTrader",
+        name: "TireKind",
         url: SITE_URL,
         potentialAction: {
           "@type": "SearchAction",

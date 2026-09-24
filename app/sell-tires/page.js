@@ -8,12 +8,12 @@ import Logo from "@/components/Logo";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Sell tires online — TireTrader for resellers",
+  title: "Sell tires online — TireKind for resellers",
   description:
     `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
   alternates: { canonical: "/sell-tires" },
   openGraph: {
-    title: "Sell tires on TireTrader — free to list during launch",
+    title: "Sell tires on TireKind — free to list during launch",
     description: `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
     url: "/sell-tires",
     type: "website",

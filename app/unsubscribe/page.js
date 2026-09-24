@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 
-export const metadata = { title: "Unsubscribe — TireTrader", robots: { index: false } };
+export const metadata = { title: "Unsubscribe — TireKind", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 // GET landing page from the email link — NO mutation here (so a mail scanner or

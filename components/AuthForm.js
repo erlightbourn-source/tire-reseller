@@ -79,7 +79,7 @@ export default function AuthForm({ mode }) {
           <div className="relative flex items-center gap-2.5">
             <Logo className="h-9 w-9" />
             <span className="font-display text-xl font-extrabold">
-              Tire<span className="text-brand-300">Trader</span>
+              Tire<span className="text-brand-300">Kind</span>
             </span>
           </div>
           <div className="relative">
@@ -102,7 +102,7 @@ export default function AuthForm({ mode }) {
         <div className="bg-[#13161c] p-7 sm:p-9">
           <div className="mb-1 flex items-center gap-2 md:hidden">
             <Logo className="h-8 w-8" />
-            <span className="font-display text-lg font-extrabold text-white">TireTrader</span>
+            <span className="font-display text-lg font-extrabold text-white">TireKind</span>
           </div>
           <h1 className="font-display text-2xl font-bold text-white">
             {isSignup ? "Create your account" : "Log in"}

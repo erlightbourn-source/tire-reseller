@@ -19,7 +19,7 @@ export async function generateMetadata({ searchParams }) {
   const state = searchParams.state && isStateAbbr(searchParams.state) ? searchParams.state.toUpperCase() : null;
   const where = state ? `in ${stateName(state)}` : "near you";
   const brand = searchParams.brand ? `${searchParams.brand} ` : "";
-  const title = `Buy ${brand}tires ${where} — TireTrader`;
+  const title = `Buy ${brand}tires ${where} — TireKind`;
   return {
     title,
     description: `Browse new & used ${brand}tire sets ${where} from trusted local resellers. Filter by size, vehicle, condition, and price.`,

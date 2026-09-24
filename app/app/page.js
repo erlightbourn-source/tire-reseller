@@ -4,12 +4,12 @@ import NotifyApp from "@/components/NotifyApp";
 import InstallApp from "@/components/InstallApp";
 
 export const metadata = {
-  title: "TireTrader App — Coming Soon",
+  title: "TireKind App — Coming Soon",
   description:
-    "The TireTrader mobile app is coming soon: snap and list tires in seconds, get instant buyer message alerts, and browse local inventory on the go.",
+    "The TireKind mobile app is coming soon: snap and list tires in seconds, get instant buyer message alerts, and browse local inventory on the go.",
   alternates: { canonical: "/app" },
   openGraph: {
-    title: "TireTrader App — Coming Soon",
+    title: "TireKind App — Coming Soon",
     description:
       "Snap and list tires in seconds, get instant buyer alerts, and browse local inventory on the go.",
     url: "/app",
@@ -45,7 +45,7 @@ export default function AppPage() {
         <div className="relative">
           <div className="mx-auto mb-4 w-fit"><Logo className="h-16 w-16" spin bare /></div>
           <span className="badge bg-white/10 text-brand-100 ring-1 ring-inset ring-white/15">Coming soon</span>
-          <h1 className="mt-3 font-display text-3xl font-extrabold sm:text-4xl">TireTrader in your pocket</h1>
+          <h1 className="mt-3 font-display text-3xl font-extrabold sm:text-4xl">TireKind in your pocket</h1>
           <p className="mx-auto mt-3 max-w-xl text-slate-300">
             We're building native iOS &amp; Android apps so you can buy and sell tires anywhere.
             Want first dibs? Drop your email and we'll ping you at launch.

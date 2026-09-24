@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Unsubscribed — TireTrader", robots: { index: false } };
+export const metadata = { title: "Unsubscribed — TireKind", robots: { index: false } };
 
 export default function UnsubscribedPage() {
   return (

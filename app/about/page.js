@@ -7,15 +7,15 @@ import { jsonLdHtml } from "@/lib/jsonld";
 // item #3). Until then this is repo-only copy, not a live promise.
 const CONTACT_EMAIL = "hello@shoptiretrader.com";
 const IG = "tire_trader";
-const TIKTOK = "tire.trader";
+const TIKTOK = "tirekind";  // @tire.trader renamed @tirekind 2026-09-23 (TireKind rebrand)
 
 export const metadata = {
-  title: "About TireTrader — Built in Broward for South Florida Drivers",
+  title: "About TireKind — Built in Broward for South Florida Drivers",
   description:
-    "TireTrader is a South Florida used-tire marketplace built by EV Tech Solutions LLC. Launching Broward-first, working directly with local sellers for real inventory from day one.",
+    "TireKind is a South Florida used-tire marketplace built by EV Tech Solutions LLC. Launching Broward-first, working directly with local sellers for real inventory from day one.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About TireTrader",
+    title: "About TireKind",
     description: "Built in Broward, for South Florida drivers. A no-markup local tire marketplace.",
     url: "/about",
     type: "website",
@@ -27,7 +27,7 @@ export default function AboutPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "TireTrader",
+    name: "TireKind",
     url: SITE_URL,
     description:
       "A South Florida used-tire marketplace connecting local drivers with tire sellers. Built by EV Tech Solutions LLC.",
@@ -54,7 +54,7 @@ export default function AboutPage() {
         <h2 className="font-display text-xl font-extrabold text-white">Why we built this</h2>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
           Buying and selling tires on a general marketplace means wading through furniture, video
-          games, and lowball DMs to find one real buyer. TireTrader is built for one thing — getting
+          games, and lowball DMs to find one real buyer. TireKind is built for one thing — getting
           South Florida drivers matched with the right tires, from sellers who actually have them,
           without the markup of a tire shop.
         </p>
@@ -63,7 +63,7 @@ export default function AboutPage() {
       <section className="card px-6 py-6">
         <h2 className="font-display text-xl font-extrabold text-white">Who&apos;s behind it</h2>
         <p className="mt-2 max-w-2xl text-sm text-slate-400">
-          TireTrader is built by EV Tech Solutions LLC, based in South Florida. We&apos;re launching
+          TireKind is built by EV Tech Solutions LLC, based in South Florida. We&apos;re launching
           Broward-first, working directly with local sellers to get real inventory on the platform
           from day one.
         </p>

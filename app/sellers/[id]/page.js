@@ -27,11 +27,11 @@ export async function generateMetadata({ params }) {
     select: { name: true, location: true, role: true, deletedAt: true },
   });
   if (!seller || seller.role !== "seller" || seller.deletedAt) {
-    return { title: "Seller not found — TireTrader", robots: { index: false } };
+    return { title: "Seller not found — TireKind", robots: { index: false } };
   }
   const where = seller.location ? ` in ${seller.location}` : "";
-  const title = `${seller.name} — tires for sale${where} | TireTrader`;
-  const description = `Browse tires listed by ${seller.name}${where} on TireTrader. See condition, tread depth, DOT year and per-tire price, read reviews, and message the seller directly.`;
+  const title = `${seller.name} — tires for sale${where} | TireKind`;
+  const description = `Browse tires listed by ${seller.name}${where} on TireKind. See condition, tread depth, DOT year and per-tire price, read reviews, and message the seller directly.`;
   return {
     title,
     description,

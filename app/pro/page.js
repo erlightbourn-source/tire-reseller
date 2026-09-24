@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
 // metadata. The title/description still serve the browser tab and any logged-in
 // share. (robots.js doesn't disallow /pro, so this is the belt-and-suspenders.)
 export const metadata = {
-  title: "Seller plan — go Pro | TireTrader",
-  description: "Upgrade to the TireTrader seller plan: priority placement, a verified badge, bulk listing, unlimited featured listings, and priority support.",
+  title: "Seller plan — go Pro | TireKind",
+  description: "Upgrade to the TireKind seller plan: priority placement, a verified badge, bulk listing, unlimited featured listings, and priority support.",
   robots: { index: false },
 };
 
