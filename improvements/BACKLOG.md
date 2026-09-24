@@ -51,3 +51,6 @@ deploy are Evan's calls — prepare, never pull the trigger.
 
 Refresh sources each run: latest flagged findings, newest `marketing-reports/*.md` recommendations,
 `improve:` lines in ~/.claude/agent-logs/dev.log, and fresh inspection.
+
+| 19 | Upload route: fail 503 (not silent relative URL) when R2 bound but R2_PUBLIC_BASE_URL unset/non-https; portal route rate-limited | resilience / launch-readiness | audit 2026-09-24 (CF port) | low | shipped-to-branch 2026-09-24 |
+| 20 | Route-level test coverage for new `/api/stripe/portal` (401 unauth, 400 no customer, dev simulated path) — needs e2e harness Stripe stub | test-coverage | audit 2026-09-24 | low | pending |
