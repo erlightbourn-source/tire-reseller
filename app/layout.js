@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getCurrentUser, canSell, isAdmin } from "@/lib/auth";
 import NavUser from "@/components/NavUser";
 import Logo from "@/components/Logo";
+import NewsletterForm from "@/components/NewsletterForm";
 import Analytics from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
 import { PLAN_COPY } from "@/lib/pricing";
@@ -90,6 +91,10 @@ export default async function RootLayout({ children }) {
               <p className="mt-2 max-w-xs text-sm text-slate-400">
                 Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.
               </p>
+              <div className="mt-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Get TireKind news</p>
+                <div className="mt-2"><NewsletterForm source="footer" compact /></div>
+              </div>
             </div>
             <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-sm sm:grid-cols-3" aria-label="Footer">
               <div className="flex flex-col gap-2">
