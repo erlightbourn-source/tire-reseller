@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { logAudit } from "@/lib/audit";
 import { LAST_UPDATED } from "@/lib/legal";
+import { SRC_COOKIE, decodeSource } from "@/lib/attribution";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -99,7 +100,9 @@ export async function POST(req) {
   await logAudit("signup", {
     userId: user.id,
     ip: clientIp(req),
-    meta: { role: user.role, agreedToTerms: true, termsVersion: LAST_UPDATED },
+    // First-touch source (utm_* / outside referrer) from the tt_src cookie; null for direct visitors.
+    meta: { role: user.role, agreedToTerms: true, termsVersion: LAST_UPDATED,
+            source: decodeSource(req.cookies?.get?.(SRC_COOKIE)?.value) },
   });
   // In dev (no email provider) surface the link so the flow is testable.
   const devLink = process.env.NODE_ENV !== "production" && !process.env.RESEND_API_KEY
