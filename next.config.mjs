@@ -29,6 +29,8 @@ const legacyRedirects = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // Cloudflare/OpenNext: keep Prisma's generated client out of the server bundle.
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   poweredByHeader: false, // don't advertise the framework/version
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
