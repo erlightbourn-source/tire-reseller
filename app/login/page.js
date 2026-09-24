@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
 export const metadata = {
+  robots: { index: false },
   title: "Log in — TireKind",
 };
 
