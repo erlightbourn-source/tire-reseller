@@ -60,7 +60,7 @@ function SizeSearch({ router, homeState }) {
           id="hero-size"
           value={size}
           onChange={(e) => setSize(e.target.value)}
-          placeholder="Enter a size like 225/45R17 or a brand"
+          placeholder="Size or brand, e.g. 225/45R17"
           className="input pl-10 text-base"
         />
       </div>

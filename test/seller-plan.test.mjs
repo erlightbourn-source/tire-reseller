@@ -63,7 +63,7 @@ test("resolvePriceId/priceConfigState: 'mixed' config — one tier id set alongs
 
 test("foundingSpotsLine: renders the counter, caps at the seat count, null when unknown", () => {
   assert.equal(foundingSpotsLine(7), `7 of ${FOUNDING_SEATS} founding spots claimed`);
-  assert.equal(foundingSpotsLine(0), `0 of ${FOUNDING_SEATS} founding spots claimed`);
+  assert.equal(foundingSpotsLine(0), `All ${FOUNDING_SEATS} founding spots open`);
   assert.equal(foundingSpotsLine(FOUNDING_SEATS + 3), `${FOUNDING_SEATS} of ${FOUNDING_SEATS} founding spots claimed`);
   assert.equal(foundingSpotsLine(null), null);
   assert.equal(foundingSpotsLine(NaN), null);
