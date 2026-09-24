@@ -6,7 +6,9 @@ import { CITIES } from "@/lib/cities";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap() {
-  const now = new Date();
+  // No lastModified on static/city/state/brand/size pages: we have no real per-page
+  // change date, and a request-time timestamp teaches crawlers to ignore lastmod.
+  // Listings keep their real updatedAt.
   const url = (path) => `${SITE_URL}${path}`;
 
   const staticPages = [
@@ -14,7 +16,6 @@ export default async function sitemap() {
     "/how-it-works", "/founding-seller", "/trust-safety", "/about", "/app",
   ].map((p) => ({
     url: url(p),
-    lastModified: now,
     changeFrequency: p === "/" || p === "/browse" ? "daily" : "weekly",
     priority: p === "/" ? 1 : 0.7,
   }));
@@ -22,7 +23,6 @@ export default async function sitemap() {
   // Programmatic Broward city landing pages — the core local-SEO play.
   const cityPages = CITIES.map((c) => ({
     url: url(`/used-tires/${c.slug}`),
-    lastModified: now,
     changeFrequency: "weekly",
     priority: 0.7,
   }));
@@ -44,8 +44,7 @@ export default async function sitemap() {
     const populated = new Set(grouped.filter((g) => g.state && g._count._all > 0).map((g) => g.state));
     statePages = STATES.filter((s) => populated.has(s.abbr)).map((s) => ({
       url: url(`/browse?state=${s.abbr}`),
-      lastModified: now,
-      changeFrequency: "daily",
+        changeFrequency: "daily",
       priority: 0.6,
     }));
 
@@ -56,8 +55,7 @@ export default async function sitemap() {
     });
     brandPages = brands.map((b) => ({
       url: url(`/tires/${brandSlug(b.brand)}`),
-      lastModified: now,
-      changeFrequency: "daily",
+        changeFrequency: "daily",
       priority: 0.6,
     }));
 
@@ -69,8 +67,7 @@ export default async function sitemap() {
     });
     sizePages = sizes.map((s) => ({
       url: url(`/sizes/${sizeSlug(s.size)}`),
-      lastModified: now,
-      changeFrequency: "daily",
+        changeFrequency: "daily",
       priority: 0.6,
     }));
 
