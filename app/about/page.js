@@ -5,7 +5,7 @@ import { jsonLdHtml } from "@/lib/jsonld";
 // Branded contact address. hello@tirekind.com forwards to the owner inbox via
 // Cloudflare Email Routing (live 2026-09-24; CF activity log shows it Forwarded).
 const CONTACT_EMAIL = "hello@tirekind.com";
-const IG = "tire_trader";
+const IG = "shoptirekind";  // @tire_trader renamed @shoptirekind 2026-09-24 (Evan pick)
 const TIKTOK = "tirekind";  // @tire.trader renamed @tirekind 2026-09-23 (TireKind rebrand)
 
 export const metadata = {
