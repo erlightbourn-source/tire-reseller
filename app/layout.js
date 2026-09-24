@@ -64,7 +64,8 @@ export default async function RootLayout({ children }) {
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
-              <span className="hidden font-display text-xl font-extrabold tracking-tight text-white sm:inline">
+              {/* sr-only on mobile (logo-only) so the home link always has an accessible name that matches the visible wordmark */}
+              <span className="sr-only font-display text-xl font-extrabold tracking-tight text-white sm:not-sr-only sm:inline">
                 Tire<span className="text-brand-400">Trader</span>
               </span>
             </Link>
