@@ -1,5 +1,8 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  // driverAdapters: lets lib/db.js run Prisma through the Neon HTTP driver on Cloudflare
+  // Workers, where the standard engine fails (EvalError: code generation from strings).
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
