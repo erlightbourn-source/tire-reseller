@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SRC_COOKIE, SRC_MAX_AGE, firstTouch, encodeSource } from "@/lib/attribution";
 
 // This middleware does two things on every (non-static) request:
 //  1. CSRF defense-in-depth: reject state-changing API requests from a foreign
@@ -84,6 +85,17 @@ export function middleware(req) {
 
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set("Content-Security-Policy", csp);
+
+  // 3) First-touch attribution cookie (lib/attribution.js): page GETs only, never overwrites.
+  if (req.method === "GET" && !req.nextUrl.pathname.startsWith("/api/") && !req.cookies.get(SRC_COOKIE)) {
+    const touch = firstTouch(req.nextUrl, req.headers.get("referer"));
+    if (touch) {
+      res.cookies.set(SRC_COOKIE, encodeSource(touch), {
+        maxAge: SRC_MAX_AGE, path: "/", sameSite: "lax", httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+  }
   return res;
 }
 
