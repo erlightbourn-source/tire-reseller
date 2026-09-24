@@ -95,7 +95,7 @@ export async function GET(req) {
   return new NextResponse(JSON.stringify(data, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="tiretrader-data-${user.id.slice(0, 8)}.json"`,
+      "Content-Disposition": `attachment; filename="tirekind-data-${user.id.slice(0, 8)}.json"`,
     },
   });
 }

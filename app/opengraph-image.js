@@ -37,10 +37,10 @@ export default function OpengraphImage() {
               border: "4px solid #4d84ff",
             }}
           >
-            T
+            K
           </div>
           <div style={{ color: "#ffffff", fontSize: "40px", fontWeight: 800, letterSpacing: "-1px" }}>
-            TIRETRADER
+            TIREKIND
           </div>
         </div>
 
@@ -76,7 +76,7 @@ export default function OpengraphImage() {
               padding: "14px 28px",
             }}
           >
-            tiretrader
+            tirekind.com
           </div>
         </div>
       </div>
