@@ -14,6 +14,9 @@ export async function POST(req) {
   if (limited) return limited;
 
   const body = await req.json().catch(() => ({}));
+  // Honeypot (NotifyApp's hidden `company` field): a filled value is a bot. Answer like a
+  // success so it learns nothing, and send nothing to MailerLite.
+  if (String(body.company || "").trim()) return NextResponse.json({ ok: true });
   const addr = String(body.email || "").trim().toLowerCase();
   if (!isEmail(addr)) return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
 
