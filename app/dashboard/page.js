@@ -8,6 +8,7 @@ import { isProSeller } from "@/lib/seller";
 import PromoteButton from "@/components/PromoteButton";
 import ManagePlanButton from "@/components/ManagePlanButton";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { tiktokShareEnabledFor } from "@/lib/tiktok";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export const metadata = {
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard");
+  const tiktokShare = tiktokShareEnabledFor(user);
 
   const listings = await prisma.listing.findMany({
     where: { sellerId: user.id },
@@ -243,6 +245,9 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   {l.status === "active" && <PromoteButton id={l.id} initial={l.featured} />}
+                  {l.status === "active" && tiktokShare && (
+                    <Link href={`/sell/${l.id}/tiktok`} className="btn-secondary">Share to TikTok</Link>
+                  )}
                   <Link href={`/sell/${l.id}/edit`} className="btn-secondary">Edit</Link>
                 </div>
               </div>

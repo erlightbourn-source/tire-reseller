@@ -7,9 +7,11 @@ import { stripMetadata } from "@/lib/image";
 
 // Photo upload. Persistence backend is chosen at runtime:
 //   1. Cloudflare R2 (prod on CF) — via the OpenNext `UPLOADS_BUCKET` binding.
-//   2. /public/uploads — local dev only (ephemeral on serverless hosts).
-// The remote path validates real image bytes + size before storing.
-// (The prior Vercel Blob backend was removed with the Vercel→Cloudflare port.)
+//   2. Vercel Blob — when BLOB_READ_WRITE_TOKEN is set (prod on Vercel today).
+//   3. /public/uploads — local dev only. Never used on a deployed host, where the
+//      filesystem is read-only/ephemeral (that fallback made every prod upload 500
+//      from the 9/14 CF-port merge until 9/25).
+// Every path validates real image bytes + size before storing.
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB per file
 const MAX_FILES = 6;
@@ -53,6 +55,20 @@ async function storeR2(bucket, bytes, fname, contentType) {
   return `${base}/uploads/${fname}`;
 }
 
+async function storeBlob(bytes, fname, contentType) {
+  // @vercel/blob is a real dependency now, so both Vercel's tracer and the OpenNext
+  // esbuild step can resolve it (the July CF-build failure was the package missing).
+  const { put } = await import("@vercel/blob");
+  const { url } = await put(`uploads/${fname}`, bytes, {
+    access: "public",
+    contentType,
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
+  return url;
+}
+
+const IS_DEPLOYED = !!process.env.VERCEL || process.env.NODE_ENV === "production";
+
 const MIME = { jpg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" };
 
 export async function POST(req) {
@@ -90,10 +106,13 @@ export async function POST(req) {
     bytes = stripMetadata(bytes, ext);
     const fname = `${user.id.slice(0, 6)}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
     try {
-      urls.push(r2 ? await storeR2(r2, bytes, fname, MIME[ext]) : await storeLocal(bytes, fname));
+      if (r2) urls.push(await storeR2(r2, bytes, fname, MIME[ext]));
+      else if (process.env.BLOB_READ_WRITE_TOKEN) urls.push(await storeBlob(bytes, fname, MIME[ext]));
+      else if (!IS_DEPLOYED) urls.push(await storeLocal(bytes, fname));
+      else throw new Error("no photo storage configured");
     } catch (e) {
-      // If the R2 store isn't reachable/configured, fall back to local rather than 500.
-      urls.push(await storeLocal(bytes, fname));
+      console.error("upload store failed:", e?.message || e);
+      return NextResponse.json({ error: "Photo upload is temporarily unavailable. Please try again." }, { status: 503 });
     }
   }
 
