@@ -54,6 +54,8 @@ export default function NotifyApp() {
         <input
           type="text"
           name="company"
+          data-lpignore="true"
+          data-1p-ignore="true"
           tabIndex={-1}
           autoComplete="off"
           aria-hidden="true"
