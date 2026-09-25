@@ -12,6 +12,7 @@ export const metadata = {
     title: "Used Tires in South Florida — City by City | TireKind",
     description:
       "Buy and sell used tires across Broward County. Local pickup, inspect before you pay.",
+    url: "/locations",
     type: "website",
     images: ["/opengraph-image"],
   },

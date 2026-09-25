@@ -15,6 +15,7 @@ export const metadata = {
     title: "TireKind Founding Seller Program — Be First, Stay Ahead",
     description:
       `First ${FOUNDING_SEATS} South Florida sellers: permanent badge, every plan perk included, price locked at ${FOUNDING_SHORT} forever.`,
+    url: "/founding-seller",
     type: "website",
     images: ["/opengraph-image"],
   },
