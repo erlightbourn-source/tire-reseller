@@ -40,7 +40,6 @@ test("isAllowedPhotoUrl accepts uploads/data/r2/blob and rejects remote", () => 
   assert.ok(isAllowedPhotoUrl("/uploads/abc.jpg"));
   assert.ok(isAllowedPhotoUrl("data:image/png;base64,xxxx"));
   assert.ok(isAllowedPhotoUrl("https://pub-abc123.r2.dev/uploads/x.jpg"));
-  assert.ok(isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("https://evil.example/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("javascript:alert(1)"));
   assert.ok(!isAllowedPhotoUrl(42));
@@ -53,6 +52,30 @@ test("isAllowedPhotoUrl honors a configured R2 custom base and rejects lookalike
   assert.ok(!isAllowedPhotoUrl("https://uploads.shoptiretrader.com.evil.example/x.jpg"));
   if (prev === undefined) delete process.env.R2_PUBLIC_BASE_URL;
   else process.env.R2_PUBLIC_BASE_URL = prev;
+});
+
+test("isAllowedPhotoUrl accepts only OUR Vercel Blob store (L899)", () => {
+  const keys = ["TIKTOK_MEDIA_BLOB_HOST", "BLOB_READ_WRITE_TOKEN"];
+  const prev = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  try {
+    for (const k of keys) delete process.env[k];
+    // No blob store configured: no blob URL can be ours.
+    assert.ok(!isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
+    // Derived from the read-write token.
+    process.env.BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_ABC123_secretpart";
+    assert.ok(isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
+    assert.ok(!isAllowedPhotoUrl("https://someoneelse.public.blob.vercel-storage.com/uploads/x.jpg"));
+    // Explicit host wins.
+    process.env.TIKTOK_MEDIA_BLOB_HOST = "he4is6089cggjac5.public.blob.vercel-storage.com";
+    assert.ok(isAllowedPhotoUrl("https://he4is6089cggjac5.public.blob.vercel-storage.com/uploads/a.jpg"));
+    assert.ok(!isAllowedPhotoUrl("https://abc123.public.blob.vercel-storage.com/uploads/x.jpg"));
+    assert.ok(!isAllowedPhotoUrl("https://he4is6089cggjac5.public.blob.vercel-storage.com.evil.example/x.jpg"));
+  } finally {
+    for (const k of keys) {
+      if (prev[k] === undefined) delete process.env[k];
+      else process.env[k] = prev[k];
+    }
+  }
 });
 
 test("rateLimit allows up to the limit then blocks", () => {

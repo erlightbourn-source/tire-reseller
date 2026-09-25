@@ -1,0 +1,10 @@
+# Never upload local secrets or agent notes with a CLI deploy (vercel deploy ships the
+# working directory; .gitignore does not apply). Vercel project env supplies prod config.
+.env
+.env.local
+.env.*.local
+.claude/
+CLAUDE.md
+AGENTS.md
+*.db
+*.db-journal
