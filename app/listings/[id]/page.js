@@ -8,6 +8,7 @@ import { priceContext } from "@/lib/pricing";
 import { jsonLdHtml } from "@/lib/jsonld";
 import { sizeSlug } from "@/lib/site";
 import { parseTireSize } from "@/lib/tiresize";
+import { publicLocation } from "@/lib/publicLocation";
 import MessageSeller from "@/components/MessageSeller";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -44,7 +45,8 @@ export async function generateMetadata({ params }) {
   if (!l || l.hidden || l.seller?.deletedAt) return { title: "Listing not found — TireKind" };
   const cond = conditionMeta(l.condition).label;
   const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireKind`;
-  const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)} in ${l.location}. Message the seller directly on TireKind.`;
+  const metaLocation = publicLocation(l.location);
+  const description = `${cond} set of ${l.quantity} ${l.brand} ${l.size} tires for ${formatPrice(l.priceCents)}${metaLocation ? ` in ${metaLocation}` : ""}. Message the seller directly on TireKind.`;
   return {
     title,
     description,
@@ -105,6 +107,7 @@ export default async function ListingDetail({ params }) {
     sizeComps.map((c) => perTire(c.priceCents, c.quantity))
   );
 
+  const location = publicLocation(listing.location);
   const cond = conditionMeta(listing.condition);
   const isUsed = listing.condition !== "new";
   const age = tireAge(listing.dotYear);
@@ -146,7 +149,7 @@ export default async function ListingDetail({ params }) {
       priceCurrency: "USD",
       availability: listing.status === "sold" ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
       itemCondition: listing.condition === "new" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
-      areaServed: listing.location,
+      ...(location ? { areaServed: location } : {}),
     },
   };
 
@@ -157,7 +160,7 @@ export default async function ListingDetail({ params }) {
       <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">
         <Link href="/browse" className="hover:text-brand-300">Marketplace</Link>
         <span aria-hidden="true">/</span>
-        {listing.state && <><Link href={`/browse?state=${listing.state}`} className="hover:text-brand-300">{listing.location}</Link><span aria-hidden="true">/</span></>}
+        {listing.state && location && <><Link href={`/browse?state=${listing.state}`} className="hover:text-brand-300">{location}</Link><span aria-hidden="true">/</span></>}
         <span className="truncate font-medium text-slate-200">{listing.brand} {listing.size}</span>
       </nav>
 
@@ -212,7 +215,7 @@ export default async function ListingDetail({ params }) {
 
             <p className="mt-4 flex items-center gap-1.5 text-sm text-slate-300">
               <svg viewBox="0 0 16 16" className="h-4 w-4 fill-slate-400" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-              {listing.location} · {listing.shipping ? "Local pickup or shipping" : "Local pickup"}
+              {location ? `${location} · ` : ""}{listing.shipping ? "Local pickup or shipping" : "Local pickup"}
             </p>
           </div>
 
@@ -235,7 +238,7 @@ export default async function ListingDetail({ params }) {
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>📅 Member since {sellerSince}</span>
               {isProSeller(listing.seller) && <span>⚡ Usually responds within a day</span>}
-              <span>📍 {listing.seller.location || listing.location}</span>
+              <span>📍 {listing.seller.location || location}</span>
             </div>
           </Link>
 
