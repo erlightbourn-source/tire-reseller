@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import { seasonLabel, treadLabel, perTire, milesLabel, conditionMeta, tireAge } from "@/lib/tire";
+import { publicLocation } from "@/lib/publicLocation";
 import FavoriteButton from "@/components/FavoriteButton";
 import Badge from "@/components/Badge";
 
@@ -12,6 +13,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
   const tread = treadLabel(listing.treadDepth);
   const age = tireAge(listing.dotYear);
   const dist = milesLabel(distance);
+  const location = publicLocation(listing.location);
 
   return (
     <div className="card card-hover group relative flex flex-col overflow-hidden">
@@ -99,10 +101,12 @@ export default function ListingCard({ listing, favorited = false, distance = nul
           )}
 
           <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-            <p className="flex min-w-0 items-center gap-1 text-xs text-slate-400">
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 fill-slate-400" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
-              <span className="truncate">{listing.location}</span>
-            </p>
+            {location ? (
+              <p className="flex min-w-0 items-center gap-1 text-xs text-slate-400">
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 fill-slate-400" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5Zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"/></svg>
+                <span className="truncate">{location}</span>
+              </p>
+            ) : <span />}
             <span className="shrink-0 text-xs font-semibold text-brand-300 transition group-hover:text-brand-200">View →</span>
           </div>
         </div>
