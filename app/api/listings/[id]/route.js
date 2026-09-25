@@ -81,6 +81,10 @@ export async function PATCH(req, { params }) {
   if (Array.isArray(b.photos)) {
     await prisma.photo.deleteMany({ where: { listingId: listing.id } });
     const photos = b.photos.filter(isAllowedPhotoUrl).slice(0, 6).map(stripDataUriMetadata);
+    const dropped = b.photos.filter((u) => !isAllowedPhotoUrl(u)).length;
+    // A drop here deletes a seller's photo on save; if it ever happens to our own
+    // store's URLs (blob host env drift), this line is the only trace.
+    if (dropped > 0) console.warn("listing edit: dropped disallowed photo URLs", { listingId: listing.id, dropped });
     data.photos = { create: photos.map((url, i) => ({ url, sort: i })) };
   }
 
