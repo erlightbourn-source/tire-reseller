@@ -103,6 +103,7 @@ export default function ListingForm({ initial }) {
         <div>
           <label className="label">City / location</label>
           <input name="location" required defaultValue={initial?.location} className="input" placeholder="Coral Springs" />
+          <p className="mt-1 text-xs text-slate-400">City and state only. Never your street address.</p>
         </div>
         <div>
           <label className="label">State</label>

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { isOwnedMediaUrl, photoExt, tiktokShareEnabledFor } from "@/lib/tiktok";
+import { publicLocation } from "@/lib/publicLocation";
 import TikTokShare from "@/components/TikTokShare";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,8 @@ export default async function ShareToTikTokPage({ params, searchParams }) {
     eligible: isOwnedMediaUrl(p.url) && !!photoExt(p.url),
   }));
   const qty = listing.quantity > 1 ? `Set of ${listing.quantity}` : "Single";
-  const summary = `${listing.brand} ${listing.size} · ${qty} · ${listing.condition === "new" ? "New" : "Used"} · ${formatPrice(listing.priceCents)} · ${listing.location}`;
+  const shareLocation = publicLocation(listing.location);
+  const summary = `${listing.brand} ${listing.size} · ${qty} · ${listing.condition === "new" ? "New" : "Used"} · ${formatPrice(listing.priceCents)}${shareLocation ? ` · ${shareLocation}` : ""}`;
 
   return (
     <div className="mx-auto max-w-2xl">

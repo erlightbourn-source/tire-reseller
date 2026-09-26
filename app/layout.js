@@ -116,7 +116,7 @@ export default async function RootLayout({ children }) {
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-400">More</span>
                 <Link href="/trust-safety" className="text-slate-300 hover:text-white">Trust &amp; Safety</Link>
                 <Link href="/about" className="text-slate-300 hover:text-white">About</Link>
-                <Link href="/app" className="text-slate-300 hover:text-white">📱 Get the app</Link>
+                <Link href="/app" className="text-slate-300 hover:text-white">📱 App (coming soon)</Link>
                 <Link href="/terms" className="text-slate-300 hover:text-white">Terms</Link>
                 <Link href="/privacy" className="text-slate-300 hover:text-white">Privacy</Link>
               </div>

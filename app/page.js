@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
 import { jsonLdHtml } from "@/lib/jsonld";
+import { publicLocation } from "@/lib/publicLocation";
 import ListingCard from "@/components/ListingCard";
 import Stars from "@/components/Stars";
 import { FoundingBadge } from "@/components/Badge";
@@ -11,7 +12,6 @@ import HeroSearch from "@/components/HeroSearch";
 import Faq from "@/components/Faq";
 import Logo from "@/components/Logo";
 import EmailAlertForm from "@/components/EmailAlertForm";
-import NewsletterForm from "@/components/NewsletterForm";
 import { BUYER_FAQ } from "@/lib/content";
 import { brandSlug, SITE_URL } from "@/lib/site";
 import { PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
@@ -247,7 +247,7 @@ export default async function Home() {
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
                   {f.ratingCount > 0 && <Stars value={f.ratingAvg} size="h-3 w-3" />}
-                  <span className="truncate">{f.location || (f.state ? stateName(f.state) : "")}</span>
+                  <span className="truncate">{publicLocation(f.location) || (f.state ? stateName(f.state) : "")}</span>
                 </div>
               </Link>
             ))}
@@ -274,8 +274,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Shop by brand */}
-      {brands.length > 0 && (
+      {/* Shop by brand — hidden below 4 brands; a strip of 1-3 chips reads as
+          thin inventory rather than "popular" (push-ada-evalE E11). */}
+      {brands.length >= 4 && (
         <section>
           <div className="mb-3">
             <p className="eyebrow">Shop by brand</p>
@@ -300,16 +301,6 @@ export default async function Home() {
           Tell us your email and we&apos;ll send a heads-up when new sets go up near you.
         </p>
         <div className="mt-4"><EmailAlertForm /></div>
-      </section>
-
-      {/* Newsletter — TireKind news list (MailerLite, double opt-in) */}
-      <section id="newsletter" className="card scroll-mt-24 px-6 py-8 text-center">
-        <p className="eyebrow">Stay in the loop</p>
-        <h2 className="mt-1 font-display text-2xl font-extrabold text-white">Get TireKind news</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
-          New sets listed near you, tips for selling the ones in your garage, and what&apos;s changing on TireKind.
-        </p>
-        <div className="mt-4"><NewsletterForm source="home" /></div>
       </section>
 
       {/* FAQ */}
