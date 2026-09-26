@@ -1,9 +1,43 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { sendEmail } from "@/lib/email";
+import { logAudit } from "@/lib/audit";
+import { SITE_URL } from "@/lib/site";
+import { renewalAckEmail } from "@/lib/renewalAck";
 
 // Stripe requires the raw body to verify the signature.
 export const dynamic = "force-dynamic";
+
+// CA BPC 17602(a)(3) acknowledgment: ONE email per Checkout Session with the
+// renewal terms + how to cancel. Stripe retries webhooks, so the AuditLog row
+// (written before sending) is the idempotency key. Never throws: a mail
+// failure must not fail the webhook and trigger a retry storm.
+async function sendRenewalAck(session, sub) {
+  try {
+    const already = await prisma.auditLog.findFirst({
+      where: { action: "renewal_ack", meta: { contains: session.id } },
+      select: { id: true },
+    });
+    if (already) return;
+    const user = await prisma.user.findFirst({ where: { stripeCustomerId: session.customer } });
+    const to = session.customer_details?.email || user?.email;
+    if (!to) return;
+    const price = sub.items.data[0]?.price;
+    await logAudit("renewal_ack", { userId: user?.id ?? null, meta: { sessionId: session.id } });
+    const { subject, text } = renewalAckEmail({
+      unitAmount: price?.unit_amount ?? 0,
+      currency: price?.currency,
+      interval: price?.recurring?.interval || "month",
+      trialEnd: sub.status === "trialing" ? sub.trial_end : null,
+      siteUrl: SITE_URL,
+    });
+    const delivered = await sendEmail({ to, subject, text });
+    if (!delivered) console.error("[stripe] renewal acknowledgment NOT delivered for session", session.id);
+  } catch (err) {
+    console.error("[stripe] renewal acknowledgment failed:", err.message);
+  }
+}
 
 async function activateForCustomer(customerId, { status, priceId, currentPeriodEnd }) {
   const user = await prisma.user.findFirst({ where: { stripeCustomerId: customerId } });
@@ -56,6 +90,7 @@ export async function POST(req) {
           priceId: sub.items.data[0]?.price?.id,
           currentPeriodEnd: sub.current_period_end,
         });
+        await sendRenewalAck(session, sub);
       }
       break;
     }
