@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { timeAgo } from "@/lib/format";
 import { SITE_URL } from "@/lib/site";
 import { jsonLdHtml } from "@/lib/jsonld";
+import { publicLocation } from "@/lib/publicLocation";
 import ListingCard from "@/components/ListingCard";
 import { FoundingBadge } from "@/components/Badge";
 import Stars from "@/components/Stars";
@@ -29,7 +30,8 @@ export async function generateMetadata({ params }) {
   if (!seller || seller.role !== "seller" || seller.deletedAt) {
     return { title: "Seller not found — TireKind", robots: { index: false } };
   }
-  const where = seller.location ? ` in ${seller.location}` : "";
+  const loc = publicLocation(seller.location);
+  const where = loc ? ` in ${loc}` : "";
   const title = `${seller.name} — tires for sale${where} | TireKind`;
   const description = `Browse tires listed by ${seller.name}${where} on TireKind. See condition, tread depth, DOT year and per-tire price, read reviews, and message the seller directly.`;
   return {
@@ -91,7 +93,7 @@ export default async function SellerProfile({ params }) {
           "@type": "Person",
           name: seller.name,
           url: sellerUrl,
-          ...(seller.location ? { address: { "@type": "PostalAddress", addressLocality: seller.location } } : {}),
+          ...(publicLocation(seller.location) ? { address: { "@type": "PostalAddress", addressLocality: publicLocation(seller.location) } } : {}),
           // Only emit a rating when real reviews exist — never fabricate one.
           ...(reviews.length
             ? {
@@ -137,7 +139,7 @@ export default async function SellerProfile({ params }) {
             <Stars value={avg} />
             <span className="font-semibold text-slate-200">{avg ? avg.toFixed(1) : "—"}</span>
             <span>({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
-            {seller.location && <span>· 📍 {seller.location}</span>}
+            {publicLocation(seller.location) && <span>· 📍 {publicLocation(seller.location)}</span>}
           </div>
           <p className="mt-1 text-xs text-slate-400">
             {seller.listings.length} active · {soldCount} sold · Member since {new Date(seller.createdAt).getFullYear()}

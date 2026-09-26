@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { buildListingWhere } from "@/lib/listingFilter";
 import { sendEmail } from "@/lib/email";
 import { formatPrice } from "@/lib/format";
+import { publicLocation } from "@/lib/publicLocation";
 import { SITE_URL } from "@/lib/site";
 import { bearerMatches } from "@/lib/security";
 
@@ -53,7 +54,7 @@ export async function GET(req) {
     // so an interior newline would otherwise inject lines into this email body.
     const safeName = String(name || "there").replace(/[\r\n\t]+/g, " ").trim().slice(0, 80);
     const lines = items.map((it) => {
-      const sub = it.samples.map((m) => `   • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)} (${m.location})`).join("\n");
+      const sub = it.samples.map((m) => `   • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)}${publicLocation(m.location) ? ` (${publicLocation(m.location)})` : ""}`).join("\n");
       return ` - ${it.label}: ${it.count} new\n${sub}`;
     });
     await sendEmail({
@@ -84,7 +85,7 @@ export async function GET(req) {
       select: { brand: true, size: true, priceCents: true, location: true },
     });
     if (matches.length === 0) continue;
-    const sub = matches.map((m) => ` • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)} (${m.location})`).join("\n");
+    const sub = matches.map((m) => ` • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)}${publicLocation(m.location) ? ` (${publicLocation(m.location)})` : ""}`).join("\n");
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${a.token}`;
     await sendEmail({
       to: a.email,

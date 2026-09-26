@@ -238,7 +238,7 @@ export default async function ListingDetail({ params }) {
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>📅 Member since {sellerSince}</span>
               {isProSeller(listing.seller) && <span>⚡ Usually responds within a day</span>}
-              <span>📍 {listing.seller.location || location}</span>
+              <span>📍 {publicLocation(listing.seller.location) || location}</span>
             </div>
           </Link>
 

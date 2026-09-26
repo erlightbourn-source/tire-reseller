@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
 import { jsonLdHtml } from "@/lib/jsonld";
+import { publicLocation } from "@/lib/publicLocation";
 import ListingCard from "@/components/ListingCard";
 import Stars from "@/components/Stars";
 import { FoundingBadge } from "@/components/Badge";
@@ -246,7 +247,7 @@ export default async function Home() {
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
                   {f.ratingCount > 0 && <Stars value={f.ratingAvg} size="h-3 w-3" />}
-                  <span className="truncate">{f.location || (f.state ? stateName(f.state) : "")}</span>
+                  <span className="truncate">{publicLocation(f.location) || (f.state ? stateName(f.state) : "")}</span>
                 </div>
               </Link>
             ))}
