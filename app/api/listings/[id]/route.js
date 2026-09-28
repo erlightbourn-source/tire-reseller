@@ -83,13 +83,15 @@ export async function PATCH(req, { params }) {
   // Replace photos if provided — only host-served or data-URI images. Data-URI
   // photos bypass the /api/upload Exif-stripping pipeline, so strip them here too.
   if (Array.isArray(b.photos)) {
-    await prisma.photo.deleteMany({ where: { listingId: listing.id } });
     const photos = b.photos.filter(isAllowedPhotoUrl).slice(0, 6).map(stripDataUriMetadata);
     const dropped = b.photos.filter((u) => !isAllowedPhotoUrl(u)).length;
     // A drop here deletes a seller's photo on save; if it ever happens to our own
     // store's URLs (blob host env drift), this line is the only trace.
     if (dropped > 0) console.warn("listing edit: dropped disallowed photo URLs", { listingId: listing.id, dropped });
-    data.photos = { create: photos.map((url, i) => ({ url, sort: i })) };
+    // Delete + re-create inside the SAME update (one nested write = one
+    // transaction). A separate deleteMany ran first and committed on its own, so
+    // any failure in the update below left the listing with zero photos.
+    data.photos = { deleteMany: {}, create: photos.map((url, i) => ({ url, sort: i })) };
   }
 
   await prisma.listing.update({ where: { id: listing.id }, data });
