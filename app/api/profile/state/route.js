@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { isStateAbbr } from "@/lib/states";
+import { enforceRateLimit } from "@/lib/security";
 
 // Save the logged-in member's home state to their profile.
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "profile", { key: user.id, limit: 10, windowMs: 60_000 });
+  if (limited) return limited;
 
   const { state } = await req.json();
   if (!isStateAbbr(state)) return NextResponse.json({ error: "Invalid state." }, { status: 400 });

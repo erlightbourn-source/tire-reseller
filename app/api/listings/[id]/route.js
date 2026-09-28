@@ -3,15 +3,19 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { resolveState } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
-import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
+import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { stripDataUriMetadata } from "@/lib/image";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
-async function requireOwner(id) {
+async function requireOwner(req, id) {
   const user = await getCurrentUser();
   if (!user) return { error: NextResponse.json({ error: "Not logged in." }, { status: 401 }) };
+  // Edits re-geocode, rewrite photo rows (each up to a 2 MB data URI) and delete —
+  // throttle per account like listing creation is.
+  const limited = await enforceRateLimit(req, "listing-edit", { key: user.id, limit: 30, windowMs: 60_000 });
+  if (limited) return { error: limited };
   const listing = await prisma.listing.findUnique({ where: { id } });
   if (!listing) return { error: NextResponse.json({ error: "Listing not found." }, { status: 404 }) };
   if (listing.sellerId !== user.id)
@@ -21,7 +25,7 @@ async function requireOwner(id) {
 
 export async function PATCH(req, { params }) {
   const { id } = await params;
-  const { error, listing } = await requireOwner(id);
+  const { error, listing } = await requireOwner(req, id);
   if (error) return error;
 
   const b = await req.json();
@@ -92,9 +96,9 @@ export async function PATCH(req, { params }) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req, { params }) {
+export async function DELETE(req, { params }) {
   const { id } = await params;
-  const { error, listing } = await requireOwner(id);
+  const { error, listing } = await requireOwner(req, id);
   if (error) return error;
   await prisma.listing.delete({ where: { id: listing.id } });
   return NextResponse.json({ ok: true });

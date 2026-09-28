@@ -3,12 +3,16 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { describeSearch } from "@/lib/listingFilter";
 import { stateName } from "@/lib/states";
+import { enforceRateLimit } from "@/lib/security";
 
 const ALLOWED = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "season", "runFlat", "minRating", "shipping", "state"];
+const LIMIT = { limit: 30, windowMs: 60_000 }; // per account (PATCH fires on each "mark seen")
 
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Log in to save searches." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "saved-search", { key: user.id, ...LIMIT });
+  if (limited) return limited;
 
   const { query } = await req.json();
   const sp = new URLSearchParams(String(query || "").slice(0, 600));
@@ -30,6 +34,8 @@ export async function POST(req) {
 export async function PATCH(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "saved-search", { key: user.id, ...LIMIT });
+  if (limited) return limited;
   const { id } = await req.json();
   await prisma.savedSearch.updateMany({ where: { id, userId: user.id }, data: { lastSeenAt: new Date() } });
   return NextResponse.json({ ok: true });
@@ -38,6 +44,8 @@ export async function PATCH(req) {
 export async function DELETE(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "saved-search", { key: user.id, ...LIMIT });
+  if (limited) return limited;
   const { id } = await req.json();
   await prisma.savedSearch.deleteMany({ where: { id, userId: user.id } });
   return NextResponse.json({ ok: true });

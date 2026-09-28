@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/security";
 
 export const OFFER_TTL_MS = 48 * 60 * 60 * 1000; // offers expire after 48h
 
@@ -8,6 +9,10 @@ export const OFFER_TTL_MS = 48 * 60 * 60 * 1000; // offers expire after 48h
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+
+  // Counters post a message, so share the per-account budget idea of /api/messages.
+  const limited = await enforceRateLimit(req, "offer", { key: user.id, limit: 30, windowMs: 60_000 });
+  if (limited) return limited;
 
   const { messageId, action, offerCents } = await req.json();
   if (!["accept", "decline", "counter"].includes(action))
