@@ -21,6 +21,17 @@ export async function POST(req) {
     return NextResponse.json({ error: "Not your thread." }, { status: 403 });
   if (msg.senderId === user.id)
     return NextResponse.json({ error: "You can't respond to your own offer." }, { status: 400 });
+
+  // Honor blocks (either direction), same as sending a message: every action here
+  // posts a message into the thread, and "accept" also marks the listing sold —
+  // a blocked party must not be able to do either after the block was placed.
+  const other = t.buyerId === user.id ? t.sellerId : t.buyerId;
+  const blocked = await prisma.block.findFirst({
+    where: { OR: [{ blockerId: user.id, blockedId: other }, { blockerId: other, blockedId: user.id }] },
+    select: { id: true },
+  });
+  if (blocked) return NextResponse.json({ error: "Messaging is unavailable in this conversation." }, { status: 403 });
+
   if (msg.offerStatus !== "pending")
     return NextResponse.json({ error: "This offer was already answered." }, { status: 409 });
   if (Date.now() - new Date(msg.createdAt).getTime() > OFFER_TTL_MS) {
