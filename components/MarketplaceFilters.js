@@ -293,21 +293,28 @@ function Field({ label, children }) {
 function SaveSearch({ params, router }) {
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   async function save() {
     setBusy(true);
+    setErr("");
     const res = await fetch("/api/saved-searches", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: params.toString() }),
-    });
+    }).catch(() => null);
     setBusy(false);
-    if (res.status === 401) return router.push("/login?next=/browse");
-    if (res.ok) setSaved(true);
+    if (res?.status === 401) return router.push("/login?next=/browse");
+    if (res?.ok) return setSaved(true);
+    const data = res ? await res.json().catch(() => ({})) : {};
+    setErr(data.error || "Couldn't save this search. Try again.");
   }
   return (
-    <button type="button" onClick={save} disabled={busy || saved} className="btn-secondary w-full justify-center">
-      <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>
-      {saved ? "Search saved ✓" : "Save this search"}
-    </button>
+    <>
+      <button type="button" onClick={save} disabled={busy || saved} className="btn-secondary w-full justify-center">
+        <svg viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden="true"><path d="M5 3h10a1 1 0 0 1 1 1v13l-6-3-6 3V4a1 1 0 0 1 1-1Z"/></svg>
+        {saved ? "Search saved ✓" : "Save this search"}
+      </button>
+      {err && <p role="alert" className="mt-1.5 text-xs text-red-300">{err}</p>}
+    </>
   );
 }
