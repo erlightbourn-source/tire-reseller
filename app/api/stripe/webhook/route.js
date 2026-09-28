@@ -33,7 +33,11 @@ async function sendRenewalAck(session, sub) {
       siteUrl: SITE_URL,
     });
     const delivered = await sendEmail({ to, subject, text });
-    if (!delivered) console.error("[stripe] renewal acknowledgment NOT delivered for session", session.id);
+    if (!delivered) {
+      console.error("[stripe] renewal acknowledgment NOT delivered for session", session.id);
+      // The renewal_ack row above already blocks retries, so record the miss for a manual resend.
+      await logAudit("renewal_ack_failed", { userId: user?.id ?? null, meta: { sessionId: session.id, to } });
+    }
   } catch (err) {
     console.error("[stripe] renewal acknowledgment failed:", err.message);
   }
