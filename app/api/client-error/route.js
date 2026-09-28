@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { enforceRateLimit } from "@/lib/security";
-import { buildWebhookPayload } from "@/lib/errorWebhook";
+import { buildWebhookPayload, buildErrorLine } from "@/lib/errorWebhook";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +21,10 @@ export async function POST(req) {
     return new NextResponse(null, { status: 204 });
   }
 
-  const line = `[client-error] ${data.url || "?"} :: ${String(data.message || "").slice(0, 500)}`;
+  if (!data || typeof data !== "object") data = {};
+  const line = buildErrorLine(data);
   // eslint-disable-next-line no-console
-  console.error(line, data.digest ? `(digest ${data.digest})` : "");
+  console.error(line);
 
   const hook = process.env.ERROR_WEBHOOK_URL;
   if (hook) {
