@@ -5,6 +5,16 @@ import { STATES } from "@/lib/states";
 
 // Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
 const STATE_OPTIONS = [...STATES].sort((a, b) => a.name.localeCompare(b.name));
+const MAX_PHOTOS = 6; // app/api/listings keeps only the first 6
+
+// Error responses aren't always our JSON (a platform 413/502 is HTML/text).
+async function readJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
 
 export default function ListingForm({ initial }) {
   const router = useRouter();
@@ -15,17 +25,45 @@ export default function ListingForm({ initial }) {
   const [saving, setSaving] = useState(false);
 
   async function onUpload(e) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setUploading(true);
+    const input = e.target;
+    const picked = Array.from(input.files || []);
+    if (picked.length === 0) return;
     setErr("");
-    const fd = new FormData();
-    for (const f of files) fd.append("files", f);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    setUploading(false);
-    if (!res.ok) return setErr(data.error || "Upload failed.");
-    setPhotos((p) => [...p, ...data.urls]);
+    const room = MAX_PHOTOS - photos.length;
+    if (room <= 0) {
+      input.value = "";
+      return setErr(`A listing can have up to ${MAX_PHOTOS} photos.`);
+    }
+    const files = picked.slice(0, room);
+    let problem = picked.length > room ? `Only ${room} more photo${room === 1 ? "" : "s"} fit (max ${MAX_PHOTOS}).` : "";
+    setUploading(true);
+    try {
+      // One file per request. Phone photos run 3–8 MB each and the host caps a
+      // request body at ~4.5 MB (Vercel), so posting several at once got a
+      // platform 413 (non-JSON) — which used to throw here and leave the form
+      // stuck on "Uploading…" with Save disabled.
+      for (const f of files) {
+        const fd = new FormData();
+        fd.append("files", f);
+        let res;
+        try {
+          res = await fetch("/api/upload", { method: "POST", body: fd });
+        } catch {
+          problem = "Upload failed. Check your connection and try again.";
+          break;
+        }
+        const data = await readJson(res);
+        if (!res.ok) {
+          problem = res.status === 413 ? `"${f.name}" is too large. Try a smaller photo.` : data.error || "Upload failed.";
+          break;
+        }
+        setPhotos((p) => [...p, ...(data.urls || [])].slice(0, MAX_PHOTOS));
+      }
+    } finally {
+      setUploading(false);
+      input.value = ""; // allow re-picking the same file after an error
+    }
+    if (problem) setErr(problem);
   }
 
   async function onSubmit(e) {
@@ -39,12 +77,18 @@ export default function ListingForm({ initial }) {
     body.shipping = form.get("shipping") === "on";
 
     const url = editing ? `/api/listings/${initial.id}` : "/api/listings";
-    const res = await fetch(url, {
-      method: editing ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
+    let res;
+    try {
+      res = await fetch(url, {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      setSaving(false);
+      return setErr("Could not save listing. Check your connection and try again.");
+    }
+    const data = await readJson(res);
     setSaving(false);
     if (!res.ok) {
       if (data.code === "subscription_required" || data.code === "become_seller") {
