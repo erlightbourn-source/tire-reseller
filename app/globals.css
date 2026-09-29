@@ -8,6 +8,9 @@
   color-scheme: dark;
 }
 
+/* Safari falls back to the html/body color for its toolbar tint when nothing is pinned at the edge. */
+html { background-color: #000000; }
+
 @layer base {
   /* No rounded corners anywhere — raw, jagged edges. */
   *, *::before, *::after { border-radius: 0 !important; }

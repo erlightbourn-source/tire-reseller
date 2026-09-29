@@ -1,3 +1,5 @@
+// Contrast pass 2026-09-29 (L1090): the tread/rim were dark-on-dark and the wheel read as a
+// blob at 36px. Silver rim + lighter tread keep the same mark legible at header size.
 export default function Logo({ className = "h-9 w-9", spin = false, bare = false }) {
   const scale = bare ? 1.5 : 1;
   return (
@@ -29,13 +31,13 @@ export default function Logo({ className = "h-9 w-9", spin = false, bare = false
               y1={y1.toFixed(2)}
               x2={x2.toFixed(2)}
               y2={y2.toFixed(2)}
-              stroke="#1f2430"
+              stroke="#3d465a"
               strokeWidth="2.4"
             />
           );
         })}
-        <circle r="8.5" fill="#2a2f3c" />
-        <circle r="8.5" fill="none" stroke="#3a4150" strokeWidth="1" />
+        <circle r="8.5" fill="#c3cad6" />
+        <circle r="8.5" fill="none" stroke="#e6eaf0" strokeWidth="1" />
         <circle r="3.4" fill="#0d0f13" />
         {Array.from({ length: 5 }).map((_, i) => {
           const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
@@ -45,7 +47,7 @@ export default function Logo({ className = "h-9 w-9", spin = false, bare = false
               cx={(Math.cos(a) * 5.6).toFixed(2)}
               cy={(Math.sin(a) * 5.6).toFixed(2)}
               r="1.2"
-              fill="#5c86f8"
+              fill="#2f5ee8"
             />
           );
         })}

@@ -24,8 +24,15 @@ export const metadata = {
   title: "TireKind — Buy & Sell Tires",
   description: PLAN_COPY.siteTagline,
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "TireKind", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  appleWebApp: { capable: true, title: "TireKind", statusBarStyle: "black" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    // iOS ignores SVG touch icons (Add to Home Screen fell back to a page screenshot).
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+  },
   // Default social-share cards, inherited by every route that doesn't set its
   // own. The site had NO twitter tags at all (0 pages) and no root-level
   // openGraph, so pages without a bespoke block shipped no preview. A page that
@@ -49,7 +56,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#070809",
+  themeColor: "#000000",
 };
 
 export default async function RootLayout({ children }) {
@@ -61,7 +68,9 @@ export default async function RootLayout({ children }) {
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:bg-brand-500 focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-black">
           Skip to content
         </a>
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">
+        {/* Solid bg on purpose: iOS 26 Safari tints the status-bar strip from the sticky header, and a
+            translucent one let page content show through above it (Evan 9/29, L1090). */}
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-black">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />

@@ -64,7 +64,7 @@ export default function MarketplaceFilters({ brands, children }) {
   return (
     <>
       {/* Mobile sticky search + filter bar */}
-      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-white/10 bg-ink-950/85 px-4 py-3 backdrop-blur-xl lg:hidden">
+      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-white/10 bg-black px-4 py-3 lg:hidden">
         <form onSubmit={onSearch} className="flex gap-2">
           <div className="relative flex-1">
             <svg viewBox="0 0 20 20" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-slate-400" aria-hidden="true">
