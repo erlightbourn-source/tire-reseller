@@ -45,7 +45,9 @@ function buildCsp(nonce) {
 // INERT until TIREKIND_REDIRECT=1 is set in the host env, so it can ship before DNS/hosting for tirekind.com
 // is live. Page GET/HEAD only: /api/* is never redirected (Stripe's webhook and form POSTs still target
 // shoptiretrader.com until they are repointed; a 301 would turn a POST into a failed GET).
-const OLD_HOSTS = new Set(["shoptiretrader.com", "www.shoptiretrader.com"]);
+// www.tirekind.com joined 2026-09-29 (L612): on Cloudflare no host-level www->apex redirect
+// exists (Vercel did it at its edge), so the app does it.
+const OLD_HOSTS = new Set(["shoptiretrader.com", "www.shoptiretrader.com", "www.tirekind.com"]);
 const NEW_ORIGIN = "https://tirekind.com";
 
 function tirekindRedirect(req) {
