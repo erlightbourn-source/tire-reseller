@@ -186,6 +186,31 @@ test("forgot: 4th same-address request within the hour is capped, others unaffec
   assert.equal(other.status, 200, "a different address is not affected");
 });
 
+// Signup mails the address owner even when the account already exists ("You
+// already have a TireKind account"), so it needs the same per-recipient cap as
+// forgot/resend — applied before the existence lookup, and not reset by
+// rotating the client IP.
+test("signup: 4th same-address request within the hour is capped even across IPs", async () => {
+  const addr = `capsignup${Date.now()}@example.com`;
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const post = (email, n) =>
+    req("/api/auth/signup", {
+      method: "POST",
+      headers: { "X-Real-IP": `198.18.0.${n}` }, // a fresh per-IP bucket every time
+      body: JSON.stringify({ name: "E2E", email, password, role: "buyer", agreedToTerms: true }),
+    });
+  // 1st creates the (unverified) account; 2nd-3rd hit the "already exists" branch.
+  for (let i = 1; i <= 3; i++) {
+    const r = await post(addr, i);
+    assert.equal(r.status, 200, `request ${i} passes`);
+    assert.deepEqual(await r.json(), { ok: true, pending: true }, "neutral body");
+  }
+  const fourth = await post(addr, 4);
+  assert.equal(fourth.status, 429, "4th same-address signup is capped despite a new IP");
+  const other = await post(`othersignup${Date.now()}@example.com`, 5);
+  assert.equal(other.status, 200, "a different address is not affected");
+});
+
 test("resend-verification: 4th same-address request capped; response neutral for existing accounts", async () => {
   const addr = `capv${Date.now()}@example.com`;
   const post = (email) =>
