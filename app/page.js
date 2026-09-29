@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { userStateOf, stateName } from "@/lib/states";
 import { jsonLdHtml } from "@/lib/jsonld";
 import { publicLocation } from "@/lib/publicLocation";
+import { nearestFirst } from "@/lib/nearest";
+import { visitorOrigin } from "@/lib/visitorGeo";
 import ListingCard from "@/components/ListingCard";
 import Stars from "@/components/Stars";
 import { FoundingBadge } from "@/components/Badge";
@@ -42,6 +44,10 @@ const ICONS = {
 // briefly. With Neon's pooled connection_limit=1 these six queries serialize
 // on one connection and dominate TTFB; nothing here reads Date methods after
 // serialization (ListingCard renders scalars only).
+// "Recently listed" = the newest SHOWCASE_POOL sets, ranked nearest-first to the visitor
+// (Cloudflare IP location, fallback Broward) outside the cache, so the cache key stays per-state.
+const SHOWCASE_POOL = 48;
+
 const getHomeData = (homeState) =>
   unstable_cache(
     async () => {
@@ -50,8 +56,8 @@ const getHomeData = (homeState) =>
         prisma.listing.groupBy({ by: ["state"], where: { status: "active", hidden: false, seller: { deletedAt: null } }, _count: { _all: true } }),
         prisma.listing.findMany({
           where: { status: "active", hidden: false, seller: { deletedAt: null }, ...(homeState ? { state: homeState } : {}) },
-          orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
-          take: 4,
+          orderBy: { createdAt: "desc" },
+          take: SHOWCASE_POOL,
           include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
         }),
         prisma.listing.findMany({
@@ -71,12 +77,13 @@ const getHomeData = (homeState) =>
       ]);
 
       // Fall back to nationwide recent listings if the user's state has none yet.
+      // This is the newest-first POOL; Home() ranks it nearest-first per visitor.
       const showcase = recent.length
         ? recent
         : await prisma.listing.findMany({
             where: { status: "active", hidden: false, seller: { deletedAt: null } },
-            orderBy: [{ featured: "desc" }, { sellerPro: "desc" }, { createdAt: "desc" }],
-            take: 4,
+            orderBy: { createdAt: "desc" },
+            take: SHOWCASE_POOL,
             include: { photos: { take: 1, orderBy: { sort: "asc" } }, seller: { select: { pro: true } } },
           });
 
@@ -95,7 +102,8 @@ export default async function Home() {
   const user = await getCurrentUser();
   const homeState = userStateOf(user);
 
-  const { totalActive, grouped, showcase, brandRows, founders, nearYou } = await getHomeData(homeState);
+  const { totalActive, grouped, showcase: pool, brandRows, founders, nearYou } = await getHomeData(homeState);
+  const showcase = nearestFirst(pool, visitorOrigin());
   const stateCount = grouped.filter((g) => g.state).length;
   const brands = brandRows.map((b) => b.brand);
   const launchMode = totalActive < STAT_BADGE_MIN;
