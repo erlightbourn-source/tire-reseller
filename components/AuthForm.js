@@ -6,6 +6,7 @@ import Logo from "@/components/Logo";
 import { STATES } from "@/lib/states";
 import { track } from "@/lib/track";
 import { PLAN_COPY } from "@/lib/pricing";
+import { safeNextPath } from "@/lib/site";
 
 export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
@@ -60,10 +61,10 @@ export default function AuthForm({ mode }) {
       return;
     }
     // Sellers land on their dashboard; buyers on the marketplace. Only honor a
-    // same-origin relative `next` (reject `//evil.com`, `https://…`, etc.) so the
-    // post-login redirect can't be turned into an open-redirect phishing pivot.
-    const rawNext = params.get("next") || "";
-    const safeNext = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+    // same-origin relative `next` (reject `//evil.com`, `/\evil.com`, `https://…`,
+    // etc. — see lib/site.js#safeNextPath) so the post-login redirect can't be
+    // turned into an open-redirect phishing pivot.
+    const safeNext = safeNextPath(params.get("next"), window.location.origin);
     const dest = safeNext || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");
     router.push(dest);
     router.refresh();

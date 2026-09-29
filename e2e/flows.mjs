@@ -186,6 +186,31 @@ test("forgot: 4th same-address request within the hour is capped, others unaffec
   assert.equal(other.status, 200, "a different address is not affected");
 });
 
+// Signup mails the address owner even when the account already exists ("You
+// already have a TireKind account"), so it needs the same per-recipient cap as
+// forgot/resend — applied before the existence lookup, and not reset by
+// rotating the client IP.
+test("signup: 4th same-address request within the hour is capped even across IPs", async () => {
+  const addr = `capsignup${Date.now()}@example.com`;
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const post = (email, n) =>
+    req("/api/auth/signup", {
+      method: "POST",
+      headers: { "X-Real-IP": `198.18.0.${n}` }, // a fresh per-IP bucket every time
+      body: JSON.stringify({ name: "E2E", email, password, role: "buyer", agreedToTerms: true }),
+    });
+  // 1st creates the (unverified) account; 2nd-3rd hit the "already exists" branch.
+  for (let i = 1; i <= 3; i++) {
+    const r = await post(addr, i);
+    assert.equal(r.status, 200, `request ${i} passes`);
+    assert.deepEqual(await r.json(), { ok: true, pending: true }, "neutral body");
+  }
+  const fourth = await post(addr, 4);
+  assert.equal(fourth.status, 429, "4th same-address signup is capped despite a new IP");
+  const other = await post(`othersignup${Date.now()}@example.com`, 5);
+  assert.equal(other.status, 200, "a different address is not affected");
+});
+
 test("resend-verification: 4th same-address request capped; response neutral for existing accounts", async () => {
   const addr = `capv${Date.now()}@example.com`;
   const post = (email) =>
@@ -271,4 +296,76 @@ test("core funnel: seller lists a tire, buyer offers, seller accepts", async () 
     body: JSON.stringify({ messageId: offerMessageId, action: "accept" }),
   });
   assert.equal(doubleAccept.status, 409, "re-accepting an already-answered offer is rejected");
+});
+
+// A block must stop the offer actions too, not just plain messages: the seller
+// counters, then blocks the buyer; the blocked buyer must not be able to accept
+// that counter (which would post into the thread AND mark the listing sold).
+test("offers: a blocked party can't accept/counter a pending offer", async () => {
+  const stamp = Date.now();
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  // Separate client IP bucket so this test's signups/logins don't trip the
+  // per-IP signup/login limits consumed by the tests above.
+  const ip = { "X-Real-IP": "203.0.113.77" };
+  const signIn = async (email, role) => {
+    await req("/api/auth/signup", {
+      method: "POST",
+      headers: ip,
+      body: JSON.stringify({ name: `E2E ${role}`, email, password, role, location: "Miami, FL", agreedToTerms: true }),
+    });
+    await verifyByEmail(email);
+    const login = await req("/api/auth/login", { method: "POST", headers: ip, body: JSON.stringify({ email, password }) });
+    assert.equal(login.status, 200, `${role} logs in`);
+    return sessionCookie(login);
+  };
+  const sellerCookie = await signIn(`e2eblkseller${stamp}@example.com`, "seller");
+  const buyerCookie = await signIn(`e2eblkbuyer${stamp}@example.com`, "buyer");
+
+  const { id: listingId } = await (await req("/api/listings", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ brand: "E2E Block", size: "205/55R16", location: "Miami, FL", condition: "used", price: 200, quantity: 4 }),
+  })).json();
+  const { threadId } = await (await req("/api/threads", {
+    method: "POST",
+    headers: { Cookie: buyerCookie },
+    body: JSON.stringify({ listingId, message: "Hi" }),
+  })).json();
+  const { id: buyerOfferId } = await (await req(`/api/messages/${threadId}`, {
+    method: "POST",
+    headers: { Cookie: buyerCookie },
+    body: JSON.stringify({ kind: "offer", offerCents: 15000 }),
+  })).json();
+
+  const counter = await req("/api/offers", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ messageId: buyerOfferId, action: "counter", offerCents: 18000 }),
+  });
+  assert.equal(counter.status, 200, "seller counters (pre-block)");
+  const counterMsg = await db.message.findFirst({
+    where: { threadId, kind: "offer", offerStatus: "pending" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  assert.ok(counterMsg, "seller's counter is pending");
+
+  const seller = await db.user.findUnique({ where: { email: `e2eblkseller${stamp}@example.com` }, select: { id: true } });
+  const buyer = await db.user.findUnique({ where: { email: `e2eblkbuyer${stamp}@example.com` }, select: { id: true } });
+  const block = await req("/api/block", { method: "POST", headers: { Cookie: sellerCookie }, body: JSON.stringify({ userId: buyer.id }) });
+  assert.equal(block.status, 200, "seller blocks the buyer");
+  assert.ok(seller.id);
+
+  for (const action of ["accept", "counter"]) {
+    const r = await req("/api/offers", {
+      method: "POST",
+      headers: { Cookie: buyerCookie },
+      body: JSON.stringify({ messageId: counterMsg.id, action, offerCents: 16000 }),
+    });
+    assert.equal(r.status, 403, `blocked buyer can't ${action}`);
+  }
+  const listing = await db.listing.findUnique({ where: { id: listingId }, select: { status: true } });
+  assert.equal(listing?.status, "active", "listing was NOT marked sold by the blocked party");
+  const still = await db.message.findUnique({ where: { id: counterMsg.id }, select: { offerStatus: true } });
+  assert.equal(still?.offerStatus, "pending", "counter-offer left untouched");
 });

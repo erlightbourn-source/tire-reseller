@@ -45,6 +45,25 @@ test("isAllowedPhotoUrl accepts uploads/data/r2/blob and rejects remote", () => 
   assert.ok(!isAllowedPhotoUrl(42));
 });
 
+test("isAllowedPhotoUrl: /uploads/ must be a single plain filename (no traversal/query)", () => {
+  assert.ok(isAllowedPhotoUrl("/uploads/ck12ab-1727500000000-123456.jpg"), "real upload name");
+  assert.ok(isAllowedPhotoUrl("/uploads/seed-bfgoodrich-265-70r17-3.svg"), "seed photo name");
+  for (const bad of [
+    "/uploads/../api/account",
+    "/uploads/..",
+    "/uploads/a/../../listings/x",
+    "/uploads/sub/dir.jpg",
+    "/uploads/x.jpg?next=/api/account",
+    "/uploads/x.jpg#frag",
+    "/uploads/%2e%2e/api/account",
+    "/uploads/",
+    "/uploads/.hidden",
+    "/uploads\\..\\api",
+  ]) {
+    assert.ok(!isAllowedPhotoUrl(bad), bad);
+  }
+});
+
 test("isAllowedPhotoUrl honors a configured R2 custom base and rejects lookalikes", () => {
   const prev = process.env.R2_PUBLIC_BASE_URL;
   process.env.R2_PUBLIC_BASE_URL = "https://uploads.shoptiretrader.com";
