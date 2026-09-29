@@ -1,13 +1,12 @@
 {
-  "name": "shoptiretrader",
+  "name": "tirekind",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-14",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-  // Persistent uploads. Bucket is created once CF auth lands
-  // (`wrangler r2 bucket create shoptiretrader-uploads`); the app reads it via
-  // the UPLOADS_BUCKET binding. R2_PUBLIC_BASE_URL (env var) serves the objects.
-  "r2_buckets": [
-    { "binding": "UPLOADS_BUCKET", "bucket_name": "shoptiretrader-uploads" }
-  ]
+  "workers_dev": true,
+  // v1 (L612, 2026-09-29): no R2 binding yet (R2 is not in the wrangler OAuth grant).
+  // app/api/upload/route.js falls back to BLOB_READ_WRITE_TOKEN when UPLOADS_BUCKET is
+  // absent. To add R2 later (bucket create first), restore:
+  // "r2_buckets": [{ "binding": "UPLOADS_BUCKET", "bucket_name": "shoptiretrader-uploads" }]
 }
