@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/security";
+
+const LIMIT = { limit: 20, windowMs: 60_000 }; // per account
 
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "block", { key: user.id, ...LIMIT });
+  if (limited) return limited;
   const { userId } = await req.json();
   if (!userId || userId === user.id) return NextResponse.json({ error: "Invalid user." }, { status: 400 });
   await prisma.block.upsert({
@@ -18,6 +23,8 @@ export async function POST(req) {
 export async function DELETE(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  const limited = await enforceRateLimit(req, "block", { key: user.id, ...LIMIT });
+  if (limited) return limited;
   const { userId } = await req.json();
   await prisma.block
     .delete({ where: { blockerId_blockedId: { blockerId: user.id, blockedId: userId } } })

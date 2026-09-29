@@ -61,6 +61,19 @@ export async function POST(req) {
   // account-existence oracle. New accounts are created UNVERIFIED and must click
   // an emailed link before they can log in (double opt-in).
   const NEUTRAL = NextResponse.json({ ok: true, pending: true });
+
+  // Per-recipient cap (3/hour), applied BEFORE the existence lookup so it is
+  // identical for taken and free addresses. The per-IP limit above doesn't stop
+  // an IP-rotating attacker from bombing a victim with "You already have a
+  // TireKind account" mail — the gap forgot/resend-verification closed in 8b2be88.
+  const addrLimited = await enforceRateLimit(req, "signup-addr", { key: email, limit: 3, windowMs: 60 * 60 * 1000 });
+  if (addrLimited) return addrLimited;
+
+  // Hash BEFORE the lookup so both branches pay the same bcrypt cost (~250 ms at
+  // cost 12). Previously only the new-account branch hashed, so a taken email
+  // answered ~200 ms faster — a timing oracle that undid the neutral response.
+  const passwordHash = await hashPassword(password);
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     // Tell the real owner someone tried to sign up — don't leak existence to the requester.
@@ -77,7 +90,7 @@ export async function POST(req) {
   const user = await prisma.user.create({
     data: {
       email,
-      passwordHash: await hashPassword(password),
+      passwordHash,
       name,
       location: location || null,
       state: isStateAbbr(state) ? state.toUpperCase() : null,

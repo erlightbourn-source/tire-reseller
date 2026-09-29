@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildWebhookPayload } from "../lib/errorWebhook.js";
+import { buildWebhookPayload, buildErrorLine } from "../lib/errorWebhook.js";
 
 test("buildWebhookPayload only carries text/url/digest, never an attacker-injected field", () => {
   const malicious = {
@@ -30,4 +30,22 @@ test("buildWebhookPayload caps url/digest length", () => {
   const payload = buildWebhookPayload("line", { url: "x".repeat(1000), digest: "y".repeat(1000) });
   assert.equal(payload.url.length, 500);
   assert.equal(payload.digest.length, 200);
+});
+
+test("buildErrorLine: CR/LF in client fields can't forge extra log lines", () => {
+  const line = buildErrorLine({
+    url: "/browse\n[client-error] /admin :: forged entry\r\n[security] admin login from 1.2.3.4",
+    message: "boom\nsecond line",
+    digest: "abc\n123",
+  });
+  assert.ok(!/[\r\n]/.test(line), "single line");
+  assert.ok(line.startsWith("[client-error] /browse [client-error] /admin :: forged entry"), line);
+  assert.ok(line.endsWith(":: boom second line (digest abc 123)"), line);
+});
+
+test("buildErrorLine: caps url/message, tolerates missing/garbage fields", () => {
+  assert.equal(buildErrorLine({}), "[client-error] ? :: ");
+  assert.equal(buildErrorLine(null), "[client-error] ? :: ");
+  const long = buildErrorLine({ url: "u".repeat(5000), message: "m".repeat(5000) });
+  assert.equal(long.length, "[client-error] ".length + 300 + " :: ".length + 500);
 });

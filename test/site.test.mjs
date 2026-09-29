@@ -1,7 +1,29 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { brandSlug, sizeSlug } from "../lib/site.js";
+import { brandSlug, sizeSlug, safeNextPath } from "../lib/site.js";
 import { parseTireSize } from "../lib/tiresize.js";
+
+const ORIGIN = "https://tirekind.com";
+
+test("safeNextPath keeps legitimate same-origin paths (incl. query/hash)", () => {
+  assert.equal(safeNextPath("/listings/abc123", ORIGIN), "/listings/abc123");
+  assert.equal(safeNextPath("/browse?state=FL&size=225%2F45R17", ORIGIN), "/browse?state=FL&size=225%2F45R17");
+  assert.equal(safeNextPath("/messages/t1#latest", ORIGIN), "/messages/t1#latest");
+  assert.equal(safeNextPath("/sell/abc/tiktok", ORIGIN), "/sell/abc/tiktok");
+});
+
+test("safeNextPath rejects every open-redirect shape (backslash/control-char bypasses)", () => {
+  // These four all passed the old `startsWith("/") && !startsWith("//")` check
+  // yet resolve to https://evil.com in a browser's URL parser.
+  for (const evil of ["/\\evil.com", "/\\/evil.com", "/\t/evil.com", "/\n/evil.com", "/\r/evil.com"]) {
+    assert.equal(safeNextPath(evil, ORIGIN), null, JSON.stringify(evil));
+    // Sanity: prove the input really is dangerous under plain URL resolution.
+    assert.equal(new URL(evil, ORIGIN).host, "evil.com", `precondition ${JSON.stringify(evil)}`);
+  }
+  for (const evil of ["//evil.com", "https://evil.com", "javascript:alert(1)", "evil.com", "", null, undefined, 42]) {
+    assert.equal(safeNextPath(evil, ORIGIN), null, String(evil));
+  }
+});
 
 test("brandSlug: lowercases and dashes", () => {
   assert.equal(brandSlug("Michelin"), "michelin");

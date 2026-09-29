@@ -2,12 +2,20 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { buildListingWhere } from "@/lib/listingFilter";
 import { sendEmail } from "@/lib/email";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, oneLine } from "@/lib/format";
 import { publicLocation } from "@/lib/publicLocation";
 import { SITE_URL } from "@/lib/site";
 import { bearerMatches } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
+
+// One digest bullet for a matching listing. brand/size/location are free text
+// typed by OTHER users (sellers) and this mail goes to alert subscribers, so each
+// is collapsed to a single line — an interior newline must not inject lines.
+function sampleLine(m, bullet) {
+  const loc = oneLine(publicLocation(m.location), 80);
+  return `${bullet}${oneLine(m.brand, 60)} ${oneLine(m.size, 32)} — ${formatPrice(m.priceCents)}${loc ? ` (${loc})` : ""}`;
+}
 
 // Saved-search digest. Run on a schedule (e.g. Vercel Cron). Secured by a bearer
 // token: set CRON_SECRET — Vercel automatically sends it on cron invocations, and
@@ -52,9 +60,9 @@ export async function GET(req) {
   for (const [email, { name, items }] of byUser) {
     // Strip control chars from the display name — cleanStr only trims the ends,
     // so an interior newline would otherwise inject lines into this email body.
-    const safeName = String(name || "there").replace(/[\r\n\t]+/g, " ").trim().slice(0, 80);
+    const safeName = oneLine(name, 80) || "there";
     const lines = items.map((it) => {
-      const sub = it.samples.map((m) => `   • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)}${publicLocation(m.location) ? ` (${publicLocation(m.location)})` : ""}`).join("\n");
+      const sub = it.samples.map((m) => sampleLine(m, "   • ")).join("\n");
       return ` - ${it.label}: ${it.count} new\n${sub}`;
     });
     await sendEmail({
@@ -85,7 +93,7 @@ export async function GET(req) {
       select: { brand: true, size: true, priceCents: true, location: true },
     });
     if (matches.length === 0) continue;
-    const sub = matches.map((m) => ` • ${m.brand} ${m.size} — ${formatPrice(m.priceCents)}${publicLocation(m.location) ? ` (${publicLocation(m.location)})` : ""}`).join("\n");
+    const sub = matches.map((m) => sampleLine(m, " • ")).join("\n");
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${a.token}`;
     await sendEmail({
       to: a.email,

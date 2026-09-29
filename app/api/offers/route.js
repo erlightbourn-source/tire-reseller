@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { enforceRateLimit } from "@/lib/security";
 
 export const OFFER_TTL_MS = 48 * 60 * 60 * 1000; // offers expire after 48h
 
@@ -8,6 +9,10 @@ export const OFFER_TTL_MS = 48 * 60 * 60 * 1000; // offers expire after 48h
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+
+  // Counters post a message, so share the per-account budget idea of /api/messages.
+  const limited = await enforceRateLimit(req, "offer", { key: user.id, limit: 30, windowMs: 60_000 });
+  if (limited) return limited;
 
   const { messageId, action, offerCents } = await req.json();
   if (!["accept", "decline", "counter"].includes(action))
@@ -21,6 +26,17 @@ export async function POST(req) {
     return NextResponse.json({ error: "Not your thread." }, { status: 403 });
   if (msg.senderId === user.id)
     return NextResponse.json({ error: "You can't respond to your own offer." }, { status: 400 });
+
+  // Honor blocks (either direction), same as sending a message: every action here
+  // posts a message into the thread, and "accept" also marks the listing sold —
+  // a blocked party must not be able to do either after the block was placed.
+  const other = t.buyerId === user.id ? t.sellerId : t.buyerId;
+  const blocked = await prisma.block.findFirst({
+    where: { OR: [{ blockerId: user.id, blockedId: other }, { blockerId: other, blockedId: user.id }] },
+    select: { id: true },
+  });
+  if (blocked) return NextResponse.json({ error: "Messaging is unavailable in this conversation." }, { status: 403 });
+
   if (msg.offerStatus !== "pending")
     return NextResponse.json({ error: "This offer was already answered." }, { status: 409 });
   if (Date.now() - new Date(msg.createdAt).getTime() > OFFER_TTL_MS) {
