@@ -40,4 +40,24 @@ const nextConfig = {
   },
 };
 
+// Cloudflare build only (TK_CF_BUILD=1, set by the cf:build script): @vercel/blob imports
+// Node's `undici`, whose socket-based fetch hangs on Workers (upload timed out on the preview,
+// L612 2026-09-29). Point that one import at the package's own global-fetch shim. Vercel builds
+// never set the flag, so their bundle is unchanged.
+if (process.env.TK_CF_BUILD === "1") {
+  nextConfig.webpack = (config, { isServer, webpack }) => {
+    if (isServer) {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^undici$/, (resource) => {
+          if (/[\\/]@vercel[\\/]blob[\\/]/.test(resource.context || "")) {
+            // Absolute path: the package's exports map hides dist/undici-browser.js.
+            resource.request = new URL("./node_modules/@vercel/blob/dist/undici-browser.js", import.meta.url).pathname;
+          }
+        })
+      );
+    }
+    return config;
+  };
+}
+
 export default nextConfig;
