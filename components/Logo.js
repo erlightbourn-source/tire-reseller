@@ -1,5 +1,5 @@
 export default function Logo({ className = "h-9 w-9", spin = false, bare = false }) {
-  const scale = bare ? 1.5 : 1;
+  const scale = bare ? 1.4 : 1; // tire r=16.5 → 23.1 of the 24 half-box, no edge clip
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
       <defs>
@@ -14,38 +14,36 @@ export default function Logo({ className = "h-9 w-9", spin = false, bare = false
           className={spin ? "animate-spinslow" : ""}
           style={spin ? { transformBox: "fill-box", transformOrigin: "center" } : undefined}
         >
-        <circle r="15.5" fill="#0d0f13" />
-        <circle r="15.5" fill="none" stroke="#000" strokeOpacity="0.4" strokeWidth="1.5" />
-        {Array.from({ length: 16 }).map((_, i) => {
-          const a = (i / 16) * Math.PI * 2;
-          const x1 = Math.cos(a) * 9.5;
-          const y1 = Math.sin(a) * 9.5;
-          const x2 = Math.cos(a) * 15;
-          const y2 = Math.sin(a) * 15;
+        {/* Dark tread ring + silver rim: reads as a tire down to favicon size (the old all-dark wheel blurred into a blob at 28-36px). */}
+        <circle r="16.5" fill="#0b0d11" />
+        {Array.from({ length: 18 }).map((_, i) => {
+          const a = (i / 18) * Math.PI * 2;
           return (
             <line
               key={i}
-              x1={x1.toFixed(2)}
-              y1={y1.toFixed(2)}
-              x2={x2.toFixed(2)}
-              y2={y2.toFixed(2)}
-              stroke="#1f2430"
-              strokeWidth="2.4"
+              x1={(Math.cos(a) * 12.6).toFixed(2)}
+              y1={(Math.sin(a) * 12.6).toFixed(2)}
+              x2={(Math.cos(a) * 16.5).toFixed(2)}
+              y2={(Math.sin(a) * 16.5).toFixed(2)}
+              stroke="#4a5468"
+              strokeWidth="2.1"
             />
           );
         })}
-        <circle r="8.5" fill="#2a2f3c" />
-        <circle r="8.5" fill="none" stroke="#3a4150" strokeWidth="1" />
-        <circle r="3.4" fill="#0d0f13" />
+        <circle r="12.4" fill="#0b0d11" />
+        <circle r="9.4" fill="#c3cddf" />
+        <circle r="9.4" fill="none" stroke="#e8eef8" strokeWidth="0.8" />
+        <circle r="6.6" fill="#8d99b0" />
+        <circle r="3.1" fill="#0b0d11" />
         {Array.from({ length: 5 }).map((_, i) => {
           const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
           return (
             <circle
               key={i}
-              cx={(Math.cos(a) * 5.6).toFixed(2)}
-              cy={(Math.sin(a) * 5.6).toFixed(2)}
-              r="1.2"
-              fill="#5c86f8"
+              cx={(Math.cos(a) * 4.9).toFixed(2)}
+              cy={(Math.sin(a) * 4.9).toFixed(2)}
+              r="1.05"
+              fill="#0b0d11"
             />
           );
         })}

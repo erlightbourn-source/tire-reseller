@@ -25,7 +25,16 @@ export const metadata = {
   description: PLAN_COPY.siteTagline,
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "TireKind", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  // iOS ignores SVG apple-touch-icons (home-screen falls back to a page screenshot),
+  // and older Safari/Edge want an .ico, so ship real PNG/ICO alongside the SVG.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   // Default social-share cards, inherited by every route that doesn't set its
   // own. The site had NO twitter tags at all (0 pages) and no root-level
   // openGraph, so pages without a bespoke block shipped no preview. A page that
@@ -48,8 +57,15 @@ export const metadata = {
   },
 };
 
+// Status-bar / toolbar fill. theme-color covers Chrome, Android and Safari <=18;
+// Safari 26 ignores it and samples the sticky header instead, so the header must be
+// an OPAQUE color that matches (a translucent header let the page scroll visibly
+// behind the clock, Evan 9/29). viewportFit "cover" + the safe-area padding below
+// keep the installed app (black-translucent status bar) from drawing under the notch.
 export const viewport = {
-  themeColor: "#070809",
+  themeColor: "#000000",
+  colorScheme: "dark",
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }) {
@@ -61,7 +77,7 @@ export default async function RootLayout({ children }) {
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:bg-brand-500 focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-black">
           Skip to content
         </a>
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950/70 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-ink-950 pt-[env(safe-area-inset-top)]">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
             <Link href="/" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
@@ -82,7 +98,7 @@ export default async function RootLayout({ children }) {
 
         <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-8">{children}</main>
 
-        <footer className="mt-8 border-t border-white/10 bg-ink-950/60">
+        <footer className="mt-8 border-t border-white/10 bg-ink-950/60 pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-8 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2.5">

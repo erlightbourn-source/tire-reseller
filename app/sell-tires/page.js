@@ -137,7 +137,7 @@ export default async function SellTiresPage() {
       </section>
 
       {/* Sticky mobile CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-950/90 p-3 backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-ink-950 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div className="text-sm">
             <p className="font-bold text-white">Sell tires — free during launch</p>

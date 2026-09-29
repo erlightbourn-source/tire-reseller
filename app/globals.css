@@ -8,6 +8,16 @@
   color-scheme: dark;
 }
 
+/* Solid canvas behind everything (overscroll, Safari 26 toolbar fallback), and keep
+   content off the notch in landscape now that the viewport is viewport-fit=cover. */
+html {
+  background-color: #000000;
+}
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 @layer base {
   /* No rounded corners anywhere — raw, jagged edges. */
   *, *::before, *::after { border-radius: 0 !important; }

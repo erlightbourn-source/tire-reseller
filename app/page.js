@@ -313,7 +313,7 @@ export default async function Home() {
             <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">Read the buying guide</Link>.
           </p>
           <div className="mt-4 hidden lg:flex">
-            <Logo className="h-24 w-24 opacity-80" />
+            <Logo className="h-24 w-24" />
           </div>
         </div>
         <div className="card px-5 py-2">
