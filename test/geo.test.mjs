@@ -20,20 +20,22 @@ test("geocodeCity resolves known cities and rejects unknowns", () => {
 });
 
 test("geocodeCity falls back to the state centroid for an unknown city", () => {
-  // Regression: Coral Springs isn't in CITIES, so it used to geocode to null and
-  // drop out of every "near me" radius query. With a known state it now lands on
-  // the FL centroid (flagged approx), placing it roughly right.
-  const explicit = geocodeCity("Coral Springs", "FL");
+  // Regression: an unknown city used to geocode to null and drop out of every "near me"
+  // radius query. With a known state it lands on the state centroid (flagged approx).
+  // (Coral Springs was the original example; it is a real SoFla place since 9/29.)
+  const explicit = geocodeCity("Nowhere Town", "FL");
   assert.ok(explicit && explicit.approx === true);
   assert.ok(Math.abs(explicit.lat - STATE_CENTROIDS.FL[0]) < 0.001);
   // State parsed from the location text works too ("City, ST").
-  const parsed = geocodeCity("Coral Springs, FL");
+  const parsed = geocodeCity("Nowhere Town, FL");
   assert.ok(parsed && parsed.approx === true && Math.abs(parsed.lng - STATE_CENTROIDS.FL[1]) < 0.001);
   // An exact city hit is NOT flagged approx and keeps its real coords.
   const dallas = geocodeCity("Dallas, TX");
   assert.ok(dallas && dallas.approx === undefined && Math.abs(dallas.lat - 32.7767) < 0.01);
   // No state anywhere, or an invalid one → still null (no false placement).
-  assert.equal(geocodeCity("Coral Springs"), null);
+  assert.equal(geocodeCity("Nowhere Town"), null);
+  // A bare SoFla town name resolves to the town (TireKind is a SoFla marketplace).
+  assert.ok(geocodeCity("Coral Springs").approx === undefined);
   assert.equal(geocodeCity("Nowhere, ZZ"), null);
 });
 
@@ -41,4 +43,15 @@ test("cityOptions returns a non-empty labeled list", () => {
   const opts = cityOptions();
   assert.ok(opts.length > 10);
   assert.ok(opts[0].label.includes(","));
+});
+
+test("South Florida towns geocode to the town, not the Florida centroid", async () => {
+  const { geocodeCity } = await import("../lib/geo.js");
+  const cs = geocodeCity("Coral Springs", "FL");
+  assert.ok(!cs.approx && Math.abs(cs.lat - 26.27) < 0.1 && Math.abs(cs.lng + 80.26) < 0.1);
+  const addr = geocodeCity("1234 NW 5th Ave, Pembroke Pines, FL 33024");
+  assert.ok(!addr.approx && Math.abs(addr.lat - 26.0) < 0.1);
+  const ri = geocodeCity("539 Charles St, Providence, RI 02904, United States");
+  assert.deepEqual(ri, { lat: 41.824, lng: -71.4128 });
+  assert.equal(geocodeCity("Nowhere Town", "FL").approx, true);
 });
