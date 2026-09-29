@@ -1,0 +1,10 @@
+# TireKind cron runner on Cloudflare (L612, 2026-09-29). Replaces vercel.json crons once Vercel's are off.
+# UTC, 5 min after Vercel's (0 14 / 0 3) so the overlap can't double-send alerts (they advance lastSeenAt).
+name = "tirekind-cron"
+main = "index.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+[triggers]
+crons = ["5 14 * * *", "5 3 * * *"]
+# Secret: CRON_SECRET (same value as the app's), set with `wrangler secret put CRON_SECRET`.
