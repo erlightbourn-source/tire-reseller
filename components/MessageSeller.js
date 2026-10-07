@@ -5,7 +5,52 @@ import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
 import { SAFETY_WARNING, detectOffPlatform } from "@/lib/safety";
 
-export default function MessageSeller({ listingId, loggedIn }) {
+// Logged-out visitors can send one question without an account when the server flag GUEST_INQUIRY=on
+// (passed down as `guestInquiry`). The relay is email-only; no thread is created.
+function GuestInquiry({ listingId }) {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [question, setQuestion] = useState("Hi! Is this set still available?");
+  const [hp, setHp] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [sent, setSent] = useState(false);
+
+  async function send() {
+    setBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId, email, question, website: hp }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setErr(data.error || "Could not send your question.");
+      else { track("Guest inquiry"); setSent(true); }
+    } finally { setBusy(false); }
+  }
+
+  if (sent) return <div className="card p-4 text-sm text-slate-300">Sent. The seller will reply to your email.</div>;
+  if (!open) return <button onClick={() => setOpen(true)} className="btn-secondary mt-2 w-full">Ask a question without an account</button>;
+  return (
+    <div className="card mt-2 space-y-2 p-4">
+      {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
+      <p className="text-sm font-semibold text-slate-200">Ask the seller</p>
+      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email" className="input" autoComplete="email" />
+      <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={3} maxLength={600} className="input" />
+      {/* honeypot: hidden from people, bots fill it */}
+      <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
+      <p className="text-xs text-slate-400">We email your question and your address to the seller so they can reply. Links aren&apos;t allowed.</p>
+      <div className="flex gap-2">
+        <button onClick={send} disabled={busy} className="btn-primary flex-1">{busy ? "Sending…" : "Send question"}</button>
+        <button onClick={() => setOpen(false)} className="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+export default function MessageSeller({ listingId, loggedIn, guestInquiry = false }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("Hi! Is this set still available?");
@@ -18,6 +63,7 @@ export default function MessageSeller({ listingId, loggedIn }) {
       <div className="card p-5 text-center">
         <p className="text-sm text-slate-400">Log in to message the seller and make an offer.</p>
         <a href={`/login?next=/listings/${listingId}`} className="btn-primary mt-3 w-full">Log in to message</a>
+        {guestInquiry && <GuestInquiry listingId={listingId} />}
       </div>
     );
   }
