@@ -42,3 +42,17 @@ test("email: Reply-To is the buyer, one-line subject even with hostile title, sa
   assert.ok(!/[\r\n]/.test(m.subject));
   assert.ok(m.text.includes("Still available?") && m.text.includes("Keep it on TireKind.") && m.text.includes("https://tirekind.com/listings/abc"));
 });
+
+test("bare-domain / shortener links are rejected too (no scheme needed to drop a link)", () => {
+  for (const question of ["pay me at evil.com/checkout please", "message me on t.me/scammer about it", "see bit.ly/3abcd for the price", "Is the PAYPAL-refund.xyz deal real?"])
+    assert.equal(parseGuestInquiry({ ...ok, question }).ok, false, question);
+  // real tire talk must still pass: sizes, decimals, abbreviations
+  for (const question of ["Is the tread 6.5/32 or better on 225/45R17.5 tires?", "e.g. are they matched, i.e. same brand?", "Do these fit a 2019 Civic. How far is pickup?"])
+    assert.equal(parseGuestInquiry({ ...ok, question }).ok, true, question);
+});
+
+test("Reply-To safety: addresses with header-list/quote/angle characters are rejected", () => {
+  for (const email of ["a,b@gmail.com", "a;b@gmail.com", '"a"@gmail.com', "a<b@gmail.com", "a>b@gmail.com", "a(b)@gmail.com"])
+    assert.equal(parseGuestInquiry({ ...ok, email }).ok, false, email);
+  assert.equal(parseGuestInquiry({ ...ok, email: "jane.doe+tires@gmail.com" }).ok, true);
+});
