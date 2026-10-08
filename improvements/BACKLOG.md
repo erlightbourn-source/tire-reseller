@@ -54,3 +54,7 @@ deploy are Evan's calls — prepare, never pull the trigger.
 
 Refresh sources each run: latest flagged findings, newest `marketing-reports/*.md` recommendations,
 `improve:` lines in ~/.claude/agent-logs/dev.log, and fresh inspection.
+| 19 | Guest "Ask the seller" relay (flag-OFF): reject bare-domain/shortener links (not only http/www) and Reply-To addresses with list/quote/angle chars — closes a link-drop + header-shaping gap in an unauthenticated route that emails sellers | security-hardening | 2026-10-08 audit of d077914 | low | shipped 2026-10-08 (de/safety-20261008) |
+| 20 | Guest inquiry buyer address is UNVERIFIED (anyone can type any Reply-To). Bounded by 5/IP/hr + 3/address/day + 1/listing/hr, but per-address caps only hold with Upstash configured (in-memory otherwise = per-isolate on Workers). Before flipping GUEST_INQUIRY=on: confirm UPSTASH_* is set in the prod Worker, or add an emailed confirm step | launch-readiness / abuse | 2026-10-08 audit | med (ops + product call) | flagged — Evan/Dev ops |
+| 21 | wrangler 4.145.0 -> 4.147.0 (minor, deploy toolchain only) closes remaining undici/miniflare/sharp advisories (npm audit omit=dev 4 left) | dependency | 2026-10-05, 2026-10-08 audit | low (not in runtime bundle) | flagged — minor bump, Dev to do with a manual wrangler dry-run deploy check |
+
