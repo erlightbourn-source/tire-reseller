@@ -4,7 +4,8 @@ import AccountSettings from "@/components/AccountSettings";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Account settings — TireKind" };
+// Private account page: keep it out of search (Dev 2026-10-08, audit sites.md P3).
+export const metadata = { title: "Account settings — TireKind", robots: { index: false, follow: false } };
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();

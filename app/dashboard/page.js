@@ -12,8 +12,10 @@ import { tiktokShareEnabledFor } from "@/lib/tiktok";
 
 export const dynamic = "force-dynamic";
 
+// Private seller page: keep it out of search (Dev 2026-10-08, audit sites.md P3).
 export const metadata = {
   title: "Seller dashboard — TireKind",
+  robots: { index: false, follow: false },
 };
 
 export default async function DashboardPage() {
