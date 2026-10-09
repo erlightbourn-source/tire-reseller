@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseTireSize, deriveListingColumns, sizeWhere } from "../lib/tiresize.js";
+import { parseTireSize, deriveListingColumns, sizeWhere, canonicalSizeLabel } from "../lib/tiresize.js";
 
 test("parseTireSize: full metric sizes", () => {
   assert.deepEqual(parseTireSize("245/40R19"), { width: 245, aspect: 40, rim: 19 });
@@ -43,4 +43,15 @@ test("sizeWhere: structured for parseable, substring fallback otherwise", () => 
   assert.deepEqual(sizeWhere("245/40R19"), { widthMm: 245, aspectRatio: 40, rimDiameter: 19 });
   assert.deepEqual(sizeWhere("R19"), { rimDiameter: 19 });
   assert.deepEqual(sizeWhere("bald set"), { size: { contains: "bald set" } });
+});
+
+test("canonicalSizeLabel: matches the /sizes label format, null when not a full size", () => {
+  assert.equal(canonicalSizeLabel("225/45R17"), "225/45R17");
+  assert.equal(canonicalSizeLabel("P245/40ZR19"), "245/40R19");
+  assert.equal(canonicalSizeLabel("LT265/70R17"), "265/70R17");
+  assert.equal(canonicalSizeLabel("R17"), null);
+  assert.equal(canonicalSizeLabel("245"), null);
+  assert.equal(canonicalSizeLabel("bald goodyear"), null);
+  assert.equal(canonicalSizeLabel(""), null);
+  assert.equal(canonicalSizeLabel(undefined), null);
 });
