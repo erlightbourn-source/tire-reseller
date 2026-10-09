@@ -4,14 +4,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 import { priceFor, resolvePriceId } from "@/lib/pricing";
 import { SITE_URL } from "@/lib/site";
+import { enforceRateLimit } from "@/lib/security";
 
 // Stripe needs absolute success/cancel URLs. Prefer APP_URL, then the public
 // site URL — never a localhost default in production.
 const APP_URL = (process.env.APP_URL || SITE_URL).replace(/\/$/, "");
 
-export async function POST() {
+export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in first." }, { status: 401 });
+
+  const limited = await enforceRateLimit(req, "checkout", { key: user.id, limit: 5, windowMs: 60_000 });
+  if (limited) return limited;
 
   if (user.subscriptionStatus === "active") {
     return NextResponse.json({ url: "/dashboard" });

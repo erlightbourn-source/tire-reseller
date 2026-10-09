@@ -40,6 +40,12 @@ export async function POST(req) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  // Admin-banned accounts never get a session (bannedAt survives the soft-delete
+  // reactivation path below, which would otherwise undo a ban).
+  if (user.bannedAt) {
+    return NextResponse.json({ error: "This account has been suspended." }, { status: 403 });
+  }
+
   // Block login until the email is verified (double opt-in signup).
   if (!user.emailVerified) {
     return NextResponse.json(
@@ -55,10 +61,11 @@ export async function POST(req) {
     if (Date.now() - new Date(user.deletedAt).getTime() <= GRACE_MS) {
       await prisma.user.update({ where: { id: user.id }, data: { deletedAt: null } });
       // Restore listings hidden by the soft-delete, but leave any that meet the
-      // report auto-hide rule hidden — same credible-reporter threshold the
+      // report auto-hide rule hidden (and never touch moderator hides: the
+      // hiddenByAdmin filter above) — same credible-reporter threshold the
       // reports endpoint uses to hide, so the two rules can't drift.
       const hidden = await prisma.listing.findMany({
-        where: { sellerId: user.id, hidden: true },
+        where: { sellerId: user.id, hidden: true, hiddenByAdmin: false },
         select: { id: true },
       });
       const keepHidden = await autoHiddenIds(hidden.map((l) => l.id));
