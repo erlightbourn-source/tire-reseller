@@ -106,12 +106,17 @@ test("rateLimit allows up to the limit then blocks", () => {
   assert.ok(blocked.retryAfter > 0);
 });
 
-test("edgeTierFor picks the tightest binding that is never stricter than the route", () => {
+test("edgeTierFor picks the tightest binding that never blocks a burst the route allows", () => {
   assert.equal(edgeTierFor(5, 60_000).binding, "RL_PER_MIN_5");        // signup 5/min
   assert.equal(edgeTierFor(8, 60_000).binding, "RL_PER_MIN_15");       // login 8/min
   assert.equal(edgeTierFor(3, 60 * 60_000).binding, "RL_PER_MIN_5");   // 3/hour per address
   assert.equal(edgeTierFor(1, 30 * 60_000).binding, "RL_PER_MIN_5");   // view dedupe
-  assert.equal(edgeTierFor(40, 60_000).binding, "RL_PER_MIN_60");
+  assert.equal(edgeTierFor(20, 60_000).binding, "RL_PER_MIN_60");      // upload 20/min
   assert.equal(edgeTierFor(60, 60_000).binding, "RL_PER_MIN_60");
+  // A 300/day cap may be spent 6+ at a time (multi-photo listing): no 5/min binding.
+  assert.equal(edgeTierFor(300, 24 * 60 * 60_000), null);
+  assert.equal(edgeTierFor(10, 60 * 60_000).binding, "RL_PER_MIN_15");
   assert.equal(edgeTierFor(61, 60_000), null);
+  // Sub-minute windows scale up to a per-minute rate.
+  assert.equal(edgeTierFor(2, 10_000).binding, "RL_PER_MIN_15");       // 12/min
 });
