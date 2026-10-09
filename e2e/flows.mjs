@@ -460,3 +460,29 @@ test("founding-seller CTAs: signup for visitors, dashboard when logged in; selle
   const dash = await req("/dashboard", { headers: { Cookie: cookie } });
   assert.equal(dash.status, 200, "new seller sees the dashboard, not a redirect");
 });
+
+// L1674 (review fix): bulk add holds new listings to the same proof-field rule as a
+// single listing: a line without tread depth or a valid DOT year is skipped with a reason.
+test("bulk add: lines need tread depth + DOT year; valid lines store them", async () => {
+  const login = await req("/api/auth/login", { method: "POST", headers: { "X-Real-IP": "203.0.113.89" }, body: JSON.stringify({ email: "mike@tiretrader.test", password: "seller1234" }) });
+  assert.equal(login.status, 200, "seeded pro seller logs in");
+  const cookie = sessionCookie(login);
+  const text = [
+    "E2E Bulk | 225/45R17 | 320 | 4 | used | Dallas, TX | 7/32 | 2022",
+    "E2E Bulk | 225/45R17 | 320 | 4 | used | Dallas, TX",
+    "E2E Bulk | 225/45R17 | 320 | 4 | used | Dallas, TX | 7/32",
+    "E2E Bulk | 225/45R17 | 320 | 4 | used | Dallas, TX | 7/32 | 1985",
+  ].join("\n");
+  const res = await req("/api/listings/bulk", { method: "POST", headers: { Cookie: cookie }, body: JSON.stringify({ text }) });
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.count, 1, "only the complete line is created");
+  assert.equal(data.errors.length, 3);
+  assert.match(data.errors[0], /^Line 2: Tread depth/);
+  assert.match(data.errors[1], /^Line 3: DOT year is required/);
+  assert.match(data.errors[2], /^Line 4: DOT year must be/);
+  const row = await db.listing.findFirst({ where: { brand: "E2E Bulk" }, orderBy: { createdAt: "desc" }, select: { treadDepth: true, dotYear: true, treadDepth32: true } });
+  assert.equal(row.treadDepth, "7/32");
+  assert.equal(row.dotYear, 2022);
+  assert.equal(row.treadDepth32, 7);
+});
