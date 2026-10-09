@@ -148,6 +148,8 @@ function sendConfirm(email, verifyToken) {
   return sendEmail({
     to: email,
     subject: "Confirm your TireKind account",
-    text: `Welcome to TireKind! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
+    // The "didn't sign up" line matters: confirming someone else's signup hands
+    // them a verified account on your address (see the pre-hijack note above).
+    text: `Welcome to TireKind! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.\n\nDidn't sign up for TireKind? Don't click the link. Just ignore this email and no account will be created.`,
   });
 }
