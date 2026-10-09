@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const PLACEHOLDER = `Michelin | 225/45R17 | 320 | 4 | used | Dallas, TX
-Goodyear | 265/70R17 | 540 | 4 | new | Austin, TX
-Bridgestone | 205/55R16 | 260 | 4 | used | Houston, TX`;
+const PLACEHOLDER = `Michelin | 225/45R17 | 320 | 4 | used | Dallas, TX | 7/32 | 2022
+Goodyear | 265/70R17 | 540 | 4 | new | Austin, TX | 11/32 | 2025
+Bridgestone | 205/55R16 | 260 | 4 | used | Houston, TX | 6/32 | 2021`;
 
 export default function BulkAdd() {
   const router = useRouter();
@@ -36,7 +36,10 @@ export default function BulkAdd() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-400">
-        One listing per line: <code className="bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST</code>
+        One listing per line: <code className="bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST | Tread depth | DOT year</code>
+      </p>
+      <p className="text-xs text-slate-500">
+        Tread depth in 32nds (e.g. 7/32). DOT year from the sidewall: the last two of the 4 digits after "DOT" (2321 = 2021). Both are required.
       </p>
       {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       {result && (

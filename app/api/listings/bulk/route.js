@@ -6,11 +6,13 @@ import { geocodeCity } from "@/lib/geo";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS } from "@/lib/security";
+import { parseDotYear, requireTreadDepth } from "@/lib/listingProof";
 
 const MAX_LINES = 50;
 
 // Pro-only bulk add. One listing per line:
-//   Brand | Size | Price | Qty | new/used | City, ST
+//   Brand | Size | Price | Qty | new/used | City, ST | Tread depth | DOT year
+// Tread depth and DOT year are required, same as a single new listing (L1674).
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
@@ -28,11 +30,13 @@ export async function POST(req) {
   const errors = [];
   for (let i = 0; i < lines.length && created.length < MAX_LINES; i++) {
     const parts = lines[i].split("|").map((p) => p.trim());
-    const [brandRaw, sizeRaw, priceRaw, qtyRaw, condRaw, locationRaw] = parts;
+    const [brandRaw, sizeRaw, priceRaw, qtyRaw, condRaw, locationRaw, treadRaw, dotRaw] = parts;
     try {
       const brand = cleanStr(brandRaw, LIMITS.brand, { required: true, field: "Brand" });
       const size = cleanStr(sizeRaw, LIMITS.size, { required: true, field: "Size" });
       const location = cleanStr(locationRaw, LIMITS.location, { required: true, field: "City, ST" });
+      const treadDepth = requireTreadDepth(treadRaw);
+      const dotYear = parseDotYear(dotRaw, { required: true });
       const price = Number(priceRaw);
       if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
         errors.push(`Line ${i + 1}: invalid price`);
@@ -50,12 +54,14 @@ export async function POST(req) {
           condition: condRaw === "new" ? "new" : "used",
           priceCents,
           location,
+          treadDepth,
+          dotYear,
           state: stateFromLocation(location),
           lat: coords.lat ?? null,
           lng: coords.lng ?? null,
           sellerPro: isProSeller(user),
           sellerFounding: !!user.foundingSeller,
-          ...deriveListingColumns({ size, treadDepth: null, priceCents, quantity }),
+          ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
         },
       });
       created.push(l.id);

@@ -7,6 +7,7 @@ import { checkRateLimit, clientIp } from "@/lib/security";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
 import { priceContext } from "@/lib/pricing";
+import { formatLoadSpeed } from "@/lib/listingProof";
 import { jsonLdHtml } from "@/lib/jsonld";
 import { sizeSlug } from "@/lib/site";
 import { parseTireSize } from "@/lib/tiresize";
@@ -124,6 +125,7 @@ export default async function ListingDetail({ params }) {
   const isUsed = listing.condition !== "new";
   const age = tireAge(listing.dotYear);
   const lifePct = treadLifePct(listing.treadDepth);
+  const loadSpeed = formatLoadSpeed(listing.loadIndex, listing.speedRating);
   const sellerSince = new Date(listing.seller.createdAt).getFullYear();
   const initials = listing.seller.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -139,7 +141,7 @@ export default async function ListingDetail({ params }) {
     ["Condition", cond.label],
     ["Tread depth", treadLabel(listing.treadDepth) || "—"],
     listing.season && ["Season", seasonLabel(listing.season)],
-    (listing.loadIndex || listing.speedRating) && ["Load / Speed", `${listing.loadIndex || "—"}${listing.speedRating || ""}`],
+    loadSpeed && ["Load / Speed", loadSpeed],
     ["Run-flat", listing.runFlat ? "Yes" : "No"],
     ["Delivery", listing.shipping ? "Local pickup or shipping" : "Local pickup only"],
     listing.dotYear && ["DOT year", `${listing.dotYear}${age ? ` · ${age.label}` : ""}`],

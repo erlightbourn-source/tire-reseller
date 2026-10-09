@@ -8,18 +8,19 @@ import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 import { priceFor, PLAN_COPY } from "@/lib/pricing";
 import { stripDataUriMetadata } from "@/lib/image";
+import { normalizeSpeedRating, parseDotYear, requireTreadDepth } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
-function tireAttrs(b, state) {
+// speedRating and dotYear are validated by the caller (a bad value is a 400, never silently dropped).
+function tireAttrs(b, state, { speedRating, dotYear }) {
   const coords = geocodeCity(b.location, state) || {};
-  const dot = b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null;
   return {
     season: SEASONS.includes(b.season) ? b.season : null,
     loadIndex: b.loadIndex ? String(b.loadIndex).trim().slice(0, 8) : null,
-    speedRating: b.speedRating ? String(b.speedRating).trim().toUpperCase().slice(0, 4) : null,
+    speedRating,
     runFlat: !!b.runFlat,
     shipping: !!b.shipping,
-    dotYear: dot && dot >= 1990 && dot <= 2100 ? dot : null,
+    dotYear,
     lat: coords.lat ?? null,
     lng: coords.lng ?? null,
   };
@@ -47,12 +48,15 @@ export async function POST(req) {
   if (limited) return limited;
 
   const b = await req.json();
-  let brand, size, location, treadDepth, description;
+  let brand, size, location, treadDepth, description, dotYear, speedRating;
   try {
     brand = cleanStr(b.brand, LIMITS.brand, { required: true, field: "Brand" });
     size = cleanStr(b.size, LIMITS.size, { required: true, field: "Size" });
     location = cleanStr(b.location, LIMITS.location, { required: true, field: "Location" });
-    treadDepth = cleanStr(b.treadDepth, LIMITS.treadDepth, { field: "Tread depth" });
+    // Proof fields: required on new listings so buyers can vet before messaging.
+    treadDepth = requireTreadDepth(b.treadDepth);
+    dotYear = parseDotYear(b.dotYear, { required: true });
+    speedRating = normalizeSpeedRating(b.speedRating);
     description = cleanStr(b.description, LIMITS.description, { field: "Description" });
   } catch (e) {
     if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
@@ -90,7 +94,7 @@ export async function POST(req) {
       sellerPro: isProSeller(user),
       sellerFounding: !!user.foundingSeller,
       ...deriveListingColumns({ size, treadDepth, priceCents, quantity }),
-      ...tireAttrs(b, state),
+      ...tireAttrs(b, state, { speedRating, dotYear }),
       photos: {
         create: photos.map((url, i) => ({ url, sort: i })),
       },
