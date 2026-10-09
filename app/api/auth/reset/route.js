@@ -49,6 +49,11 @@ export async function POST(req) {
       resetTokenHash: null,
       resetTokenExpiry: null,
       tokenVersion: { increment: 1 },
+      // The link was emailed, so using it proves the mailbox: that also confirms
+      // the address (this is how a re-started pending signup finishes, F4).
+      emailVerified: true,
+      verifyTokenHash: null,
+      verifyTokenExpiry: null,
     },
   });
   if (claim.count === 0) {

@@ -4,7 +4,18 @@
   "compatibility_date": "2026-07-14",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-  "workers_dev": true,
+  // Security audit L1624 (2026-10-09): the app is served only on its custom domains.
+  // workers.dev and per-version preview URLs were a second public origin (an old
+  // version's preview URL keeps serving that version's code against the prod DB).
+  "workers_dev": false,
+  "preview_urls": false,
+  // Durable rate-limit counters (lib/security.js edgeLimit), shared by all isolates
+  // in a Cloudflare location. Period must be 10 or 60 s. Included in Workers Paid.
+  "ratelimits": [
+    { "name": "RL_PER_MIN_5", "namespace_id": "1624005", "simple": { "limit": 5, "period": 60 } },
+    { "name": "RL_PER_MIN_15", "namespace_id": "1624015", "simple": { "limit": 15, "period": 60 } },
+    { "name": "RL_PER_MIN_60", "namespace_id": "1624060", "simple": { "limit": 60, "period": 60 } }
+  ],
   // v1 (L612, 2026-09-29): no R2 binding yet (R2 is not in the wrangler OAuth grant).
   // app/api/upload/route.js falls back to BLOB_READ_WRITE_TOKEN when UPLOADS_BUCKET is
   // absent. To add R2 later (bucket create first), restore:

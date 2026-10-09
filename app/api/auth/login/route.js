@@ -4,6 +4,7 @@ import { verifyPassword, createSession } from "@/lib/auth";
 import { enforceRateLimit, isEmail, clientIp } from "@/lib/security";
 import { autoHiddenIds } from "@/lib/moderation";
 import { logAudit } from "@/lib/audit";
+import { checkTurnstile } from "@/lib/turnstile";
 
 const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -17,7 +18,12 @@ export async function POST(req) {
   const limited = await enforceRateLimit(req, "login", { limit: 8, windowMs: 60_000 });
   if (limited) return limited;
 
-  const { email, password } = await req.json();
+  const { email, password, turnstileToken } = await req.json();
+
+  // Bot check before the password compare, so a scripted guesser can't even burn
+  // the victim's per-account failure bucket.
+  const bot = await checkTurnstile(req, turnstileToken);
+  if (bot) return bot;
   if (!email || !password || typeof password !== "string") {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }

@@ -6,6 +6,7 @@ import { stateName } from "@/lib/states";
 import { sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { enforceRateLimit, isEmail } from "@/lib/security";
+import { checkTurnstile } from "@/lib/turnstile";
 
 const ALLOWED = ["q", "brand", "condition", "size", "maxPrice", "minTread", "minYear", "qty", "minRating", "shipping", "season", "runFlat", "state"];
 
@@ -14,7 +15,9 @@ export async function POST(req) {
   const limited = await enforceRateLimit(req, "emailalert", { limit: 5, windowMs: 60_000 });
   if (limited) return limited;
 
-  const { email, query } = await req.json();
+  const { email, query, turnstileToken } = await req.json();
+  const bot = await checkTurnstile(req, turnstileToken);
+  if (bot) return bot;
   const addr = String(email || "").toLowerCase();
   if (!isEmail(addr)) return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
 
@@ -60,7 +63,11 @@ export async function POST(req) {
     to: addr,
     subject: "Confirm your TireKind tire alerts",
     text:
-      `Confirm you want alerts when new tires match: ${label}\n\n` +
+      // Fixed text only: the search label is built from caller-supplied filters, so
+      // echoing it here let anyone send ~500 chars of their own text to any inbox
+      // inside a genuine TireKind email (audit L1624 F5). The label shows up only
+      // after the owner confirms, in their own digests.
+      `Confirm you want TireKind to email you when new tire listings match your saved search.\n\n` +
       `Confirm: ${SITE_URL}/api/email-alerts/confirm?token=${confirm.token}\n\n` +
       `If you didn't request this, just ignore this email — you won't hear from us again.`,
   });

@@ -11,6 +11,9 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "geolocation=(self), camera=(), microphone=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
+  // Isolates our window from cross-origin popups/openers (audit L1624). Stripe
+  // Checkout and TikTok OAuth are full-page redirects, not popups, so unaffected.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
 // The pre-app static site lived at *.html URLs. Keep those links (search

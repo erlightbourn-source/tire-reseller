@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { enforceRateLimit, isEmail } from "@/lib/security";
+import { checkTurnstile } from "@/lib/turnstile";
 
 // TireKind newsletter signup → MailerLite "TireKind — Subscribers" group.
 // Posts server-side to MailerLite's PUBLIC form endpoint (the same one the
@@ -17,6 +18,8 @@ export async function POST(req) {
   // Honeypot (NotifyApp's hidden `company` field): a filled value is a bot. Answer like a
   // success so it learns nothing, and send nothing to MailerLite.
   if (String(body.company || "").trim()) return NextResponse.json({ ok: true });
+  const bot = await checkTurnstile(req, body.turnstileToken);
+  if (bot) return bot;
   const addr = String(body.email || "").trim().toLowerCase();
   if (!isEmail(addr)) return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanStr, clampInt, isEmail, ValidationError, rateLimit, isAllowedPhotoUrl } from "../lib/validation.js";
+import { cleanStr, clampInt, isEmail, ValidationError, rateLimit, isAllowedPhotoUrl, edgeTierFor } from "../lib/validation.js";
 
 test("cleanStr trims and returns the value", () => {
   assert.equal(cleanStr("  hi  ", 10), "hi");
@@ -39,7 +39,8 @@ test("clampInt clamps, rounds, and falls back", () => {
 test("isAllowedPhotoUrl accepts uploads/data/r2/blob and rejects remote", () => {
   assert.ok(isAllowedPhotoUrl("/uploads/abc.jpg"));
   assert.ok(isAllowedPhotoUrl("data:image/png;base64,xxxx"));
-  assert.ok(isAllowedPhotoUrl("https://pub-abc123.r2.dev/uploads/x.jpg"));
+  // Arbitrary r2.dev buckets are not ours (audit L1624 F7); only R2_PUBLIC_BASE_URL is.
+  assert.ok(!isAllowedPhotoUrl("https://pub-abc123.r2.dev/uploads/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("https://evil.example/x.jpg"));
   assert.ok(!isAllowedPhotoUrl("javascript:alert(1)"));
   assert.ok(!isAllowedPhotoUrl(42));
@@ -103,4 +104,19 @@ test("rateLimit allows up to the limit then blocks", () => {
   const blocked = rateLimit(key, { limit: 3, windowMs: 60_000 });
   assert.ok(!blocked.ok);
   assert.ok(blocked.retryAfter > 0);
+});
+
+test("edgeTierFor picks the tightest binding that never blocks a burst the route allows", () => {
+  assert.equal(edgeTierFor(5, 60_000).binding, "RL_PER_MIN_5");        // signup 5/min
+  assert.equal(edgeTierFor(8, 60_000).binding, "RL_PER_MIN_15");       // login 8/min
+  assert.equal(edgeTierFor(3, 60 * 60_000).binding, "RL_PER_MIN_5");   // 3/hour per address
+  assert.equal(edgeTierFor(1, 30 * 60_000).binding, "RL_PER_MIN_5");   // view dedupe
+  assert.equal(edgeTierFor(20, 60_000).binding, "RL_PER_MIN_60");      // upload 20/min
+  assert.equal(edgeTierFor(60, 60_000).binding, "RL_PER_MIN_60");
+  // A 300/day cap may be spent 6+ at a time (multi-photo listing): no 5/min binding.
+  assert.equal(edgeTierFor(300, 24 * 60 * 60_000), null);
+  assert.equal(edgeTierFor(10, 60 * 60_000).binding, "RL_PER_MIN_15");
+  assert.equal(edgeTierFor(61, 60_000), null);
+  // Sub-minute windows scale up to a per-minute rate.
+  assert.equal(edgeTierFor(2, 10_000).binding, "RL_PER_MIN_15");       // 12/min
 });

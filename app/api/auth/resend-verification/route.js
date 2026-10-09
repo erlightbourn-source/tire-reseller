@@ -32,7 +32,7 @@ export async function POST(req) {
     await sendEmail({
       to: addr,
       subject: "Confirm your TireKind account",
-      text: `Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${token}\n\nThis link expires in 24 hours.`,
+      text: `Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${token}\n\nThis link expires in 24 hours.\n\nDidn't sign up for TireKind? Don't click the link. Just ignore this email and no account will be created.`,
     });
   }
   return NEUTRAL;

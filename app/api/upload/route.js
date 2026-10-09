@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canSell } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/security";
 import { stripMetadata } from "@/lib/image";
 import { buildR2Url } from "@/lib/r2Url";
@@ -77,15 +77,24 @@ const MIME = { jpg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "ima
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  // Photos only ever attach to listings, so only accounts that can list may upload
+  // (audit L1624 F6: any verified buyer could fill public storage).
+  if (!canSell(user)) return NextResponse.json({ error: "Only active sellers can upload photos." }, { status: 403 });
 
-  const limited = await enforceRateLimit(req, "upload", { key: user.id, limit: 40, windowMs: 60_000 });
+  const limited = await enforceRateLimit(req, "upload", { key: user.id, limit: 20, windowMs: 60_000 });
   if (limited) return limited;
+  const daily = await enforceRateLimit(req, "upload-day", { key: user.id, limit: 300, windowMs: 24 * 60 * 60_000 });
+  if (daily) return daily;
 
   // Reject an oversized multipart body BEFORE parsing it into memory (App Router
   // route handlers have no default body cap → memory-exhaustion DoS otherwise).
   const MAX_BODY = MAX_BYTES * MAX_FILES + 1024 * 1024; // total payload ceiling
-  const declaredLen = Number(req.headers.get("content-length") || 0);
-  if (declaredLen > MAX_BODY) {
+  // A chunked body has no Content-Length and would skip this check, so require one
+  // (browsers always send it for FormData uploads).
+  const rawLen = req.headers.get("content-length");
+  if (!rawLen) return NextResponse.json({ error: "Content-Length required." }, { status: 411 });
+  const declaredLen = Number(rawLen);
+  if (!Number.isFinite(declaredLen) || declaredLen > MAX_BODY) {
     return NextResponse.json({ error: "Upload too large." }, { status: 413 });
   }
 

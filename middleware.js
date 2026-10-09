@@ -32,8 +32,11 @@ function buildCsp(nonce) {
     // the event beacon it POSTs to (connect-src). Harmless when analytics is off.
     // Same pattern for Cloudflare Web Analytics (script on static.cloudflareinsights.com,
     // RUM beacon POSTs to cloudflareinsights.com/cdn-cgi/rum).
-    `script-src ${scriptSrc} https://plausible.io https://static.cloudflareinsights.com`,
-    "connect-src 'self' https://plausible.io https://cloudflareinsights.com",
+    // challenges.cloudflare.com = Turnstile bot check on the logged-out forms
+    // (components/useTurnstile.js): its loader script plus the challenge iframe.
+    `script-src ${scriptSrc} https://plausible.io https://static.cloudflareinsights.com https://challenges.cloudflare.com`,
+    "connect-src 'self' https://plausible.io https://cloudflareinsights.com https://challenges.cloudflare.com",
+    "frame-src 'self' https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

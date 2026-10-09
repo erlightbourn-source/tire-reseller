@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { enforceRateLimit } from "@/lib/security";
+import { checkTurnstile } from "@/lib/turnstile";
 import { sendEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/site";
 import { SAFETY_WARNING } from "@/lib/safety";
@@ -17,6 +18,8 @@ export async function POST(req) {
 
   let raw;
   try { raw = await req.json(); } catch { return NextResponse.json({ error: "Bad request." }, { status: 400 }); }
+  const bot = await checkTurnstile(req, raw?.turnstileToken);
+  if (bot) return bot;
   const parsed = parseGuestInquiry(raw);
   if (!parsed.ok) {
     return NextResponse.json(parsed.silent ? { ok: true } : { error: parsed.error }, { status: parsed.status });

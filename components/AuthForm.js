@@ -7,6 +7,7 @@ import { STATES } from "@/lib/states";
 import { track } from "@/lib/track";
 import { PLAN_COPY } from "@/lib/pricing";
 import { safeNextPath } from "@/lib/site";
+import { useTurnstile } from "@/components/useTurnstile";
 
 export default function AuthForm({ mode }) {
   const isSignup = mode === "signup";
@@ -19,6 +20,7 @@ export default function AuthForm({ mode }) {
   const [pending, setPending] = useState(false);       // signup → "check your email"
   const [unverified, setUnverified] = useState("");    // login of an unverified account → offer resend
   const [resent, setResent] = useState(false);
+  const { ref: botRef, getToken } = useTurnstile();
 
   async function resend() {
     if (!unverified) return;
@@ -41,6 +43,7 @@ export default function AuthForm({ mode }) {
       body.role = role;
       body.agreedToTerms = agreed;
     }
+    body.turnstileToken = await getToken();
     const res = await fetch(`/api/auth/${isSignup ? "signup" : "login"}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -213,6 +216,7 @@ export default function AuthForm({ mode }) {
                 </span>
               </label>
             )}
+            <div ref={botRef} />
             <button disabled={loading || (isSignup && !agreed)} className="btn-primary w-full">
               {loading ? "Please wait…" : isSignup ? "Create account" : "Log in"}
             </button>

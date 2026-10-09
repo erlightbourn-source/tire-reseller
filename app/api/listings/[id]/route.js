@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canSell } from "@/lib/auth";
 import { resolveState } from "@/lib/states";
 import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
@@ -25,7 +25,7 @@ async function requireOwner(req, id) {
 
 export async function PATCH(req, { params }) {
   const { id } = await params;
-  const { error, listing } = await requireOwner(req, id);
+  const { error, listing, user } = await requireOwner(req, id);
   if (error) return error;
 
   const b = await req.json();
@@ -56,7 +56,18 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Enter a valid price." }, { status: 400 });
     data.priceCents = Math.round(price * 100);
   }
-  if (b.status !== undefined && ["active", "sold"].includes(b.status)) data.status = b.status;
+  if (b.status !== undefined && ["active", "sold"].includes(b.status)) {
+    // An expired seller can still edit, mark sold or delete, but can't put a
+    // listing back on the market without an active plan (audit L1624 F14);
+    // creating listings is gated the same way in POST /api/listings.
+    if (b.status === "active" && listing.status !== "active" && !canSell(user)) {
+      return NextResponse.json(
+        { error: "Your listing period has ended. Subscribe to relist.", code: "subscription_required" },
+        { status: 403 }
+      );
+    }
+    data.status = b.status;
+  }
   // NOTE: `featured` (paid/admin promotion) is intentionally NOT accepted here —
   // allowing the owner to set it would let any seller promote a listing for free.
   if (b.season !== undefined) data.season = SEASONS.includes(b.season) ? b.season : null;

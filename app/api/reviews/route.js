@@ -24,16 +24,21 @@ export async function POST(req) {
   const seller = await prisma.user.findUnique({ where: { id: sellerId } });
   if (!seller || seller.role !== "seller") return NextResponse.json({ error: "Seller not found." }, { status: 404 });
 
-  // Anti-brigading: only let buyers who have actually contacted this seller
-  // (started a message thread) leave a review — prevents drive-by rating attacks
-  // from throwaway accounts with no transaction history.
+  // Anti-brigading: only buyers who have had a real conversation with this seller
+  // (they wrote AND the seller replied in the same thread) may review. An empty
+  // thread used to be enough, and any throwaway account can open one with no
+  // message (audit L1624 F8).
   const contacted = await prisma.thread.findFirst({
-    where: { buyerId: user.id, sellerId },
+    where: {
+      buyerId: user.id,
+      sellerId,
+      AND: [{ messages: { some: { senderId: user.id } } }, { messages: { some: { senderId: sellerId } } }],
+    },
     select: { id: true },
   });
   if (!contacted) {
     return NextResponse.json(
-      { error: "You can only review a seller you've messaged." },
+      { error: "You can review a seller once you've messaged them and they've replied." },
       { status: 403 }
     );
   }
