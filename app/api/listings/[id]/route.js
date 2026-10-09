@@ -6,6 +6,7 @@ import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { stripDataUriMetadata } from "@/lib/image";
+import { normalizeSpeedRating, parseDotYear } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -35,6 +36,10 @@ export async function PATCH(req, { params }) {
     if (b.size !== undefined) data.size = cleanStr(b.size, LIMITS.size, { required: true, field: "Size" });
     if (b.treadDepth !== undefined) data.treadDepth = cleanStr(b.treadDepth, LIMITS.treadDepth, { field: "Tread depth" });
     if (b.description !== undefined) data.description = cleanStr(b.description, LIMITS.description, { field: "Description" });
+    // Proof fields stay optional on edit (existing listings may predate the requirement),
+    // but anything provided is validated rather than silently dropped.
+    if (b.speedRating !== undefined) data.speedRating = normalizeSpeedRating(b.speedRating);
+    if (b.dotYear !== undefined) data.dotYear = parseDotYear(b.dotYear);
     if (b.location !== undefined) {
       const loc = cleanStr(b.location, LIMITS.location, { required: true, field: "Location" });
       data.location = loc;
@@ -72,12 +77,7 @@ export async function PATCH(req, { params }) {
   // allowing the owner to set it would let any seller promote a listing for free.
   if (b.season !== undefined) data.season = SEASONS.includes(b.season) ? b.season : null;
   if (b.loadIndex !== undefined) data.loadIndex = b.loadIndex ? String(b.loadIndex).trim().slice(0, 8) : null;
-  if (b.speedRating !== undefined) data.speedRating = b.speedRating ? String(b.speedRating).trim().toUpperCase().slice(0, 4) : null;
   if (b.runFlat !== undefined) data.runFlat = !!b.runFlat;
-  if (b.dotYear !== undefined) {
-    const dot = b.dotYear && Number(b.dotYear) ? Math.round(Number(b.dotYear)) : null;
-    data.dotYear = dot && dot >= 1990 && dot <= 2100 ? dot : null;
-  }
   if (b.shipping !== undefined) data.shipping = !!b.shipping;
 
   // Keep the denormalized size/tread/per-tire columns in sync when any of their

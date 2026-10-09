@@ -240,7 +240,7 @@ test("core funnel: seller lists a tire, buyer offers, seller accepts", async () 
   const listingRes = await req("/api/listings", {
     method: "POST",
     headers: { Cookie: sellerCookie },
-    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4 }),
+    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025 }),
   });
   assert.equal(listingRes.status, 200, "seller creates a listing");
   const { id: listingId } = await listingRes.json();
@@ -324,7 +324,7 @@ test("offers: a blocked party can't accept/counter a pending offer", async () =>
   const { id: listingId } = await (await req("/api/listings", {
     method: "POST",
     headers: { Cookie: sellerCookie },
-    body: JSON.stringify({ brand: "E2E Block", size: "205/55R16", location: "Miami, FL", condition: "used", price: 200, quantity: 4 }),
+    body: JSON.stringify({ brand: "E2E Block", size: "205/55R16", location: "Miami, FL", condition: "used", price: 200, quantity: 4, treadDepth: "6/32in", dotYear: 2022 }),
   })).json();
   const { threadId } = await (await req("/api/threads", {
     method: "POST",
@@ -368,4 +368,61 @@ test("offers: a blocked party can't accept/counter a pending offer", async () =>
   assert.equal(listing?.status, "active", "listing was NOT marked sold by the blocked party");
   const still = await db.message.findUnique({ where: { id: counterMsg.id }, select: { offerStatus: true } });
   assert.equal(still?.offerStatus, "pending", "counter-offer left untouched");
+});
+
+// L1674: new listings must carry tread depth + DOT year, and the speed rating must be
+// a real speed symbol (a seller once typed "130" mph, which rendered as "102130").
+// PATCH on an existing listing stays lenient about missing fields but validates what it gets.
+test("listing proof fields: POST requires treadDepth + dotYear, validates speedRating; PATCH validates if provided", async () => {
+  // Seeded seller: the signup endpoint is capped at 5/min per IP and earlier tests already use 5.
+  const login = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email: "demo@tiretrader.test", password: "demo1234" }) });
+  assert.equal(login.status, 200, "seeded seller logs in");
+  const cookie = sessionCookie(login);
+  const base = { brand: "E2E Proof", size: "225/65R17", location: "Miami, FL", condition: "used", price: 250, quantity: 4, treadDepth: "8/32in", dotYear: 2022 };
+  const post = (over, drop = []) => {
+    const body = { ...base, ...over };
+    for (const k of drop) delete body[k];
+    return req("/api/listings", { method: "POST", headers: { Cookie: cookie }, body: JSON.stringify(body) });
+  };
+
+  const noDot = await post({}, ["dotYear"]);
+  assert.equal(noDot.status, 400, "missing dotYear -> 400");
+  assert.match((await noDot.json()).error, /DOT year/);
+  const noTread = await post({}, ["treadDepth"]);
+  assert.equal(noTread.status, 400, "missing treadDepth -> 400");
+  assert.match((await noTread.json()).error, /Tread depth/);
+  assert.equal((await post({ dotYear: 1985 })).status, 400, "dotYear 1985 -> 400");
+  assert.equal((await post({ dotYear: new Date().getFullYear() + 2 })).status, 400, "dotYear too far ahead -> 400");
+
+  const mph = await post({ speedRating: "130" });
+  assert.equal(mph.status, 400, "speedRating 130 -> 400");
+  assert.match((await mph.json()).error, /Speed rating/);
+
+  const ok = await post({ loadIndex: "102", speedRating: "h" });
+  assert.equal(ok.status, 200, "valid listing is created");
+  const { id } = await ok.json();
+  const row = await db.listing.findUnique({ where: { id }, select: { speedRating: true, dotYear: true, treadDepth: true } });
+  assert.deepEqual(row, { speedRating: "H", dotYear: 2022, treadDepth: "8/32in" });
+  for (const sr of ["ZR", "(Y)"]) assert.equal((await post({ speedRating: sr })).status, 200, `speedRating ${sr} ok`);
+  assert.equal((await post({}, ["speedRating"])).status, 200, "speedRating stays optional");
+
+  // Rendered page: "102 H" with a space.
+  const html = await (await req(`/listings/${id}`)).text();
+  assert.match(html, /102 H/);
+  assert.ok(!html.includes("102H"));
+
+  // PATCH: partial edit without the proof fields still works; provided-but-bad values are rejected.
+  const patch = (body) => req(`/api/listings/${id}`, { method: "PATCH", headers: { Cookie: cookie }, body: JSON.stringify(body) });
+  assert.equal((await patch({ price: 240 })).status, 200, "PATCH without proof fields is fine");
+  assert.equal((await patch({ speedRating: "130" })).status, 400, "PATCH speedRating 130 -> 400");
+  assert.equal((await patch({ dotYear: 1985 })).status, 400, "PATCH dotYear 1985 -> 400");
+  assert.equal((await patch({ speedRating: "V", dotYear: "2023" })).status, 200, "PATCH valid values");
+  const after = await db.listing.findUnique({ where: { id }, select: { speedRating: true, dotYear: true } });
+  assert.deepEqual(after, { speedRating: "V", dotYear: 2023 });
+
+  // Legacy row with garbage stored speed renders only the load index.
+  await db.listing.update({ where: { id }, data: { speedRating: "130" } });
+  const legacy = await (await req(`/listings/${id}`)).text();
+  assert.ok(!legacy.includes("102130"), "never renders 102130");
+  assert.ok(!legacy.includes("102 130"));
 });

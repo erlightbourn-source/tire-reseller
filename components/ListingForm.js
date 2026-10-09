@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
+import { SPEED_RATINGS, isValidSpeedRating, DOT_YEAR_MIN } from "@/lib/listingProof";
 
 // Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
 const STATE_OPTIONS = [...STATES].sort((a, b) => a.name.localeCompare(b.name));
 const MAX_PHOTOS = 6; // app/api/listings keeps only the first 6
+const DOT_YEAR_MAX = new Date().getFullYear() + 1; // matches parseDotYear
 
 // Error responses aren't always our JSON (a platform 413/502 is HTML/text).
 async function readJson(res) {
@@ -128,8 +130,9 @@ export default function ListingForm({ initial }) {
           </select>
         </div>
         <div>
-          <label className="label">Tread depth <span className="text-slate-400">(optional)</span></label>
-          <input name="treadDepth" defaultValue={initial?.treadDepth || ""} className="input" placeholder="8/32in" />
+          <label className="label">Tread depth {editing ? <span className="text-slate-400">(please add)</span> : <span className="text-slate-400">(required)</span>}</label>
+          <input name="treadDepth" required={!editing} defaultValue={initial?.treadDepth || ""} className="input" placeholder="8/32in" />
+          <p className="mt-1 text-xs text-slate-400">Measured in 32nds of an inch, e.g. 8/32in. Type &quot;new&quot; for unused tires.</p>
         </div>
         <div>
           <label className="label">Price (USD)</label>
@@ -184,11 +187,32 @@ export default function ListingForm({ initial }) {
           </div>
           <div>
             <label className="label">Speed rating</label>
-            <input name="speedRating" defaultValue={initial?.speedRating || ""} className="input" placeholder="V" maxLength={3} />
+            {/* A stored value outside the valid set (old rows where a seller typed mph) is not offered back. */}
+            <select name="speedRating" defaultValue={isValidSpeedRating(initial?.speedRating) ? initial.speedRating : ""} className="input">
+              <option value="">—</option>
+              {SPEED_RATINGS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-400">The letter after the load index on the sidewall (e.g. 102H), not mph.</p>
           </div>
           <div>
-            <label className="label">DOT year <span className="text-slate-400">(mfg.)</span></label>
-            <input name="dotYear" type="number" min="2000" max="2030" defaultValue={initial?.dotYear || ""} className="input" placeholder="2022" />
+            <label className="label">DOT year <span className="text-slate-400">{editing ? "(please add)" : "(required)"}</span></label>
+            <input
+              name="dotYear"
+              type="number"
+              inputMode="numeric"
+              step="1"
+              min={DOT_YEAR_MIN}
+              max={DOT_YEAR_MAX}
+              required={!editing}
+              defaultValue={initial?.dotYear || ""}
+              className="input"
+              placeholder="2022"
+            />
+            <p className="mt-1 text-xs text-slate-400">
+              Find the 4 digits after &quot;DOT&quot; on the sidewall: week then year. 2321 = week 23 of 2021, so enter 2021.
+            </p>
           </div>
           <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-slate-200">
             <input type="checkbox" name="runFlat" defaultChecked={initial?.runFlat} className="h-4 w-4 border-white/20 bg-white/10 accent-brand-500" />
@@ -203,6 +227,9 @@ export default function ListingForm({ initial }) {
 
       <div>
         <label className="label">Photos</label>
+        <p className="mb-2 text-xs text-slate-400">
+          Tip: add a close-up of the DOT code and a photo of the tread with a coin or gauge.
+        </p>
         <input type="file" accept="image/*" multiple onChange={onUpload} className="block text-sm" />
         {uploading && <p className="mt-1 text-sm text-slate-400">Uploading…</p>}
         {photos.length > 0 && (
