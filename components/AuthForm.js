@@ -68,7 +68,9 @@ export default function AuthForm({ mode }) {
     // etc. — see lib/site.js#safeNextPath) so the post-login redirect can't be
     // turned into an open-redirect phishing pivot.
     const safeNext = safeNextPath(params.get("next"), window.location.origin);
-    const dest = safeNext || (isSignup ? (role === "seller" ? "/dashboard" : "/") : "/");
+    // The verify link lands on a bare /login?verified=1 (no `next`), so the role
+    // from the login response is what sends a new seller to /dashboard.
+    const dest = safeNext || (data.role === "seller" ? "/dashboard" : "/");
     router.push(dest);
     router.refresh();
   }

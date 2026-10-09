@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FoundingBadge } from "@/components/Badge";
 import { FOUNDING_SEATS, FOUNDING_LABEL, FOUNDING_SHORT, PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
 import { getFoundingClaimed } from "@/lib/founding";
+import { getCurrentUser } from "@/lib/auth";
 
 // Renders per request so the founding-seat counter is live (cached 60s in lib/founding.js).
 export const dynamic = "force-dynamic";
@@ -31,6 +32,10 @@ const PERKS = [
 
 export default async function FoundingSellerPage() {
   const spots = foundingSpotsLine(await getFoundingClaimed());
+  // Founders sign up as sellers and list free: new visitors go to seller signup,
+  // logged-in ones straight to their dashboard. Never the paid /subscribe checkout.
+  const user = await getCurrentUser();
+  const claimHref = user ? "/dashboard" : "/signup?role=seller";
   return (
     <div className="space-y-8">
       <header>
@@ -56,7 +61,7 @@ export default async function FoundingSellerPage() {
           </p>
         )}
         <div className="mt-5">
-          <Link href="/sell-tires" className="btn-primary">Claim your Founding Seller spot</Link>
+          <Link href={claimHref} className="btn-primary">Claim your Founding Seller spot</Link>
         </div>
       </header>
 
@@ -100,7 +105,7 @@ export default async function FoundingSellerPage() {
           to the first {FOUNDING_SEATS} South Florida sellers.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
-          <Link href="/sell-tires" className="btn-primary">Claim your spot</Link>
+          <Link href={claimHref} className="btn-primary">Claim your spot</Link>
           <Link href="/how-it-works" className="font-semibold text-brand-300 hover:underline">How selling works →</Link>
         </div>
       </section>
