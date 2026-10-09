@@ -95,23 +95,34 @@ export async function POST(req) {
     verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
   };
 
-  // Pre-hijack guard (audit L1624 F4): an UNVERIFIED account proves nothing about
-  // who owns the address. If someone signed up with this email first and never
-  // confirmed, a new signup replaces that pending account's password and details
-  // and voids its old link; only the newest confirm link (sent to the real inbox)
-  // works. Otherwise an attacker could pre-register a victim's email with their
-  // own password and inherit the account once the victim confirms it.
+  // Pre-hijack guard (audit L1624 F4). An UNVERIFIED account proves nothing about
+  // who owns the address, so a second signup for it must not pick the password:
+  // whoever sent it may be the attacker or the real owner, and either may be the
+  // one who signed up first. So this request's password is never stored. Instead
+  // the old confirm link dies, and the inbox gets a single "choose your password"
+  // link; only the mailbox owner can finish, and the password they choose there
+  // is the one that sticks (app/api/auth/reset marks the email verified).
   if (existing && !existing.emailVerified && !existing.deletedAt) {
+    const { token: setToken, hash: setHash } = newResetToken();
     await prisma.user.update({
       where: { id: existing.id },
-      data: { ...pendingData, tokenVersion: { increment: 1 } },
+      data: {
+        verifyTokenHash: null,
+        verifyTokenExpiry: null,
+        resetTokenHash: setHash,
+        resetTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
+        tokenVersion: { increment: 1 },
+      },
     });
-    await sendConfirm(email, verifyToken);
-    await logAudit("signup", {
-      userId: existing.id,
-      ip: clientIp(req),
-      meta: { role: pendingData.role, agreedToTerms: true, termsVersion: LAST_UPDATED, replacedPending: true },
+    await sendEmail({
+      to: email,
+      subject: "Finish creating your TireKind account",
+      text:
+        `Someone started a TireKind signup with this email. To finish it, choose your password here:\n\n` +
+        `${SITE_URL}/reset?token=${setToken}\n\nThis link expires in 24 hours. Earlier confirmation links for this address no longer work.\n\n` +
+        `Didn't sign up for TireKind? Don't click the link. Just ignore this email and no account will be created.`,
     });
+    await logAudit("signup_pending_retry", { userId: existing.id, ip: clientIp(req) });
     return NEUTRAL;
   }
 
