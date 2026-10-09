@@ -99,18 +99,32 @@ export async function POST(req) {
       break;
     }
     case "customer.subscription.updated":
-    case "customer.subscription.created": {
-      const sub = event.data.object;
+    case "customer.subscription.created":
+    case "customer.subscription.deleted": {
+      // Never trust the event payload's status: events can arrive late or be
+      // replayed (a stale subscription.updated(active) after .deleted would
+      // re-grant pro). Re-fetch the subscription and write its CURRENT state.
+      const evSub = event.data.object;
+      let sub;
+      try {
+        sub = await stripe.subscriptions.retrieve(evSub.id);
+      } catch (err) {
+        if (event.type !== "customer.subscription.deleted") {
+          // Can't confirm current state: fail so Stripe retries instead of writing a guess.
+          console.error("[stripe] subscription re-fetch failed:", err.message);
+          return NextResponse.json({ error: "Temporary error." }, { status: 500 });
+        }
+        sub = null; // deleted and no longer retrievable: canceled is the only safe reading
+      }
+      if (!sub) {
+        await activateForCustomer(evSub.customer, { status: "canceled", currentPeriodEnd: evSub.current_period_end });
+        break;
+      }
       await activateForCustomer(sub.customer, {
         status: sub.status === "active" || sub.status === "trialing" ? "active" : sub.status,
         priceId: sub.items.data[0]?.price?.id,
         currentPeriodEnd: sub.current_period_end,
       });
-      break;
-    }
-    case "customer.subscription.deleted": {
-      const sub = event.data.object;
-      await activateForCustomer(sub.customer, { status: "canceled", currentPeriodEnd: sub.current_period_end });
       break;
     }
     default:

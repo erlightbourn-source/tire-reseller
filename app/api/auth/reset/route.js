@@ -26,9 +26,15 @@ export async function POST(req) {
   const now = new Date();
   const user = await prisma.user.findFirst({
     where: { resetTokenHash: hash, resetTokenExpiry: { gt: now } },
-    select: { id: true },
+    select: { id: true, bannedAt: true },
   });
   if (!user) {
+    return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
+  }
+
+  // A banned user may not get a session from reset (the ban survives a password
+  // change). Same response as an invalid token: no ban-status oracle.
+  if (user.bannedAt) {
     return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
   }
 

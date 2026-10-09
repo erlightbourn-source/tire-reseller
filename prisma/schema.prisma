@@ -47,6 +47,7 @@ model User {
   verifyTokenHash   String?   @unique
   verifyTokenExpiry DateTime?
   deletedAt         DateTime? // soft-delete: account scheduled for removal (7-day grace)
+  bannedAt          DateTime? // admin ban: blocks login/session/reset; row is kept as the email tombstone (never purged)
 
   // Seller billing. Listing is free during launch (no card); sellerFreeUntil is
   // when that window ends, after which the ONE seller plan applies at the
@@ -96,9 +97,10 @@ model Listing {
   shipping    Boolean @default(false) // seller offers shipping (vs local pickup only)
   dotYear     Int? // manufacture (DOT) year, e.g. 2022
 
-  featured Boolean @default(false) // promoted listing
-  hidden   Boolean @default(false) // auto-hidden after enough reports
-  views    Int     @default(0)
+  featured      Boolean @default(false) // promoted listing
+  hidden        Boolean @default(false) // auto-hidden after enough reports
+  hiddenByAdmin Boolean @default(false) // hidden by a moderator/ban; account reactivation must not unhide it
+  views         Int     @default(0)
 
   // Denormalized columns for indexed filtering/sorting (populated on write +
   // backfilled). Avoids `LIKE '%size%'` scans, in-JS tread filtering, the
