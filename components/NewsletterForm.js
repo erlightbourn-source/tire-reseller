@@ -1,6 +1,7 @@
 "use client";
 import { useId, useState } from "react";
 import { track } from "@/lib/track";
+import { useTurnstile } from "@/components/useTurnstile";
 
 // TireKind news signup (MailerLite, double opt-in via /api/newsletter).
 // `source` labels where the signup came from for analytics ("footer", "home").
@@ -10,15 +11,18 @@ export default function NewsletterForm({ source = "footer", compact = false }) {
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // Sits in the footer of every page, so the bot check loads only once someone types.
+  const { ref: botRef, getToken } = useTurnstile(email.length > 0);
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setErr("");
+    const turnstileToken = await getToken();
     const res = await fetch("/api/newsletter", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, turnstileToken }),
     }).catch(() => null);
     const data = res ? await res.json().catch(() => ({})) : {};
     setBusy(false);
@@ -39,6 +43,7 @@ export default function NewsletterForm({ source = "footer", compact = false }) {
           placeholder="you@example.com" autoComplete="email" className="input" />
         <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Sign up"}</button>
       </form>
+      <div ref={botRef} />
       {err && <p className="mt-1.5 text-sm text-amber-300">{err}</p>}
       <p className="mt-1.5 text-xs text-slate-400">
         Occasional emails about new local listings and selling tips. Unsubscribe anytime. See our{" "}

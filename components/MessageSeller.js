@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/track";
 import { SAFETY_WARNING, detectOffPlatform } from "@/lib/safety";
+import { useTurnstile } from "@/components/useTurnstile";
 
 // Logged-out visitors can send one question without an account when the server flag GUEST_INQUIRY=on
 // (passed down as `guestInquiry`). The relay is email-only; no thread is created.
@@ -15,15 +16,17 @@ function GuestInquiry({ listingId }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [sent, setSent] = useState(false);
+  const { ref: botRef, getToken } = useTurnstile(open);
 
   async function send() {
     setBusy(true);
     setErr("");
     try {
+      const turnstileToken = await getToken();
       const res = await fetch("/api/inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId, email, question, website: hp }),
+        body: JSON.stringify({ listingId, email, question, website: hp, turnstileToken }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setErr(data.error || "Could not send your question.");
@@ -42,6 +45,7 @@ function GuestInquiry({ listingId }) {
       {/* honeypot: hidden from people, bots fill it */}
       <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
       <p className="text-xs text-slate-400">We email your question and your address to the seller so they can reply. Links aren&apos;t allowed.</p>
+      <div ref={botRef} />
       <div className="flex gap-2">
         <button onClick={send} disabled={busy} className="btn-primary flex-1">{busy ? "Sending…" : "Send question"}</button>
         <button onClick={() => setOpen(false)} className="btn-secondary">Cancel</button>

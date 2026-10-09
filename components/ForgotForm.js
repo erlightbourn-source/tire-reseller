@@ -2,23 +2,31 @@
 import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { useTurnstile } from "@/components/useTurnstile";
 
 export default function ForgotForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [devLink, setDevLink] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const { ref: botRef, getToken } = useTurnstile();
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
+    setErr("");
+    const turnstileToken = await getToken();
     const res = await fetch("/api/auth/forgot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json().catch(() => ({}));
+      body: JSON.stringify({ email, turnstileToken }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setBusy(false);
+    // The reply never says whether an account exists, but a failed bot check or a
+    // rate limit is not "sent", so show it instead of the confirmation.
+    if (!res || res.status === 400 || res.status === 429) return setErr(data.error || "Something went wrong. Try again.");
     setSent(true);
     if (data.devLink) setDevLink(data.devLink);
   }
@@ -51,6 +59,8 @@ export default function ForgotForm() {
               <label className="label" htmlFor="forgot-email">Email</label>
               <input id="forgot-email" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="you@example.com" />
             </div>
+            {err && <p className="text-sm text-amber-300" role="alert">{err}</p>}
+            <div ref={botRef} />
             <button disabled={busy} className="btn-primary w-full">{busy ? "Sending…" : "Send reset link"}</button>
             <p className="text-center text-sm text-slate-400">
               Remembered it? <Link href="/login" className="font-semibold text-brand-300 hover:underline">Log in</Link>

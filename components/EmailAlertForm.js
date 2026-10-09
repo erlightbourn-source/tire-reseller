@@ -1,6 +1,7 @@
 "use client";
 import { useId, useState } from "react";
 import { track } from "@/lib/track";
+import { useTurnstile } from "@/components/useTurnstile";
 
 // Capture buyer demand without requiring an account: email me when matching
 // tires are listed. `query` is the current browse querystring.
@@ -13,15 +14,17 @@ export default function EmailAlertForm({ query = "", compact = false }) {
   const [err, setErr] = useState("");
   // Separate, unchecked-by-default consent: alerts are not marketing mail.
   const [news, setNews] = useState(false);
+  const { ref: botRef, getToken } = useTurnstile(email.length > 0);
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setErr("");
+    const turnstileToken = await getToken();
     const res = await fetch("/api/email-alerts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, query }),
+      body: JSON.stringify({ email, query, turnstileToken }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -29,10 +32,11 @@ export default function EmailAlertForm({ query = "", compact = false }) {
     track("Email alert");
     if (news) {
       // Best effort: the alert already succeeded, so a newsletter hiccup must not undo it.
+      // Tokens are single-use, so the newsletter call waits for a fresh one.
       const nr = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken: await getToken() }),
       }).catch(() => null);
       if (nr && nr.ok) track("Newsletter signup", { source: "alerts" });
     }
@@ -51,6 +55,7 @@ export default function EmailAlertForm({ query = "", compact = false }) {
           placeholder="you@example.com" className="input" />
         <button disabled={busy} className="btn-primary shrink-0">{busy ? "…" : "Email me matches"}</button>
       </form>
+      <div ref={botRef} />
       {err && <p className="mt-1.5 text-sm text-amber-300">{err}</p>}
       <p className="mt-1.5 text-xs text-slate-400">One email when tires match. No account needed, unsubscribe anytime.</p>
       <label className={`mt-2 flex items-start gap-2 text-xs text-slate-400 ${compact ? "" : "justify-center"}`}>

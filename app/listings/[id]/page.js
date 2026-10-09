@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { headers } from "next/headers";
+import { checkRateLimit, clientIp } from "@/lib/security";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
 import { priceContext } from "@/lib/pricing";
@@ -68,9 +70,16 @@ export default async function ListingDetail({ params }) {
   // auto-hide and account-deletion takedowns are trivially bypassed.
   if (!isOwner && (listing.hidden || listing.seller?.deletedAt)) notFound();
 
+  // Count a view once per visitor IP per listing per 30 min, and never for
+  // crawlers, so reloads or a script can't inflate seller analytics (audit L1624 F13).
   if (!isOwner) {
-    await prisma.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
-    await prisma.listingView.create({ data: { listingId: listing.id } }).catch(() => {});
+    const h = await headers();
+    const bot = /bot|crawl|spider|slurp|preview|monitor/i.test(h.get("user-agent") || "");
+    const first = !bot && (await checkRateLimit(`view:${listing.id}:${clientIp({ headers: h })}`, { limit: 1, windowMs: 30 * 60_000 })).ok;
+    if (first) {
+      await prisma.listing.update({ where: { id: listing.id }, data: { views: { increment: 1 } } });
+      await prisma.listingView.create({ data: { listingId: listing.id } }).catch(() => {});
+    }
   }
 
   let favorited = false;

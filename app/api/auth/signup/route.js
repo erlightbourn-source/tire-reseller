@@ -9,6 +9,7 @@ import { SITE_URL } from "@/lib/site";
 import { logAudit } from "@/lib/audit";
 import { LAST_UPDATED } from "@/lib/legal";
 import { SRC_COOKIE, decodeSource } from "@/lib/attribution";
+import { checkTurnstile } from "@/lib/turnstile";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -19,6 +20,10 @@ export async function POST(req) {
 
   const body = await req.json();
   const { password, role, state } = body;
+
+  // Bot check before any DB, bcrypt or email work.
+  const bot = await checkTurnstile(req, body.turnstileToken);
+  if (bot) return bot;
 
   // Click-through consent gate: require explicit agreement to the Terms of
   // Service + Privacy Policy before an account can be created. Enforced here on
@@ -75,6 +80,41 @@ export async function POST(req) {
   const passwordHash = await hashPassword(password);
 
   const existing = await prisma.user.findUnique({ where: { email } });
+  const isSeller = role === "seller";
+  const { token: verifyToken, hash: verifyTokenHash } = newResetToken();
+  const pendingData = {
+    passwordHash,
+    name,
+    location: location || null,
+    state: isStateAbbr(state) ? state.toUpperCase() : null,
+    role: isSeller ? "seller" : "buyer",
+    // Sellers list free during launch — no charge until this date (lib/pricing.js).
+    sellerFreeUntil: isSeller ? freeYearFromNow() : null,
+    emailVerified: false,
+    verifyTokenHash,
+    verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
+  };
+
+  // Pre-hijack guard (audit L1624 F4): an UNVERIFIED account proves nothing about
+  // who owns the address. If someone signed up with this email first and never
+  // confirmed, a new signup replaces that pending account's password and details
+  // and voids its old link; only the newest confirm link (sent to the real inbox)
+  // works. Otherwise an attacker could pre-register a victim's email with their
+  // own password and inherit the account once the victim confirms it.
+  if (existing && !existing.emailVerified && !existing.deletedAt) {
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: { ...pendingData, tokenVersion: { increment: 1 } },
+    });
+    await sendConfirm(email, verifyToken);
+    await logAudit("signup", {
+      userId: existing.id,
+      ip: clientIp(req),
+      meta: { role: pendingData.role, agreedToTerms: true, termsVersion: LAST_UPDATED, replacedPending: true },
+    });
+    return NEUTRAL;
+  }
+
   if (existing) {
     // Tell the real owner someone tried to sign up — don't leak existence to the requester.
     await sendEmail({
@@ -85,29 +125,9 @@ export async function POST(req) {
     return NEUTRAL;
   }
 
-  const isSeller = role === "seller";
-  const { token: verifyToken, hash: verifyTokenHash } = newResetToken();
-  const user = await prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-      name,
-      location: location || null,
-      state: isStateAbbr(state) ? state.toUpperCase() : null,
-      role: isSeller ? "seller" : "buyer",
-      // Sellers list free during launch — no charge until this date (lib/pricing.js).
-      sellerFreeUntil: isSeller ? freeYearFromNow() : null,
-      emailVerified: false,
-      verifyTokenHash,
-      verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
-    },
-  });
+  const user = await prisma.user.create({ data: { email, ...pendingData } });
 
-  await sendEmail({
-    to: email,
-    subject: "Confirm your TireKind account",
-    text: `Welcome to TireKind! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
-  });
+  await sendConfirm(email, verifyToken);
   // Record the consent event (who/when/which terms version) for a defensible
   // click-through trail without a schema change — it lives in the audit log.
   await logAudit("signup", {
@@ -122,4 +142,12 @@ export async function POST(req) {
     ? `${SITE_URL}/api/auth/verify?token=${verifyToken}`
     : undefined;
   return NextResponse.json({ ok: true, pending: true, devLink });
+}
+
+function sendConfirm(email, verifyToken) {
+  return sendEmail({
+    to: email,
+    subject: "Confirm your TireKind account",
+    text: `Welcome to TireKind! Confirm your email to finish signing up:\n\n${SITE_URL}/api/auth/verify?token=${verifyToken}\n\nThis link expires in 24 hours.`,
+  });
 }

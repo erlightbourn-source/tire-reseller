@@ -1,6 +1,7 @@
 "use client";
 import { useId, useState } from "react";
 import { track } from "@/lib/track";
+import { useTurnstile } from "@/components/useTurnstile";
 
 // App-launch waitlist on /app. Posts to /api/newsletter (MailerLite "TireKind —
 // Subscribers", double opt-in), the same list as the footer signup, so nobody is
@@ -12,15 +13,17 @@ export default function NotifyApp() {
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const { ref: botRef, getToken } = useTurnstile(email.length > 0);
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setErr("");
+    const turnstileToken = await getToken();
     const res = await fetch("/api/newsletter", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, company }),
+      body: JSON.stringify({ email, company, turnstileToken }),
     }).catch(() => null);
     const data = res ? await res.json().catch(() => ({})) : {};
     setBusy(false);
@@ -65,6 +68,7 @@ export default function NotifyApp() {
         />
         <button disabled={busy} className="btn-primary whitespace-nowrap px-5">{busy ? "…" : "Notify me"}</button>
       </form>
+      <div ref={botRef} />
       {err && <p className="mt-1.5 text-sm text-amber-300">{err}</p>}
       <p className="mt-1.5 text-xs text-slate-400">
         We'll email you when the app launches, plus occasional TireKind news. Unsubscribe anytime. See our{" "}

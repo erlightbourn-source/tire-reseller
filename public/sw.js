@@ -1,7 +1,10 @@
-// Minimal service worker — enables installability + a basic offline fallback.
-const CACHE = "tiretrader-v1";
+// Minimal service worker — enables installability + a basic offline note.
+// It caches NOTHING: page responses can hold a signed-in user's dashboard or
+// messages, and a cached copy would outlive logout on a shared device (audit
+// L1624). The new cache name makes activate() delete the old v1 page cache.
+const CACHE = "tirekind-v2";
 
-self.addEventListener("install", (e) => {
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
@@ -12,19 +15,13 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// Network-first for navigations, falling back to cache, then a tiny offline note.
+// Network only for navigations, with a tiny offline note when the network is gone.
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET") return;
-  if (req.mode === "navigate") {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || new Response("<h1>Offline</h1>", { headers: { "Content-Type": "text/html" } })))
-    );
-  }
+  if (req.method !== "GET" || req.mode !== "navigate") return;
+  e.respondWith(
+    fetch(req).catch(
+      () => new Response("<h1>Offline</h1><p>Reconnect to use TireKind.</p>", { headers: { "Content-Type": "text/html" } })
+    )
+  );
 });
