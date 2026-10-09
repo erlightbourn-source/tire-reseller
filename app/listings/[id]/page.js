@@ -12,6 +12,7 @@ import { sizeSlug } from "@/lib/site";
 import { parseTireSize } from "@/lib/tiresize";
 import { publicLocation } from "@/lib/publicLocation";
 import MessageSeller from "@/components/MessageSeller";
+import ListingSizeAlert from "@/components/ListingSizeAlert";
 import { guestInquiryEnabled } from "@/lib/guestInquiry";
 import DeleteListingButton from "@/components/DeleteListingButton";
 import PhotoGallery from "@/components/PhotoGallery";
@@ -265,7 +266,10 @@ export default async function ListingDetail({ params }) {
               </div>
             </div>
           ) : (
-            <MessageSeller listingId={listing.id} loggedIn={!!user} guestInquiry={guestInquiryEnabled()} />
+            <>
+              <MessageSeller listingId={listing.id} loggedIn={!!user} guestInquiry={guestInquiryEnabled()} />
+              {!user && <ListingSizeAlert size={listing.size} />}
+            </>
           )}
 
           <div className="flex items-center justify-between gap-2">
