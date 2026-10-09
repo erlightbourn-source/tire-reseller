@@ -9,8 +9,9 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Sell tires online — TireKind for resellers",
+  // Search snippet trimmed to <=155 chars (Dev 2026-10-08, audit sites.md P3: was ~256, cut off in results).
   description:
-    `Move tire inventory faster without Facebook Marketplace chaos. List unlimited sets, message buyers, and track sales. ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`,
+    "Sell used tires online without Marketplace chaos. List unlimited sets, message buyers and track sales. Free to list during launch, no card needed.",
   alternates: { canonical: "/sell-tires" },
   openGraph: {
     title: "Sell tires on TireKind — free to list during launch",
