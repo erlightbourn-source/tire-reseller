@@ -426,3 +426,37 @@ test("listing proof fields: POST requires treadDepth + dotYear, validates speedR
   assert.ok(!legacy.includes("102130"), "never renders 102130");
   assert.ok(!legacy.includes("102 130"));
 });
+
+// L1421 founding-seller path: the page's CTAs go to seller signup for visitors
+// and to /dashboard for logged-in users (never /subscribe or /sell-tires), and a
+// freshly verified seller's login reports role=seller so AuthForm lands them on
+// /dashboard, which renders for them instead of bouncing to /login.
+test("founding-seller CTAs: signup for visitors, dashboard when logged in; seller login lands on dashboard", async () => {
+  const claimHrefs = (html) =>
+    [...html.matchAll(/<a\s([^>]*)>Claim[^<]*</g)].map((m) => m[1].match(/href="([^"]*)"/)?.[1]);
+
+  const anon = await (await req("/founding-seller")).text();
+  const anonHrefs = claimHrefs(anon);
+  assert.equal(anonHrefs.length, 2, "both Claim CTAs render");
+  assert.deepEqual(anonHrefs, ["/signup?role=seller", "/signup?role=seller"], "visitor CTAs go to seller signup");
+
+  const email = `e2e${Date.now()}-founder@example.com`;
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const ip = { "X-Real-IP": "203.0.113.88" }; // own rate-limit bucket: earlier tests spend the shared per-IP signup budget
+  await req("/api/auth/signup", {
+    method: "POST",
+    headers: ip,
+    body: JSON.stringify({ name: "E2E Founder", email, password, role: "seller", location: "Miami, FL", agreedToTerms: true }),
+  });
+  await verifyByEmail(email);
+  const login = await req("/api/auth/login", { method: "POST", headers: ip, body: JSON.stringify({ email, password }) });
+  assert.equal(login.status, 200);
+  assert.equal((await login.json()).role, "seller", "login response carries the role");
+  const cookie = sessionCookie(login);
+
+  const authed = await (await req("/founding-seller", { headers: { Cookie: cookie } })).text();
+  assert.deepEqual(claimHrefs(authed), ["/dashboard", "/dashboard"], "logged-in CTAs go to the dashboard");
+
+  const dash = await req("/dashboard", { headers: { Cookie: cookie } });
+  assert.equal(dash.status, 200, "new seller sees the dashboard, not a redirect");
+});

@@ -85,5 +85,5 @@ export async function POST(req) {
 
   await createSession(user.id, user.tokenVersion);
   await logAudit("login", { userId: user.id, ip: clientIp(req), meta: reactivated ? { reactivated: true } : null });
-  return NextResponse.json({ ok: true, userId: user.id, reactivated });
+  return NextResponse.json({ ok: true, userId: user.id, role: user.role, reactivated });
 }
