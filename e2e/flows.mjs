@@ -486,3 +486,14 @@ test("bulk add: lines need tread depth + DOT year; valid lines store them", asyn
   assert.equal(row.dotYear, 2022);
   assert.equal(row.treadDepth32, 7);
 });
+
+// L1421 follow-up: /sell-tires is the free-to-list landing page, so its signed-out
+// CTAs must go straight to seller signup (a seller is free on signup, so the old
+// next=/subscribe hop was a dead detour that the verify step dropped anyway).
+test("sell-tires signed-out CTA goes to seller signup without next=/subscribe", async () => {
+  const html = await (await req("/sell-tires")).text();
+  const hrefs = [...html.matchAll(/<a\s([^>]*)>\s*Start selling free\s*</g)].map((m) => m[1].match(/href="([^"]*)"/)?.[1]);
+  assert.ok(hrefs.length >= 1, "Start selling free CTA renders");
+  for (const h of hrefs) assert.equal(h, "/signup?role=seller", "CTA skips the /subscribe detour");
+  assert.ok(!html.includes("next=/subscribe") && !html.includes("next=%2Fsubscribe"), "no next=/subscribe left on the page");
+});

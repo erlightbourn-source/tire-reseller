@@ -37,7 +37,7 @@ export default async function SellTiresPage() {
   const totalActive = await prisma.listing.count({ where: { status: "active", hidden: false, seller: { deletedAt: null } } });
 
   // Where the primary CTA should go based on who's viewing.
-  const ctaHref = alreadySelling ? "/sell" : user ? "/subscribe" : "/signup?role=seller&next=/subscribe";
+  const ctaHref = alreadySelling ? "/sell" : user ? "/subscribe" : "/signup?role=seller";
   const ctaLabel = alreadySelling ? "Create a listing" : "Start selling free";
 
   return (
