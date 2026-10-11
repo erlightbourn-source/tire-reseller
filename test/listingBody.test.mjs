@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildListingBody } from "../lib/listingBody.js";
+import { buildListingBody, dotYearInputAttrs } from "../lib/listingBody.js";
 import { parseDotYear } from "../lib/listingProof.js";
 
 function formOf(fields) {
@@ -55,4 +55,40 @@ test("checkboxes become explicit booleans in both modes", () => {
   const on = buildListingBody(formOf({ runFlat: "on" }), null, false, PHOTOS);
   assert.equal(on.runFlat, true);
   assert.equal(on.shipping, false);
+});
+
+/* ---------------- dotYearInputAttrs: browser-side range check ---------------- */
+const RANGE = { min: 1990, max: 2027 };
+
+test("create: required with min/max", () => {
+  const a = dotYearInputAttrs({ editing: false, initialDotYear: null, value: "", ...RANGE });
+  assert.deepEqual(a, { required: true, min: 1990, max: 2027 });
+});
+
+test("create: min/max stay even if the value looks like a stored one", () => {
+  const a = dotYearInputAttrs({ editing: false, initialDotYear: 1975, value: "1975", ...RANGE });
+  assert.equal(a.min, 1990);
+  assert.equal(a.max, 2027);
+});
+
+test("edit: unchanged legacy out-of-range year drops min/max so the browser does not block submit", () => {
+  const a = dotYearInputAttrs({ editing: true, initialDotYear: 1975, value: "1975", ...RANGE });
+  assert.equal(a.required, false);
+  assert.equal("min" in a, false);
+  assert.equal("max" in a, false);
+});
+
+test("edit: cleared field drops min/max and is not required", () => {
+  const a = dotYearInputAttrs({ editing: true, initialDotYear: 1975, value: "", ...RANGE });
+  assert.deepEqual(a, { required: false });
+});
+
+test("edit: changed value brings min/max back", () => {
+  const a = dotYearInputAttrs({ editing: true, initialDotYear: 1975, value: "1980", ...RANGE });
+  assert.deepEqual(a, { required: false, min: 1990, max: 2027 });
+});
+
+test("edit: listing with no stored year validates any entered value", () => {
+  const a = dotYearInputAttrs({ editing: true, initialDotYear: null, value: "2022", ...RANGE });
+  assert.equal(a.min, 1990);
 });
