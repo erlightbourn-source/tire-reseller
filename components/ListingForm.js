@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
+import { buildListingBody } from "@/lib/listingBody";
 import { SPEED_RATINGS, isValidSpeedRating, DOT_YEAR_MIN } from "@/lib/listingProof";
 
 // Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
@@ -73,10 +74,7 @@ export default function ListingForm({ initial }) {
     setErr("");
     setSaving(true);
     const form = new FormData(e.currentTarget);
-    const body = Object.fromEntries(form.entries());
-    body.photos = photos;
-    body.runFlat = form.get("runFlat") === "on"; // checkbox → explicit boolean
-    body.shipping = form.get("shipping") === "on";
+    const body = buildListingBody(form, initial, editing, photos);
 
     const url = editing ? `/api/listings/${initial.id}` : "/api/listings";
     let res;
