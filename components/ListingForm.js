@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
+import { buildListingBody, dotYearInputAttrs } from "@/lib/listingBody";
 import { SPEED_RATINGS, isValidSpeedRating, DOT_YEAR_MIN } from "@/lib/listingProof";
 
 // Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
@@ -25,6 +26,7 @@ export default function ListingForm({ initial }) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dotYear, setDotYear] = useState(initial?.dotYear ? String(initial.dotYear) : "");
 
   async function onUpload(e) {
     const input = e.target;
@@ -73,10 +75,7 @@ export default function ListingForm({ initial }) {
     setErr("");
     setSaving(true);
     const form = new FormData(e.currentTarget);
-    const body = Object.fromEntries(form.entries());
-    body.photos = photos;
-    body.runFlat = form.get("runFlat") === "on"; // checkbox → explicit boolean
-    body.shipping = form.get("shipping") === "on";
+    const body = buildListingBody(form, initial, editing, photos);
 
     const url = editing ? `/api/listings/${initial.id}` : "/api/listings";
     let res;
@@ -203,10 +202,9 @@ export default function ListingForm({ initial }) {
               type="number"
               inputMode="numeric"
               step="1"
-              min={DOT_YEAR_MIN}
-              max={DOT_YEAR_MAX}
-              required={!editing}
-              defaultValue={initial?.dotYear || ""}
+              {...dotYearInputAttrs({ editing, initialDotYear: initial?.dotYear, value: dotYear, min: DOT_YEAR_MIN, max: DOT_YEAR_MAX })}
+              value={dotYear}
+              onChange={(e) => setDotYear(e.target.value)}
               className="input"
               placeholder="2022"
             />
