@@ -497,3 +497,28 @@ test("sell-tires signed-out CTA goes to seller signup without next=/subscribe", 
   for (const h of hrefs) assert.equal(h, "/signup?role=seller", "CTA skips the /subscribe detour");
   assert.ok(!html.includes("next=/subscribe") && !html.includes("next=%2Fsubscribe"), "no next=/subscribe left on the page");
 });
+
+// L1421: founding-seller "talk first" form. Page shows the form + jump link; the API validates, stores
+// the lead (AuditLog row) and never touches the newsletter route.
+test("founding-seller interest form: page renders, API validates, stores name+contact+page, honeypot is silent", async () => {
+  const html = await (await req("/founding-seller")).text();
+  assert.ok(html.includes('id="interest"') && html.includes("Rather talk before you sign up?") && html.includes("Count me in"), "form renders");
+  assert.ok(html.includes('href="#interest"'), "jump link under the first CTA");
+  assert.ok(html.includes("OK with TireKind contacting you by email, phone or text"), "consent line renders");
+
+  const ip = { "X-Real-IP": "203.0.113.99" };
+  const post = (body) => req("/api/founding-interest", { method: "POST", headers: ip, body: JSON.stringify(body) });
+  const tag = `E2E Shop ${Date.now()}`;
+
+  assert.equal((await post({ name: "", contact: "a@b.com" })).status, 400, "name required");
+  assert.equal((await post({ name: tag, contact: "12345" })).status, 400, "bad contact rejected");
+  assert.equal((await post({ name: tag, contact: "(954) 555-0123", company: "bot" })).status, 200, "honeypot answers like success");
+  assert.equal(await db.auditLog.count({ where: { action: "founding_seller_interest", meta: { contains: tag } } }), 0, "honeypot stored nothing");
+
+  const res = await post({ name: tag, contact: "(954) 555-0123" });
+  assert.equal(res.status, 200, "valid lead accepted (stored even with no mail provider configured)");
+  const row = await db.auditLog.findFirst({ where: { action: "founding_seller_interest", meta: { contains: tag } } });
+  assert.ok(row, "lead stored");
+  assert.deepEqual(JSON.parse(row.meta), { name: tag, contact: "(954) 555-0123", kind: "phone", page: "/founding-seller" });
+  assert.ok(row.createdAt instanceof Date, "timestamp stored");
+});

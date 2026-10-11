@@ -3,6 +3,7 @@ import { FoundingBadge } from "@/components/Badge";
 import { FOUNDING_SEATS, FOUNDING_LABEL, FOUNDING_SHORT, PLAN_COPY, foundingSpotsLine } from "@/lib/pricing";
 import { getFoundingClaimed } from "@/lib/founding";
 import { getCurrentUser } from "@/lib/auth";
+import FoundingInterestForm from "@/components/FoundingInterestForm";
 
 // Renders per request so the founding-seat counter is live (cached 60s in lib/founding.js).
 export const dynamic = "force-dynamic";
@@ -62,6 +63,9 @@ export default async function FoundingSellerPage() {
         )}
         <div className="mt-5">
           <Link href={claimHref} className="btn-primary">Claim your Founding Seller spot</Link>
+          <p className="mt-3 text-sm">
+            <a href="#interest" className="font-semibold text-brand-300 hover:underline">Rather talk first? Leave your number or email →</a>
+          </p>
         </div>
       </header>
 
@@ -109,6 +113,8 @@ export default async function FoundingSellerPage() {
           <Link href="/how-it-works" className="font-semibold text-brand-300 hover:underline">How selling works →</Link>
         </div>
       </section>
+
+      <FoundingInterestForm />
     </div>
   );
 }
