@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   parseFoundingInterest, buildInterestEmail, normalizeUsPhone,
-  NAME_ERROR, CONTACT_ERROR, NAME_MAX, INTEREST_PAGE,
+  NAME_ERROR, CONTACT_ERROR, NAME_MAX, INTEREST_PAGE, INTEREST_CONSENT_VERSION,
 } from "../lib/foundingInterest.js";
 
 const ok = { name: "Mike's Tire Shop", contact: "Mike@Shop.com" };
@@ -78,4 +78,8 @@ test("name with newlines can't break the subject line", () => {
   const r = parseFoundingInterest({ name: "Mike\r\nBcc: x@y.com", contact: "mike@shop.com" });
   assert.equal(r.ok, true);
   assert.ok(!/[\r\n]/.test(buildInterestEmail(r.data).subject));
+});
+
+test("consent text is versioned for the AuditLog row (Quinn 2026-10-11)", () => {
+  assert.match(INTEREST_CONSENT_VERSION, /^v\d+-\d{4}-\d{2}-\d{2}$/);
 });

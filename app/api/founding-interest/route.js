@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { enforceRateLimit, clientIp } from "@/lib/security";
 import { checkTurnstile } from "@/lib/turnstile";
 import { sendEmail } from "@/lib/email";
-import { parseFoundingInterest, buildInterestEmail, INTEREST_ACTION, INTEREST_PAGE, INTEREST_INBOX } from "@/lib/foundingInterest";
+import { parseFoundingInterest, buildInterestEmail, INTEREST_ACTION, INTEREST_PAGE, INTEREST_INBOX, INTEREST_CONSENT_VERSION } from "@/lib/foundingInterest";
 
 // Founding-seller "rather talk first?" form. A lead is stored (AuditLog row, no schema change) AND emailed to
 // the inbox Miles watches. It is NOT added to MailerLite: newsletter consent is a different consent. Success
@@ -34,7 +34,7 @@ export async function POST(req) {
         data: {
           action: INTEREST_ACTION,
           ip: clientIp(req) || null,
-          meta: JSON.stringify({ name, contact, kind, page: INTEREST_PAGE }).slice(0, 1000),
+          meta: JSON.stringify({ name, contact, kind, page: INTEREST_PAGE, consent: INTEREST_CONSENT_VERSION }).slice(0, 1000),
           createdAt: at,
         },
       })

@@ -73,8 +73,9 @@ export default function FoundingInterestForm() {
         <div ref={botRef} />
         {err && <p role="alert" className="text-sm text-amber-300">{err}</p>}
         <button disabled={busy} className="btn-primary w-full sm:w-auto">{busy ? "Sending…" : "Count me in"}</button>
-        <p className="text-xs text-slate-400">
-          No account and no card needed. By sending this, you&apos;re OK with TireKind contacting you by email, phone or text about selling on TireKind. See our{" "}
+        {/* Consent wording = Quinn 2026-10-11, verbatim; version stored as INTEREST_CONSENT_VERSION. Body size, not micro-text. */}
+        <p className="text-sm text-slate-300">
+          No account and no card needed. By sending this, you agree TireKind may contact you about selling on TireKind by email, or by call or text to the number you give, including texts sent with automated tools. Consent isn&apos;t required to sell on TireKind. Msg &amp; data rates may apply; reply STOP to opt out. See our{" "}
           <Link href="/privacy" className="underline hover:text-white">Privacy Policy</Link>.
         </p>
       </form>

@@ -504,7 +504,7 @@ test("founding-seller interest form: page renders, API validates, stores name+co
   const html = await (await req("/founding-seller")).text();
   assert.ok(html.includes('id="interest"') && html.includes("Rather talk before you sign up?") && html.includes("Count me in"), "form renders");
   assert.ok(html.includes('href="#interest"'), "jump link under the first CTA");
-  assert.ok(html.includes("OK with TireKind contacting you by email, phone or text"), "consent line renders");
+  assert.ok(html.includes("including texts sent with automated tools") && html.includes("reply STOP to opt out"), "consent line renders");
 
   const ip = { "X-Real-IP": "203.0.113.99" };
   const post = (body) => req("/api/founding-interest", { method: "POST", headers: ip, body: JSON.stringify(body) });
@@ -519,6 +519,6 @@ test("founding-seller interest form: page renders, API validates, stores name+co
   assert.equal(res.status, 200, "valid lead accepted (stored even with no mail provider configured)");
   const row = await db.auditLog.findFirst({ where: { action: "founding_seller_interest", meta: { contains: tag } } });
   assert.ok(row, "lead stored");
-  assert.deepEqual(JSON.parse(row.meta), { name: tag, contact: "(954) 555-0123", kind: "phone", page: "/founding-seller" });
+  assert.deepEqual(JSON.parse(row.meta), { name: tag, contact: "(954) 555-0123", kind: "phone", page: "/founding-seller", consent: "v1-2026-10-11" });
   assert.ok(row.createdAt instanceof Date, "timestamp stored");
 });
