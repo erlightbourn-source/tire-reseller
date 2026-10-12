@@ -73,13 +73,17 @@ async function verifyByEmail(email) {
   });
 }
 
-async function signUpVerifiedAndLogin(email, password, role) {
+// `ip` (optional) gives a test its own X-Forwarded-For so it gets its own per-IP login/signup bucket instead of
+// sharing the suite-wide one (login is capped at 8/min per IP; the suite sits close to that).
+async function signUpVerifiedAndLogin(email, password, role, ip) {
+  const ipHeaders = ip ? { "X-Forwarded-For": ip } : {};
   await req("/api/auth/signup", {
     method: "POST",
+    headers: ipHeaders,
     body: JSON.stringify({ name: role === "seller" ? "E2E Seller" : "E2E Buyer", email, password, role, location: "Miami, FL", agreedToTerms: true }),
   });
   await verifyByEmail(email);
-  const login = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+  const login = await req("/api/auth/login", { method: "POST", headers: ipHeaders, body: JSON.stringify({ email, password }) });
   assert.equal(login.status, 200, `${role} logs in after verification`);
   const cookie = sessionCookie(login);
   assert.ok(cookie, `${role} session cookie issued`);
@@ -521,4 +525,60 @@ test("founding-seller interest form: page renders, API validates, stores name+co
   assert.ok(row, "lead stored");
   assert.deepEqual(JSON.parse(row.meta), { name: tag, contact: "(954) 555-0123", kind: "phone", page: "/founding-seller", consent: "v1-2026-10-11" });
   assert.ok(row.createdAt instanceof Date, "timestamp stored");
+});
+
+// Audit L1624 F8: a review used to need only an (even empty) thread. Now the buyer must have written AND the
+// seller must have replied. Locks the 403 -> 200 transition so a refactor of the thread query can't reopen
+// drive-by ratings from throwaway accounts.
+test("reviews: need a real two-way conversation (buyer wrote AND seller replied)", async () => {
+  const stamp = Date.now();
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const sellerCookie = await signUpVerifiedAndLogin(`e2erevseller${stamp}@example.com`, password, "seller", "203.0.113.11");
+  const seller = await db.user.findUnique({ where: { email: `e2erevseller${stamp}@example.com` }, select: { id: true } });
+  const listingRes = await req("/api/listings", {
+    method: "POST",
+    headers: { Cookie: sellerCookie },
+    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025 }),
+  });
+  assert.equal(listingRes.status, 200, "seller creates a listing");
+  const { id: listingId } = await listingRes.json();
+
+  const buyerCookie = await signUpVerifiedAndLogin(`e2erevbuyer${stamp}@example.com`, password, "buyer", "203.0.113.12");
+  const review = () =>
+    req("/api/reviews", { method: "POST", headers: { Cookie: buyerCookie }, body: JSON.stringify({ sellerId: seller.id, rating: 5, body: "Great seller." }) });
+
+  assert.equal((await review()).status, 403, "no thread at all: review denied");
+
+  const { threadId } = await (await req("/api/threads", { method: "POST", headers: { Cookie: buyerCookie }, body: JSON.stringify({ listingId, message: "Is this still available?" }) })).json();
+  assert.ok(threadId, "buyer opens a thread");
+  assert.equal((await review()).status, 403, "buyer wrote but the seller has not replied: review denied");
+
+  const reply = await req(`/api/messages/${threadId}`, { method: "POST", headers: { Cookie: sellerCookie }, body: JSON.stringify({ body: "Yes, it is." }) });
+  assert.equal(reply.status, 200, "seller replies");
+  assert.equal((await review()).status, 200, "after the seller replies the review is accepted");
+});
+
+// Audit L1624 F6: uploads are for listing photos only, so only accounts that can sell may upload; and a body with
+// no Content-Length (chunked) must not slip past the size pre-check. Both are rejected BEFORE the body is parsed.
+test("upload: buyers are refused (403) and a chunked body with no Content-Length is refused (411)", async () => {
+  const stamp = Date.now();
+  const password = "Zx9-e2e-uncommon-pass-7q";
+  const buyerCookie = await signUpVerifiedAndLogin(`e2eupbuyer${stamp}@example.com`, password, "buyer", "203.0.113.13");
+  const sellerCookie = await signUpVerifiedAndLogin(`e2eupseller${stamp}@example.com`, password, "seller", "203.0.113.14");
+
+  const form = () => {
+    const f = new FormData();
+    f.append("files", new Blob([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], { type: "image/jpeg" }), "x.jpg");
+    return f;
+  };
+  const asBuyer = await fetch(`${BASE}/api/upload`, { method: "POST", headers: { Origin: BASE, Cookie: buyerCookie }, body: form() });
+  assert.equal(asBuyer.status, 403, "a buyer account can't upload");
+
+  const chunked = await fetch(`${BASE}/api/upload`, {
+    method: "POST",
+    headers: { Origin: BASE, Cookie: sellerCookie, "Content-Type": "multipart/form-data; boundary=x" },
+    body: new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode("--x--\r\n")); c.close(); } }),
+    duplex: "half",
+  });
+  assert.equal(chunked.status, 411, "a seller upload with no Content-Length is refused before parsing");
 });
