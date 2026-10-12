@@ -124,7 +124,7 @@ export default async function SellTiresPage() {
           </div>
           <div className="p-6">
             <ul className="space-y-2 text-left text-sm text-slate-300">
-              {["Unlimited listings, no per-listing fees", "Built-in buyer messaging & offers", "Seller dashboard with views & analytics", "Verified badge, priority placement & bulk add included"].map((t) => (
+              {["Unlimited listings, no per-listing fees", "Built-in buyer messaging & offers", "Seller dashboard with views & analytics", "Pro badge, priority placement & bulk add included"].map((t) => (
                 <li key={t} className="flex gap-2">
                   <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 fill-emerald-400" aria-hidden="true"><path d="M8 13.2 4.8 10l-1.4 1.4L8 16l8-8-1.4-1.4Z"/></svg>
                   {t}

@@ -29,7 +29,7 @@ const TRUST = [
   { title: "Local tire inventory", body: "Browse new & used sets from resellers in your state.", icon: "pin" },
   { title: "Message sellers directly", body: "Ask questions and make offers without sharing your number.", icon: "chat" },
   { title: "Save searches", body: "Get notified when matching tires are listed near you.", icon: "bell" },
-  { title: "Seller ratings", body: "Buyers review sellers, and verified sellers carry a badge you can check.", icon: "shield" },
+  { title: "Seller ratings", body: "Buyers review sellers, so you can check a seller's ratings before you buy.", icon: "shield" },
 ];
 
 const ICONS = {

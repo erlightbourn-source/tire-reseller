@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 // share. (robots.js doesn't disallow /pro, so this is the belt-and-suspenders.)
 export const metadata = {
   title: "Seller plan — go Pro | TireKind",
-  description: "Upgrade to the TireKind seller plan: priority placement, a verified badge, bulk listing, unlimited featured listings, and priority support.",
+  description: "Upgrade to the TireKind seller plan: priority placement, a Pro badge, bulk listing, unlimited featured listings, and priority support.",
   robots: { index: false },
 };
 
@@ -24,7 +24,7 @@ export const metadata = {
 // a founding seller sees their locked founding price, everyone else standard.
 const PERKS = [
   ["🚀", "Priority placement", "Your listings rank above unsubscribed sellers in every search."],
-  ["✅", "Verified badge", "A trust badge on your profile and every listing."],
+  ["✅", "Pro badge", "A Pro Seller badge on your profile and every listing."],
   ["📥", "Bulk listing tool", "Add a whole batch of tires in one paste — perfect for shops."],
   ["⭐", "Unlimited featured", "Promote as many listings as you want, anytime."],
   ["📈", "Priority support", "Jump the line when you need help."],
