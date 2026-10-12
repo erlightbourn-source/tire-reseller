@@ -222,7 +222,7 @@ export default function TikTokShare({ listingId, photos, suggestion, notice }) {
         <form onSubmit={submit} className="space-y-4">
           {/* Photos + preview */}
           <div className="card p-5">
-            <label className="label">Photos</label>
+            <p className="label">Photos</p>
             {eligible.length === 0 ? (
               <p className="text-sm text-slate-400">
                 TikTok photo posts need JPG or WEBP photos. Add one to this listing first.

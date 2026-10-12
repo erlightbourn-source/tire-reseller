@@ -110,32 +110,32 @@ export default function ListingForm({ initial }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Brand</label>
-          <input name="brand" required defaultValue={initial?.brand} className="input" placeholder="Michelin" />
+          <label className="label" htmlFor="lf-brand">Brand</label>
+          <input id="lf-brand" name="brand" required defaultValue={initial?.brand} className="input" placeholder="Michelin" />
         </div>
         <div>
-          <label className="label">Size</label>
-          <input name="size" required defaultValue={initial?.size} className="input" placeholder="225/45R17" />
+          <label className="label" htmlFor="lf-size">Size</label>
+          <input id="lf-size" name="size" required defaultValue={initial?.size} className="input" placeholder="225/45R17" />
         </div>
         <div>
-          <label className="label">Quantity</label>
-          <input name="quantity" type="number" min="1" defaultValue={initial?.quantity ?? 4} className="input" />
+          <label className="label" htmlFor="lf-quantity">Quantity</label>
+          <input id="lf-quantity" name="quantity" type="number" min="1" defaultValue={initial?.quantity ?? 4} className="input" />
         </div>
         <div>
-          <label className="label">Condition</label>
-          <select name="condition" defaultValue={initial?.condition || "used"} className="input">
+          <label className="label" htmlFor="lf-condition">Condition</label>
+          <select id="lf-condition" name="condition" defaultValue={initial?.condition || "used"} className="input">
             <option value="new">New</option>
             <option value="used">Used</option>
           </select>
         </div>
         <div>
-          <label className="label">Tread depth {editing ? <span className="text-slate-400">(please add)</span> : <span className="text-slate-400">(required)</span>}</label>
-          <input name="treadDepth" required={!editing} defaultValue={initial?.treadDepth || ""} className="input" placeholder="8/32in" />
+          <label className="label" htmlFor="lf-treadDepth">Tread depth {editing ? <span className="text-slate-400">(please add)</span> : <span className="text-slate-400">(required)</span>}</label>
+          <input id="lf-treadDepth" name="treadDepth" required={!editing} defaultValue={initial?.treadDepth || ""} className="input" placeholder="8/32in" />
           <p className="mt-1 text-xs text-slate-400">Measured in 32nds of an inch, e.g. 8/32in. Type &quot;new&quot; for unused tires.</p>
         </div>
         <div>
-          <label className="label">Price (USD)</label>
-          <input
+          <label className="label" htmlFor="lf-price">Price (USD)</label>
+          <input id="lf-price"
             name="price"
             type="number"
             min="1"
@@ -147,13 +147,13 @@ export default function ListingForm({ initial }) {
           />
         </div>
         <div>
-          <label className="label">City / location</label>
-          <input name="location" required defaultValue={initial?.location} className="input" placeholder="Coral Springs" />
+          <label className="label" htmlFor="lf-location">City / location</label>
+          <input id="lf-location" name="location" required defaultValue={initial?.location} className="input" placeholder="Coral Springs" />
           <p className="mt-1 text-xs text-slate-400">City and state only. Never your street address.</p>
         </div>
         <div>
-          <label className="label">State</label>
-          <select name="state" required defaultValue={initial?.state || ""} className="input">
+          <label className="label" htmlFor="lf-state">State</label>
+          <select id="lf-state" name="state" required defaultValue={initial?.state || ""} className="input">
             <option value="" disabled>Select a state…</option>
             {STATE_OPTIONS.map((s) => (
               <option key={s.abbr} value={s.abbr}>{s.name}</option>
@@ -162,8 +162,8 @@ export default function ListingForm({ initial }) {
           <p className="mt-1 text-xs text-slate-400">Buyers filter by state — required so your listing shows up.</p>
         </div>
         <div className="sm:col-span-2">
-          <label className="label">Description <span className="text-slate-400">(optional)</span></label>
-          <textarea name="description" rows={3} defaultValue={initial?.description || ""} className="input" placeholder="Set of 4, mounted one season, no patches…" />
+          <label className="label" htmlFor="lf-description">Description <span className="text-slate-400">(optional)</span></label>
+          <textarea id="lf-description" name="description" rows={3} defaultValue={initial?.description || ""} className="input" placeholder="Set of 4, mounted one season, no patches…" />
         </div>
       </div>
 
@@ -171,8 +171,8 @@ export default function ListingForm({ initial }) {
         <p className="mb-3 text-sm font-bold text-slate-200">Tire details <span className="font-normal text-slate-400">— help buyers find the right fit</span></p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className="label">Season</label>
-            <select name="season" defaultValue={initial?.season || ""} className="input">
+            <label className="label" htmlFor="lf-season">Season</label>
+            <select id="lf-season" name="season" defaultValue={initial?.season || ""} className="input">
               <option value="">—</option>
               <option value="all-season">All-season</option>
               <option value="summer">Summer</option>
@@ -181,13 +181,13 @@ export default function ListingForm({ initial }) {
             </select>
           </div>
           <div>
-            <label className="label">Load index</label>
-            <input name="loadIndex" defaultValue={initial?.loadIndex || ""} className="input" placeholder="91" />
+            <label className="label" htmlFor="lf-loadIndex">Load index</label>
+            <input id="lf-loadIndex" name="loadIndex" defaultValue={initial?.loadIndex || ""} className="input" placeholder="91" />
           </div>
           <div>
-            <label className="label">Speed rating</label>
+            <label className="label" htmlFor="lf-speedRating">Speed rating</label>
             {/* A stored value outside the valid set (old rows where a seller typed mph) is not offered back. */}
-            <select name="speedRating" defaultValue={isValidSpeedRating(initial?.speedRating) ? initial.speedRating : ""} className="input">
+            <select id="lf-speedRating" name="speedRating" defaultValue={isValidSpeedRating(initial?.speedRating) ? initial.speedRating : ""} className="input">
               <option value="">—</option>
               {SPEED_RATINGS.map((r) => (
                 <option key={r} value={r}>{r}</option>
@@ -196,8 +196,8 @@ export default function ListingForm({ initial }) {
             <p className="mt-1 text-xs text-slate-400">The letter after the load index on the sidewall (e.g. 102H), not mph.</p>
           </div>
           <div>
-            <label className="label">DOT year <span className="text-slate-400">{editing ? "(please add)" : "(required)"}</span></label>
-            <input
+            <label className="label" htmlFor="lf-dotYear">DOT year <span className="text-slate-400">{editing ? "(please add)" : "(required)"}</span></label>
+            <input id="lf-dotYear"
               name="dotYear"
               type="number"
               inputMode="numeric"
@@ -224,11 +224,11 @@ export default function ListingForm({ initial }) {
       </div>
 
       <div>
-        <label className="label">Photos</label>
+        <label className="label" htmlFor="lf-photos">Photos</label>
         <p className="mb-2 text-xs text-slate-400">
           Tip: add a close-up of the DOT code and a photo of the tread with a coin or gauge.
         </p>
-        <input type="file" accept="image/*" multiple onChange={onUpload} className="block text-sm" />
+        <input id="lf-photos" type="file" accept="image/*" multiple onChange={onUpload} className="block text-sm" />
         {uploading && <p className="mt-1 text-sm text-slate-400">Uploading…</p>}
         {photos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -251,8 +251,8 @@ export default function ListingForm({ initial }) {
 
       {editing && (
         <div>
-          <label className="label">Status</label>
-          <select name="status" defaultValue={initial?.status || "active"} className="input max-w-xs">
+          <label className="label" htmlFor="lf-status">Status</label>
+          <select id="lf-status" name="status" defaultValue={initial?.status || "active"} className="input max-w-xs">
             <option value="active">Active</option>
             <option value="sold">Sold</option>
           </select>

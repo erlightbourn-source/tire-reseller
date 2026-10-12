@@ -148,8 +148,8 @@ export default function AuthForm({ mode }) {
           <form onSubmit={onSubmit} className="mt-5 space-y-3.5">
             {isSignup && (
               <div>
-                <label className="label">I want to…</label>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="label" id="auth-role-label">I want to…</p>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="auth-role-label">
                   <RoleCard
                     active={role === "buyer"}
                     onClick={() => setRole("buyer")}
@@ -175,30 +175,30 @@ export default function AuthForm({ mode }) {
             )}
             {isSignup && (
               <div>
-                <label className="label">Full name</label>
-                <input name="name" required className="input" placeholder="Jordan Tires" />
+                <label className="label" htmlFor="auth-name">Full name</label>
+                <input id="auth-name" name="name" required className="input" placeholder="Jordan Tires" />
               </div>
             )}
             <div>
-              <label className="label">Email</label>
-              <input name="email" type="email" required className="input" placeholder="you@example.com" />
+              <label className="label" htmlFor="auth-email">Email</label>
+              <input id="auth-email" name="email" type="email" required className="input" placeholder="you@example.com" />
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <label className="label">Password</label>
+                <label className="label" htmlFor="auth-password">Password</label>
                 {!isSignup && <Link href="/forgot" className="mb-1.5 text-xs font-medium text-brand-300 hover:underline">Forgot password?</Link>}
               </div>
-              <input name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
+              <input id="auth-password" name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
             </div>
             {isSignup && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">City <span className="font-normal text-slate-400">(optional)</span></label>
-                  <input name="location" className="input" placeholder="Fort Lauderdale" />
+                  <label className="label" htmlFor="auth-location">City <span className="font-normal text-slate-400">(optional)</span></label>
+                  <input id="auth-location" name="location" className="input" placeholder="Fort Lauderdale" />
                 </div>
                 <div>
-                  <label className="label">Your state</label>
-                  <select name="state" className="input" defaultValue="">
+                  <label className="label" htmlFor="auth-state">Your state</label>
+                  <select id="auth-state" name="state" className="input" defaultValue="">
                     <option value="">Select…</option>
                     {STATES.map((s) => (
                       <option key={s.abbr} value={s.abbr}>{s.name}</option>
