@@ -24,7 +24,7 @@ export const metadata = {
 
 const PERKS = [
   ["Permanent Founding Seller badge", "On your profile, every listing, every card. It never goes away, even after the program closes."],
-  ["Every seller-plan perk, included", "Priority search placement, the verified badge, and bulk listing — all part of the plan, at no extra cost for founders."],
+  ["Every seller-plan perk, included", "Priority search placement, the Pro badge, and bulk listing — all part of the plan, at no extra cost for founders."],
   [`Price locked at ${FOUNDING_LABEL} — forever`, "When standard pricing eventually changes, yours doesn't."],
   ["Homepage spotlight", "Featured placement while we build out inventory."],
   ["White-glove onboarding", "We'll personally help you shoot and upload your first batch of listings in Broward. Zero extra work on your end."],

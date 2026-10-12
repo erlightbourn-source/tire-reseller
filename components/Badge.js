@@ -30,14 +30,15 @@ export function FoundingBadge({ className = "" }) {
   );
 }
 
-// Small inline "verified pro" mark used on seller cards.
+// Small inline "Pro Seller" mark used on seller cards. It means a paid seller plan,
+// not a vetting step, so it must never say "verified" or "trusted" (Quinn 2026-10-11).
 export function ProBadge({ className = "" }) {
   return (
     <Badge tone="pro" className={className}>
       <svg viewBox="0 0 20 20" className="h-3 w-3 fill-current" aria-hidden="true">
         <path d="M10 1l2.4 1.7 2.9-.2.9 2.8 2.4 1.7-.9 2.8.9 2.8-2.4 1.7-.9 2.8-2.9-.2L10 19l-2.4-1.7-2.9.2-.9-2.8L1.4 13l.9-2.8L1.4 7.4l2.4-1.7.9-2.8 2.9.2L10 1zm-1 11.5l4.2-4.2-1.2-1.2L9 10.1 7.3 8.4 6 9.6l3 2.9z" />
       </svg>
-      Verified Pro
+      Pro Seller
     </Badge>
   );
 }
