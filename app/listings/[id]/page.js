@@ -25,7 +25,6 @@ import ReportListing from "@/components/ReportListing";
 import ShareListing from "@/components/ShareListing";
 import TrackView from "@/components/TrackView";
 import Badge, { ProBadge, FoundingBadge } from "@/components/Badge";
-import { isProSeller } from "@/lib/seller";
 import { detectOffPlatform, SAFETY_WARNING } from "@/lib/safety";
 import { BUYER_CHECKLIST } from "@/lib/content";
 
@@ -251,7 +250,6 @@ export default async function ListingDetail({ params }) {
             </div>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span>📅 Member since {sellerSince}</span>
-              {isProSeller(listing.seller) && <span>⚡ Usually responds within a day</span>}
               <span>📍 {publicLocation(listing.seller.location) || location}</span>
             </div>
           </Link>
