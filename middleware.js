@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { siteLock } from "@/lib/siteLock";
 import { SRC_COOKIE, SRC_MAX_AGE, firstTouch, encodeSource } from "@/lib/attribution";
 
 // This middleware does two things on every (non-static) request:
+//  0. Pre-launch Basic Auth lock (lib/siteLock.js), off unless SITE_LOCK=1.
 //  1. CSRF defense-in-depth: reject state-changing API requests from a foreign
 //     origin. Browsers attach an Origin header to cross-origin mutations, so a
 //     mismatch means a forged cross-site request. Requests with NO Origin
@@ -64,6 +66,12 @@ function tirekindRedirect(req) {
 }
 
 export function middleware(req) {
+  // 0) Pre-launch lock (SITE_LOCK=1): Basic Auth before anything else, so nothing is served or redirected unauthenticated.
+  const locked = siteLock(req);
+  if (locked) return locked;
+  // sitemap.xml is gated by the lock above (it is in the matcher for that reason) but needs no CSP/cookie work.
+  if (req.nextUrl.pathname === "/sitemap.xml") return NextResponse.next();
+
   const moved = tirekindRedirect(req);
   if (moved) return moved;
 
@@ -108,6 +116,6 @@ export const config = {
   // Run on pages (for CSP) and API routes (for CSRF), but skip static assets and
   // public files that don't need a per-request nonce.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|sw.js).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|sw.js).*)",
   ],
 };
