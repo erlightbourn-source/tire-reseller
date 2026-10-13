@@ -30,14 +30,22 @@ test("right credentials pass through (null); passwords containing ':' work", () 
   assert.equal(siteLock(req("/", basic(LOCK_USER, "a:b:c")), env), null);
 });
 
-test("exempt: webhook, cron, api, robots, favicon, next static/image pass with no auth", () => {
-  for (const p of ["/api/stripe/webhook", "/api/webhooks/stripe", "/api/cron/alerts", "/api/health", "/robots.txt", "/favicon.ico", "/_next/static/chunks/a.js", "/_next/image?url=x"]) {
+test("exempt: webhook, cron, health, tiktok media, robots, favicon, next static/image pass with no auth", () => {
+  for (const p of ["/api/stripe/webhook", "/api/cron/alerts", "/api/cron/purge", "/api/cron/stats", "/api/health", "/api/tiktok/media/tok.jpg", "/robots.txt", "/favicon.ico", "/_next/static/chunks/a.js", "/_next/image?url=x"]) {
     assert.equal(siteLock(req(p), ON), null, p);
   }
 });
 
+test("every other /api route is locked: data GETs and form POSTs", () => {
+  for (const p of ["/api/listings", "/api/listings/abc", "/api/listings/bulk", "/api/notifications", "/api/messages/t1", "/api/account", "/api/inquiry", "/api/newsletter", "/api/founding-interest", "/api/email-alerts", "/api/email-alerts/confirm", "/api/auth/login", "/api/auth/signup", "/api/auth/verify", "/api/stripe/checkout", "/api/stripe/portal", "/api/upload", "/api/client-error", "/api/tiktok/callback", "/api/tiktok/post", "/api"]) {
+    assert.equal(siteLock(req(p), ON).status, 401, p);
+    assert.equal(siteLock(new Request("https://tirekind.com" + p, { method: "POST" }), ON).status, 401, "POST " + p);
+    assert.equal(siteLock(req(p, basic(LOCK_USER, PW)), ON), null, "authed " + p);
+  }
+});
+
 test("not exempt: pages, sitemap, lookalike paths", () => {
-  for (const p of ["/", "/browse", "/sitemap.xml", "/apiary", "/robots.txt.bak", "/favicon.ico/x", "/_nextish"]) {
+  for (const p of ["/", "/browse", "/sitemap.xml", "/apiary", "/robots.txt.bak", "/favicon.ico/x", "/_nextish", "/api/health/x", "/api/stripe/webhook/x", "/api/cron", "/api/tiktok/media", "/api/stripe/webhooks"]) {
     assert.equal(isLockExempt(p.split("?")[0]), false, p);
     assert.equal(siteLock(req(p), ON).status, 401, p);
   }
