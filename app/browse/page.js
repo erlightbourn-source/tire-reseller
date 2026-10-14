@@ -276,8 +276,8 @@ export default async function BrowsePage({ searchParams }) {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {pageListings.map((l) => (
-                <ListingCard key={l.id} listing={l} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} fair={l._fair ?? null} />
+              {pageListings.map((l, i) => (
+                <ListingCard key={l.id} listing={l} index={i} favorited={favSet.has(l.id)} distance={l._distance ?? null} rating={l._rating ?? null} fair={l._fair ?? null} />
               ))}
             </div>
             {pageCount > 1 && (
