@@ -227,7 +227,7 @@ export default async function Home() {
         </div>
         {showcase.length ? (
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {showcase.map((l) => <ListingCard key={l.id} listing={l} />)}
+            {showcase.map((l, i) => <ListingCard key={l.id} listing={l} index={i} />)}
           </div>
         ) : (
           <div className="card grid place-items-center px-6 py-12 text-center">

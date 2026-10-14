@@ -4,8 +4,9 @@ import { seasonLabel, treadLabel, perTire, milesLabel, conditionMeta, tireAge } 
 import { publicLocation } from "@/lib/publicLocation";
 import FavoriteButton from "@/components/FavoriteButton";
 import Badge from "@/components/Badge";
+import ListingCardImage, { Placeholder } from "@/components/ListingCardImage";
 
-export default function ListingCard({ listing, favorited = false, distance = null, rating = null, fair = null }) {
+export default function ListingCard({ listing, favorited = false, distance = null, rating = null, fair = null, index = null }) {
   const dealTone = fair && fair.tone !== "fair" ? fair.tone : null;
   const photo = listing.photos?.[0]?.url;
   const sold = listing.status === "sold";
@@ -21,13 +22,7 @@ export default function ListingCard({ listing, favorited = false, distance = nul
       <Link href={`/listings/${listing.id}`} className="flex flex-1 flex-col">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-900">
           {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photo}
-              alt={`${listing.brand} ${listing.size} tires`}
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.06]"
-            />
+            <ListingCardImage key={photo} src={photo} alt={`${listing.brand} ${listing.size} tires`} index={index} />
           ) : (
             <Placeholder />
           )}
@@ -111,22 +106,6 @@ export default function ListingCard({ listing, favorited = false, distance = nul
           </div>
         </div>
       </Link>
-    </div>
-  );
-}
-
-function Placeholder() {
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-ink-900">
-      <svg viewBox="0 0 64 64" className="h-16 w-16 text-slate-700" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-        <circle cx="32" cy="32" r="26" />
-        <circle cx="32" cy="32" r="11" />
-        <circle cx="32" cy="32" r="2.5" fill="currentColor" stroke="none" />
-        {Array.from({ length: 12 }).map((_, i) => {
-          const a = (i * Math.PI) / 6;
-          return <line key={i} x1={32 + 19 * Math.cos(a)} y1={32 + 19 * Math.sin(a)} x2={32 + 25 * Math.cos(a)} y2={32 + 25 * Math.sin(a)} strokeWidth="2" />;
-        })}
-      </svg>
     </div>
   );
 }
