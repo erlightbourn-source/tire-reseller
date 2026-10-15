@@ -113,8 +113,9 @@ export async function PATCH(req, { params }) {
     data.photos = { deleteMany: {}, create: photos.map((url, i) => ({ url, sort: i })) };
   }
 
-  // A bulk-added draft goes public only once it has its 2 proof photos.
-  if (data.status === "active" && listing.status === "draft") {
+  // A bulk-added draft leaves draft (active, or sold, whose page is also public) only
+  // once it has its 2 proof photos.
+  if (listing.status === "draft" && data.status !== undefined && data.status !== "draft") {
     const finalCount = data.photos ? data.photos.create.length : await prisma.photo.count({ where: { listingId: listing.id } });
     if (finalCount < MIN_PROOF_PHOTOS) return NextResponse.json({ error: PROOF_PHOTOS_MESSAGE }, { status: 400 });
   }

@@ -538,6 +538,7 @@ test("bulk add: rows are drafts, hidden from buyers until published with 2 photo
   assert.equal(early.status, 400, "can't publish a draft with 1 photo");
   assert.match((await early.json()).error, /at least 2 photos/);
   assert.equal((await patch({ status: "active" })).status, 400, "can't publish a photo-less draft");
+  assert.equal((await patch({ status: "sold" })).status, 400, "can't make a photo-less draft public as sold either");
   assert.equal((await db.listing.findUnique({ where: { id }, select: { status: true } })).status, "draft");
   assert.equal((await patch({ status: "active", photos: PROOF_PHOTOS })).status, 200, "publishes with 2 photos");
   assert.equal((await db.listing.findUnique({ where: { id }, select: { status: true } })).status, "active");
