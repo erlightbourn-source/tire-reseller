@@ -154,8 +154,8 @@ export default async function SellerProfile({ params }) {
           <div className="card px-6 py-10 text-center text-sm text-slate-400">No active listings right now.</div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {seller.listings.map((l) => (
-              <ListingCard key={l.id} listing={l} />
+            {seller.listings.map((l, i) => (
+              <ListingCard key={l.id} listing={l} index={i} />
             ))}
           </div>
         )}

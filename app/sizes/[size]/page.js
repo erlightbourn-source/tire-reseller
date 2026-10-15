@@ -98,7 +98,7 @@ export default async function SizePage({ params }) {
 
       {listings.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {listings.map((l) => <ListingCard key={l.id} listing={l} />)}
+          {listings.map((l, i) => <ListingCard key={l.id} listing={l} index={i} />)}
         </div>
       ) : (
         <div className="card px-6 py-12 text-center">
