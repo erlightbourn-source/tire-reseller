@@ -108,7 +108,7 @@ export default async function RootLayout({ children }) {
               <p className="mt-2 max-w-xs text-sm text-slate-400">
                 Buy &amp; sell new and used tires with trusted local resellers. Browsing is free.
               </p>
-              <div className="mt-4">
+              <div className="mt-4" data-footer-signup>
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Get TireKind news</p>
                 <div className="mt-2"><NewsletterForm source="footer" compact /></div>
               </div>

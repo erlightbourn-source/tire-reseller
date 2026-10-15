@@ -126,4 +126,8 @@ main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
   .text-balance { text-wrap: balance; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Pages with a contextual match-alert (listing detail, size pages) skip the footer news signup so
+     there are not two email asks back to back. Pure CSS: a logged-in listing view has no match-alert,
+     so it keeps the footer signup. */
+  body:has([data-match-alert]) [data-footer-signup] { display: none; }
 }
