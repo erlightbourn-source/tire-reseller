@@ -116,7 +116,7 @@ export default async function SizePage({ params }) {
             New to used tires? Our <Link href="/guide" className="font-semibold text-brand-300 hover:text-brand-200">buying guide</Link> covers
             tread depth, DOT dates, and how to vet a seller.
           </p>
-          <div className="mt-5">
+          <div className="mt-5" data-match-alert>
             <p className="text-sm font-semibold text-slate-200">Get an email when {s.label} tires list</p>
             <div className="mt-2 sm:max-w-sm"><EmailAlertForm query={`size=${s.label}`} compact /></div>
           </div>
