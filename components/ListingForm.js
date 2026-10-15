@@ -76,7 +76,8 @@ export default function ListingForm({ initial }) {
     // Same rule as the API (requireProofPhotos / checkEditPhotoCount), checked here
     // so the seller sees it before a round trip.
     const initialCount = initial?.photos?.length || 0;
-    if (photos.length < MIN_PROOF_PHOTOS && (!editing || photos.length < initialCount)) {
+    const publishingDraft = initial?.status === "draft" && e.currentTarget.elements.namedItem("status")?.value === "active";
+    if (photos.length < MIN_PROOF_PHOTOS && (!editing || publishingDraft || photos.length < initialCount)) {
       return setErr(PROOF_PHOTOS_MESSAGE);
     }
     setSaving(true);
@@ -271,8 +272,10 @@ export default function ListingForm({ initial }) {
       {editing && (
         <div>
           <label className="label" htmlFor="lf-status">Status</label>
-          <select id="lf-status" name="status" defaultValue={initial?.status || "active"} className="input max-w-xs">
+          {/* A bulk-add draft defaults to Active so saving with its 2 photos publishes it. */}
+          <select id="lf-status" name="status" defaultValue={initial?.status === "draft" ? "active" : initial?.status || "active"} className="input max-w-xs">
             <option value="active">Active</option>
+            {initial?.status === "draft" && <option value="draft">Keep as draft (hidden from buyers)</option>}
             <option value="sold">Sold</option>
           </select>
         </div>

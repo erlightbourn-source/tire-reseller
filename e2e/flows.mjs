@@ -509,6 +509,41 @@ test("bulk add: lines need tread depth + DOT year; valid lines store them", asyn
   assert.equal(row.treadDepth32, 7);
 });
 
+// tk#80 follow-up: bulk text carries no photos, so bulk rows land as drafts that buyers can't
+// see or message until the seller adds the 2 proof photos and publishes.
+test("bulk add: rows are drafts, hidden from buyers until published with 2 photos", async () => {
+  const login = await req("/api/auth/login", { method: "POST", headers: { "X-Real-IP": "203.0.113.90" }, body: JSON.stringify({ email: "mike@tiretrader.test", password: "seller1234" }) });
+  assert.equal(login.status, 200, "seeded pro seller logs in");
+  const cookie = sessionCookie(login);
+  const res = await req("/api/listings/bulk", { method: "POST", headers: { Cookie: cookie }, body: JSON.stringify({ text: "E2E Draft | 235/40R18 | 300 | 4 | used | Dallas, TX | 6/32 | 2023" }) });
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).drafts, 1);
+  const { id } = await db.listing.findFirst({ where: { brand: "E2E Draft" }, orderBy: { createdAt: "desc" }, select: { id: true } });
+  assert.equal((await db.listing.findUnique({ where: { id }, select: { status: true } })).status, "draft");
+
+  assert.equal((await req(`/listings/${id}`)).status, 404, "visitor can't open a draft");
+  assert.equal((await req(`/listings/${id}`, { headers: { Cookie: cookie } })).status, 200, "owner can open the draft");
+  assert.ok(!(await (await req("/browse?q=E2E+Draft")).text()).includes(id), "draft not on browse");
+  const dash = await (await req("/dashboard", { headers: { Cookie: cookie } })).text();
+  assert.match(dash, /Hidden from buyers until you add 2 photos/, "dashboard flags the draft");
+
+  const buyerLogin = await req("/api/auth/login", { method: "POST", headers: { "X-Real-IP": "203.0.113.91" }, body: JSON.stringify({ email: "demo@tiretrader.test", password: "demo1234" }) });
+  const buyer = sessionCookie(buyerLogin);
+  const thread = await req("/api/threads", { method: "POST", headers: { Cookie: buyer }, body: JSON.stringify({ listingId: id, message: "Still available?" }) });
+  assert.equal(thread.status, 404, "no thread on a draft");
+
+  const patch = (body) => req(`/api/listings/${id}`, { method: "PATCH", headers: { Cookie: cookie }, body: JSON.stringify(body) });
+  assert.equal((await patch({ price: 290 })).status, 200, "draft edits without publishing are fine");
+  const early = await patch({ status: "active", photos: [PROOF_PHOTOS[0]] });
+  assert.equal(early.status, 400, "can't publish a draft with 1 photo");
+  assert.match((await early.json()).error, /at least 2 photos/);
+  assert.equal((await patch({ status: "active" })).status, 400, "can't publish a photo-less draft");
+  assert.equal((await db.listing.findUnique({ where: { id }, select: { status: true } })).status, "draft");
+  assert.equal((await patch({ status: "active", photos: PROOF_PHOTOS })).status, 200, "publishes with 2 photos");
+  assert.equal((await db.listing.findUnique({ where: { id }, select: { status: true } })).status, "active");
+  assert.equal((await req(`/listings/${id}`)).status, 200, "visitor sees it once published");
+});
+
 // L1421 follow-up: /sell-tires is the free-to-list landing page, so its signed-out
 // CTAs must go straight to seller signup (a seller is free on signup, so the old
 // next=/subscribe hop was a dead detour that the verify step dropped anyway).

@@ -6,7 +6,7 @@ import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { stripDataUriMetadata } from "@/lib/image";
-import { normalizeSpeedRating, parseDotYear, checkEditPhotoCount, MIN_PROOF_PHOTOS } from "@/lib/listingProof";
+import { normalizeSpeedRating, parseDotYear, checkEditPhotoCount, MIN_PROOF_PHOTOS, PROOF_PHOTOS_MESSAGE } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -111,6 +111,12 @@ export async function PATCH(req, { params }) {
     // transaction). A separate deleteMany ran first and committed on its own, so
     // any failure in the update below left the listing with zero photos.
     data.photos = { deleteMany: {}, create: photos.map((url, i) => ({ url, sort: i })) };
+  }
+
+  // A bulk-added draft goes public only once it has its 2 proof photos.
+  if (data.status === "active" && listing.status === "draft") {
+    const finalCount = data.photos ? data.photos.create.length : await prisma.photo.count({ where: { listingId: listing.id } });
+    if (finalCount < MIN_PROOF_PHOTOS) return NextResponse.json({ error: PROOF_PHOTOS_MESSAGE }, { status: 400 });
   }
 
   await prisma.listing.update({ where: { id: listing.id }, data });

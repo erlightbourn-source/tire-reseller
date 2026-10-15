@@ -39,13 +39,14 @@ export default function BulkAdd() {
         One listing per line: <code className="bg-white/5 px-1 text-slate-300">Brand | Size | Price | Qty | new/used | City, ST | Tread depth | DOT year</code>
       </p>
       <p className="text-xs text-slate-500">
-        Tread depth in 32nds (e.g. 7/32). DOT year from the sidewall: the last two of the 4 digits after "DOT" (2321 = 2021). Both are required.
+        Tread depth in 32nds (e.g. 7/32). DOT year from the sidewall: the last two of the 4 digits after "DOT" (2321 = 2021). Both are required. Listings are saved as drafts: add 2 photos to each (tread + DOT code) to publish.
       </p>
       {err && <div className="bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</div>}
       {result && (
         <div className="bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
-          Added {result.count} listing{result.count !== 1 ? "s" : ""}.
+          Added {result.count} draft{result.count !== 1 ? "s" : ""}.
           {result.errors?.length ? ` Skipped ${result.errors.length} line(s).` : ""}
+          {result.count > 0 && " Drafts stay hidden from buyers until you add 2 photos (tread + DOT code) from Edit on your dashboard."}
         </div>
       )}
       <textarea

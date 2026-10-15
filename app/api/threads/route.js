@@ -18,7 +18,8 @@ export async function POST(req) {
   try { message = cleanStr(raw.message, LIMITS.message, { field: "Message" }); }
   catch (e) { if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 }); throw e; }
   const listing = await prisma.listing.findUnique({ where: { id: listingId } });
-  if (!listing) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
+  // Bulk-add drafts are owner-only until they have their proof photos.
+  if (!listing || listing.status === "draft") return NextResponse.json({ error: "Listing not found." }, { status: 404 });
   if (listing.sellerId === user.id)
     return NextResponse.json({ error: "You can't message yourself about your own listing." }, { status: 400 });
 

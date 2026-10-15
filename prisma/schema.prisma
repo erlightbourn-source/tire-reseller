@@ -87,7 +87,7 @@ model Listing {
   lat         Float? // geocoded from city for radius search
   lng         Float?
   description String?
-  status      String  @default("active") // active | sold
+  status      String  @default("active") // active | sold | draft (bulk add, hidden until it has 2 proof photos)
 
   // Tire-specific attributes (the marketplace's differentiator vs generic listings)
   season      String? // summer | winter | all-season | all-weather
