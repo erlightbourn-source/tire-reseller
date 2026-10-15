@@ -582,3 +582,30 @@ test("upload: buyers are refused (403) and a chunked body with no Content-Length
   });
   assert.equal(chunked.status, 411, "a seller upload with no Content-Length is refused before parsing");
 });
+
+// Listing-card photo loading (a5ef40b): the first cards on every list page load eagerly so they don't sit as
+// broken alt text, deeper cards stay lazy. /tires/[brand] and /sizes/[size] are the SEO landing pages, so they
+// must pass the card position too. Cards are the <img> tags whose alt ends in " tires".
+test("listing-card photos: first card eager + high priority on browse, brand and size pages", async () => {
+  const withPhoto = await db.listing.findMany({
+    where: { status: "active", hidden: false, seller: { deletedAt: null }, photos: { some: {} } },
+    select: { brand: true, widthMm: true, aspectRatio: true, rimDiameter: true },
+  });
+  assert.ok(withPhoto.length > 0, "seed data has an active listing with a photo");
+  const l = withPhoto[0];
+  const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const pages = [
+    "/browse",
+    `/tires/${slug(l.brand)}`,
+    `/sizes/${slug(`${l.widthMm}/${l.aspectRatio}R${l.rimDiameter}`)}`,
+  ];
+  for (const path of pages) {
+    const r = await fetch(`${BASE}${path}`, { headers: { Origin: BASE } });
+    assert.equal(r.status, 200, `${path} renders`);
+    const cards = ((await r.text()).match(/<img\b[^>]*>/g) || []).filter((t) => / tires"/.test(t));
+    assert.ok(cards.length > 0, `${path} shows listing cards`);
+    assert.match(cards[0], /loading="eager"/, `${path}: first card photo is eager`);
+    assert.match(cards[0], /fetchPriority="high"|fetchpriority="high"/i, `${path}: first card photo is high priority`);
+    assert.ok(cards.slice(4).every((t) => /loading="lazy"/.test(t)), `${path}: cards past the fourth stay lazy`);
+  }
+});

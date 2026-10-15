@@ -34,8 +34,8 @@ export default async function FavoritesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} favorited />
+          {listings.map((l, i) => (
+            <ListingCard key={l.id} listing={l} index={i} favorited />
           ))}
         </div>
       )}

@@ -135,7 +135,7 @@ export default async function BrandPage({ params }) {
 
       {listings.length > 0 ? (
         <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {listings.map((l) => <ListingCard key={l.id} listing={l} />)}
+          {listings.map((l, i) => <ListingCard key={l.id} listing={l} index={i} />)}
         </section>
       ) : (
         <div className="card grid place-items-center px-6 py-12 text-center">
