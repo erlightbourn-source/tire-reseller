@@ -19,7 +19,7 @@ export const metadata = {
 
 const BUYER_STEPS = [
   ["Search", "By size, vehicle fitment, brand, or city."],
-  ["Compare", "Every listing shows tread depth, DOT age, condition, and a fair-price signal — you're comparing real data, not guesswork."],
+  ["Compare", "New listings must show tread depth, DOT age and condition, with photos of the tread and the DOT code. Where there are comparable sets, you also get a fair-price signal, so you're comparing real data, not guesswork."],
   ["Message the seller", "Built-in messaging, no phone number required to start. TireKind flags off-platform payment requests as a scam risk."],
   ["Inspect and pay in person", "Meet the seller, check the tires yourself, and pay them directly when you're satisfied."],
 ];
