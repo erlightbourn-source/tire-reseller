@@ -6,7 +6,7 @@ import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { stripDataUriMetadata } from "@/lib/image";
-import { normalizeSpeedRating, parseDotYear } from "@/lib/listingProof";
+import { normalizeSpeedRating, parseDotYear, checkEditPhotoCount, MIN_PROOF_PHOTOS } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -99,6 +99,14 @@ export async function PATCH(req, { params }) {
     // A drop here deletes a seller's photo on save; if it ever happens to our own
     // store's URLs (blob host env drift), this line is the only trace.
     if (dropped > 0) console.warn("listing edit: dropped disallowed photo URLs", { listingId: listing.id, dropped });
+    if (photos.length < MIN_PROOF_PHOTOS) {
+      try {
+        checkEditPhotoCount(photos.length, await prisma.photo.count({ where: { listingId: listing.id } }));
+      } catch (e) {
+        if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
+        throw e;
+      }
+    }
     // Delete + re-create inside the SAME update (one nested write = one
     // transaction). A separate deleteMany ran first and committed on its own, so
     // any failure in the update below left the listing with zero photos.

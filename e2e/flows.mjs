@@ -12,6 +12,8 @@ const PORT = 3399;
 const BASE = `http://localhost:${PORT}`;
 const DATABASE_URL = process.env.DATABASE_URL || "file:./dev.db";
 let server;
+// Two allowed photo paths: new listings must carry the tread + DOT proof photos (requireProofPhotos).
+const PROOF_PHOTOS = ["/uploads/e2e-tread.jpg", "/uploads/e2e-dot.jpg"];
 
 // Direct DB handle for the one thing the HTTP surface deliberately won't do:
 // hand back an email-verification token (see app/api/auth/verify — the token
@@ -244,7 +246,7 @@ test("core funnel: seller lists a tire, buyer offers, seller accepts", async () 
   const listingRes = await req("/api/listings", {
     method: "POST",
     headers: { Cookie: sellerCookie },
-    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025 }),
+    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025, photos: PROOF_PHOTOS }),
   });
   assert.equal(listingRes.status, 200, "seller creates a listing");
   const { id: listingId } = await listingRes.json();
@@ -328,7 +330,7 @@ test("offers: a blocked party can't accept/counter a pending offer", async () =>
   const { id: listingId } = await (await req("/api/listings", {
     method: "POST",
     headers: { Cookie: sellerCookie },
-    body: JSON.stringify({ brand: "E2E Block", size: "205/55R16", location: "Miami, FL", condition: "used", price: 200, quantity: 4, treadDepth: "6/32in", dotYear: 2022 }),
+    body: JSON.stringify({ brand: "E2E Block", size: "205/55R16", location: "Miami, FL", condition: "used", price: 200, quantity: 4, treadDepth: "6/32in", dotYear: 2022, photos: PROOF_PHOTOS }),
   })).json();
   const { threadId } = await (await req("/api/threads", {
     method: "POST",
@@ -382,7 +384,7 @@ test("listing proof fields: POST requires treadDepth + dotYear, validates speedR
   const login = await req("/api/auth/login", { method: "POST", body: JSON.stringify({ email: "demo@tiretrader.test", password: "demo1234" }) });
   assert.equal(login.status, 200, "seeded seller logs in");
   const cookie = sessionCookie(login);
-  const base = { brand: "E2E Proof", size: "225/65R17", location: "Miami, FL", condition: "used", price: 250, quantity: 4, treadDepth: "8/32in", dotYear: 2022 };
+  const base = { brand: "E2E Proof", size: "225/65R17", location: "Miami, FL", condition: "used", price: 250, quantity: 4, treadDepth: "8/32in", dotYear: 2022, photos: PROOF_PHOTOS };
   const post = (over, drop = []) => {
     const body = { ...base, ...over };
     for (const k of drop) delete body[k];
@@ -397,6 +399,13 @@ test("listing proof fields: POST requires treadDepth + dotYear, validates speedR
   assert.match((await noTread.json()).error, /Tread depth/);
   assert.equal((await post({ dotYear: 1985 })).status, 400, "dotYear 1985 -> 400");
   assert.equal((await post({ dotYear: new Date().getFullYear() + 2 })).status, 400, "dotYear too far ahead -> 400");
+
+  // Proof photos: a new listing needs 2 usable photos (tread + DOT code).
+  const noPhotos = await post({}, ["photos"]);
+  assert.equal(noPhotos.status, 400, "no photos -> 400");
+  assert.match((await noPhotos.json()).error, /at least 2 photos/);
+  assert.equal((await post({ photos: [PROOF_PHOTOS[0]] })).status, 400, "1 photo -> 400");
+  assert.equal((await post({ photos: ["https://evil.example/x.jpg", PROOF_PHOTOS[0]] })).status, 400, "a disallowed URL doesn't count toward the 2");
 
   const mph = await post({ speedRating: "130" });
   assert.equal(mph.status, 400, "speedRating 130 -> 400");
@@ -423,6 +432,15 @@ test("listing proof fields: POST requires treadDepth + dotYear, validates speedR
   assert.equal((await patch({ speedRating: "V", dotYear: "2023" })).status, 200, "PATCH valid values");
   const after = await db.listing.findUnique({ where: { id }, select: { speedRating: true, dotYear: true } });
   assert.deepEqual(after, { speedRating: "V", dotYear: 2023 });
+
+  // Photos on edit: no edit takes a listing below 2; a legacy 1-photo listing may keep its 1 or add more.
+  assert.equal((await patch({ photos: [PROOF_PHOTOS[0]] })).status, 400, "PATCH 2 -> 1 photo -> 400");
+  assert.equal(await db.photo.count({ where: { listingId: id } }), 2, "photos untouched after the rejected edit");
+  await db.photo.deleteMany({ where: { listingId: id, sort: 1 } });
+  assert.equal((await patch({ photos: [PROOF_PHOTOS[0]] })).status, 200, "legacy 1-photo listing keeps its 1");
+  assert.equal((await patch({ photos: [] })).status, 400, "legacy 1 -> 0 photos -> 400");
+  assert.equal((await patch({ photos: PROOF_PHOTOS })).status, 200, "adding back up to 2 is fine");
+  assert.equal(await db.photo.count({ where: { listingId: id } }), 2);
 
   // Legacy row with garbage stored speed renders only the load index.
   await db.listing.update({ where: { id }, data: { speedRating: "130" } });
@@ -538,7 +556,7 @@ test("reviews: need a real two-way conversation (buyer wrote AND seller replied)
   const listingRes = await req("/api/listings", {
     method: "POST",
     headers: { Cookie: sellerCookie },
-    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025 }),
+    body: JSON.stringify({ brand: "E2E Brand", size: "225/45R17", location: "Miami, FL", condition: "new", price: 400, quantity: 4, treadDepth: "new", dotYear: 2025, photos: PROOF_PHOTOS }),
   });
   assert.equal(listingRes.status, 200, "seller creates a listing");
   const { id: listingId } = await listingRes.json();
