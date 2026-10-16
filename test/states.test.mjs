@@ -53,3 +53,13 @@ test("userStateOf prefers saved state then falls back to location", () => {
   assert.equal(userStateOf({ state: "ZZ", location: "Austin, TX" }), "TX");
   assert.equal(userStateOf(null), null);
 });
+
+test("signup state list is alphabetical by name and defaults to Florida", async () => {
+  const mod = await import("../lib/states.js");
+  const names = mod.STATES_ALPHA.map((s) => s.name);
+  assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b)));
+  assert.equal(mod.STATES_ALPHA.length, mod.STATES.length); // same states, just reordered
+  assert.equal(mod.STATES_ALPHA[0].name, "Alabama");
+  assert.equal(mod.DEFAULT_SIGNUP_STATE, "FL");
+  assert.ok(mod.STATES_ALPHA.some((s) => s.abbr === mod.DEFAULT_SIGNUP_STATE));
+});
