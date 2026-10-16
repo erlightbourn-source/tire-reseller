@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
-import { STATES } from "@/lib/states";
+import { STATES_ALPHA, DEFAULT_SIGNUP_STATE } from "@/lib/states";
 import { track } from "@/lib/track";
 import { PLAN_COPY } from "@/lib/pricing";
 import { safeNextPath } from "@/lib/site";
@@ -176,7 +176,7 @@ export default function AuthForm({ mode }) {
             {isSignup && (
               <div>
                 <label className="label" htmlFor="auth-name">Full name</label>
-                <input id="auth-name" name="name" required className="input" placeholder="Jordan Tires" />
+                <input id="auth-name" name="name" required className="input" placeholder="Alex Rivera" />
               </div>
             )}
             <div>
@@ -194,13 +194,13 @@ export default function AuthForm({ mode }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label" htmlFor="auth-location">City <span className="font-normal text-slate-400">(optional)</span></label>
-                  <input id="auth-location" name="location" className="input" placeholder="Fort Lauderdale" />
+                  <input id="auth-location" name="location" className="input" placeholder="Miami" />
                 </div>
                 <div>
                   <label className="label" htmlFor="auth-state">Your state</label>
-                  <select id="auth-state" name="state" className="input" defaultValue="">
+                  <select id="auth-state" name="state" className="input" defaultValue={DEFAULT_SIGNUP_STATE}>
                     <option value="">Select…</option>
-                    {STATES.map((s) => (
+                    {STATES_ALPHA.map((s) => (
                       <option key={s.abbr} value={s.abbr}>{s.name}</option>
                     ))}
                   </select>
