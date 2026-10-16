@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 const TOOLS = [
-  ["Structured details", "Size, tread depth, DOT year, condition — so you know what you're looking at before you message anyone."],
+  ["Structured details", "New listings must show size, tread depth, DOT year and condition, so you know what you're looking at before you message anyone."],
   ["Fair-price signal", "A quick read on whether a listing is priced in line with comparable tires."],
   ["Built-in messaging", "Negotiate without handing out your phone number."],
   ["Scam warnings", "TireKind flags requests to pay off-platform or before you've inspected the tires."],
@@ -45,7 +45,7 @@ export default function TrustSafetyPage() {
       </header>
 
       <section>
-        <h2 className="font-display text-2xl font-extrabold text-white">What we build into every listing</h2>
+        <h2 className="font-display text-2xl font-extrabold text-white">What we build into TireKind</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {TOOLS.map(([title, body]) => (
             <div key={title} className="card px-5 py-5">
