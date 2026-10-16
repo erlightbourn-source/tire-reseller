@@ -45,9 +45,9 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   const l = await prisma.listing.findUnique({
     where: { id },
-    select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, hidden: true, seller: { select: { deletedAt: true } }, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
+    select: { brand: true, size: true, condition: true, quantity: true, priceCents: true, location: true, hidden: true, status: true, seller: { select: { deletedAt: true } }, photos: { take: 1, orderBy: { sort: "asc" }, select: { url: true } } },
   });
-  if (!l || l.hidden || l.seller?.deletedAt) return { title: "Listing not found — TireKind" };
+  if (!l || l.hidden || l.status === "draft" || l.seller?.deletedAt) return { title: "Listing not found — TireKind" };
   const cond = conditionMeta(l.condition).label;
   const title = `${cond} ${l.brand} ${l.size} (Qty ${l.quantity}) — ${formatPrice(l.priceCents)} | TireKind`;
   const metaLocation = publicLocation(l.location);
@@ -69,8 +69,9 @@ export default async function ListingDetail({ params }) {
   const isOwner = user?.id === listing.sellerId;
   // Hidden (moderation/auto-hide) or soft-deleted-seller listings must not be
   // reachable by direct URL for anyone but the owner — otherwise the report
-  // auto-hide and account-deletion takedowns are trivially bypassed.
-  if (!isOwner && (listing.hidden || listing.seller?.deletedAt)) notFound();
+  // auto-hide and account-deletion takedowns are trivially bypassed. Bulk-add drafts
+  // (no proof photos yet) are owner-only too.
+  if (!isOwner && (listing.hidden || listing.status === "draft" || listing.seller?.deletedAt)) notFound();
 
   // Count a view once per visitor IP per listing per 30 min, and never for
   // crawlers, so reloads or a script can't inflate seller analytics (audit L1624 F13).

@@ -100,8 +100,8 @@ export default async function CityPage({ params }) {
         <div className="card px-5 py-5">
           <h2 className="font-display text-lg font-extrabold text-white">Search your exact fit</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Every listing shows size, tread depth, DOT week/year, and a fair-price read — so you
-            know what you&apos;re looking at before you message anyone.
+            New listings must show size, tread depth, DOT year and photos of the tread and DOT code, so
+            you know what you&apos;re looking at before you message anyone.
           </p>
         </div>
         <div className="card px-5 py-5">

@@ -6,7 +6,7 @@ import { geocodeCity } from "@/lib/geo";
 import { cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl, enforceRateLimit } from "@/lib/security";
 import { deriveListingColumns } from "@/lib/tiresize";
 import { stripDataUriMetadata } from "@/lib/image";
-import { normalizeSpeedRating, parseDotYear } from "@/lib/listingProof";
+import { normalizeSpeedRating, parseDotYear, checkEditPhotoCount, MIN_PROOF_PHOTOS, PROOF_PHOTOS_MESSAGE } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 
@@ -99,10 +99,25 @@ export async function PATCH(req, { params }) {
     // A drop here deletes a seller's photo on save; if it ever happens to our own
     // store's URLs (blob host env drift), this line is the only trace.
     if (dropped > 0) console.warn("listing edit: dropped disallowed photo URLs", { listingId: listing.id, dropped });
+    if (photos.length < MIN_PROOF_PHOTOS) {
+      try {
+        checkEditPhotoCount(photos.length, await prisma.photo.count({ where: { listingId: listing.id } }));
+      } catch (e) {
+        if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
+        throw e;
+      }
+    }
     // Delete + re-create inside the SAME update (one nested write = one
     // transaction). A separate deleteMany ran first and committed on its own, so
     // any failure in the update below left the listing with zero photos.
     data.photos = { deleteMany: {}, create: photos.map((url, i) => ({ url, sort: i })) };
+  }
+
+  // A bulk-added draft leaves draft (active, or sold, whose page is also public) only
+  // once it has its 2 proof photos.
+  if (listing.status === "draft" && data.status !== undefined && data.status !== "draft") {
+    const finalCount = data.photos ? data.photos.create.length : await prisma.photo.count({ where: { listingId: listing.id } });
+    if (finalCount < MIN_PROOF_PHOTOS) return NextResponse.json({ error: PROOF_PHOTOS_MESSAGE }, { status: 400 });
   }
 
   await prisma.listing.update({ where: { id: listing.id }, data });

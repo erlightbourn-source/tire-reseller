@@ -233,8 +233,8 @@ export default async function DashboardPage() {
                     <Link href={`/listings/${l.id}`} className="truncate font-display font-bold text-white hover:underline">
                       {l.brand} · {l.size}
                     </Link>
-                    <span className={`badge ${l.status === "active" ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30" : "bg-white/10 text-slate-300"}`}>
-                      {l.status === "active" ? "Active" : "Sold"}
+                    <span className={`badge ${l.status === "active" ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-400/30" : l.status === "draft" ? "bg-amber-500/15 text-amber-200 ring-1 ring-inset ring-amber-400/30" : "bg-white/10 text-slate-300"}`}>
+                      {l.status === "active" ? "Active" : l.status === "draft" ? "Draft" : "Sold"}
                     </span>
                   </div>
                   <p className="mt-0.5 text-sm text-slate-400">
@@ -244,6 +244,9 @@ export default async function DashboardPage() {
                     <span>👁 {l.views} views</span>
                     <span>💬 {l._count.threads} chats</span>
                   </p>
+                  {l.status === "draft" && (
+                    <p className="mt-0.5 text-xs text-amber-200">Hidden from buyers until you add 2 photos: the tread and the DOT code.</p>
+                  )}
                 </div>
                 <div className="flex shrink-0 gap-2">
                   {l.status === "active" && <PromoteButton id={l.id} initial={l.featured} />}

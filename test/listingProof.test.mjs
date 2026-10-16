@@ -8,6 +8,10 @@ import {
   parseDotYear,
   requireTreadDepth,
   formatLoadSpeed,
+  requireProofPhotos,
+  checkEditPhotoCount,
+  MIN_PROOF_PHOTOS,
+  PROOF_PHOTOS_MESSAGE,
 } from "../lib/listingProof.js";
 
 const NOW = new Date("2026-10-09T12:00:00Z");
@@ -95,4 +99,31 @@ test("formatLoadSpeed: speed without load, and nothing at all", () => {
   assert.equal(formatLoadSpeed(null, "H"), "H");
   assert.equal(formatLoadSpeed("", ""), null);
   assert.equal(formatLoadSpeed("102", null), "102");
+});
+
+/* ---------------------------- proof photos ----------------------------- */
+
+test("requireProofPhotos: fewer than 2 photos -> ValidationError with the two-shot instruction", () => {
+  for (const v of [undefined, null, "x", [], ["/uploads/a.jpg"]]) {
+    assert.throws(() => requireProofPhotos(v), (e) => e instanceof ValidationError && e.message === PROOF_PHOTOS_MESSAGE);
+  }
+  assert.match(PROOF_PHOTOS_MESSAGE, /tread/);
+  assert.match(PROOF_PHOTOS_MESSAGE, /DOT code/);
+});
+
+test("requireProofPhotos: 2+ photos pass through unchanged", () => {
+  const two = ["/uploads/a.jpg", "/uploads/b.jpg"];
+  assert.equal(requireProofPhotos(two), two);
+  assert.equal(MIN_PROOF_PHOTOS, 2);
+});
+
+test("checkEditPhotoCount: never below 2 by removal; legacy short sets may stay or grow", () => {
+  assert.throws(() => checkEditPhotoCount(1, 2), ValidationError); // 2 -> 1
+  assert.throws(() => checkEditPhotoCount(0, 1), ValidationError); // legacy 1 -> 0
+  assert.throws(() => checkEditPhotoCount(1, 6), ValidationError);
+  assert.doesNotThrow(() => checkEditPhotoCount(1, 1)); // legacy keeps its 1
+  assert.doesNotThrow(() => checkEditPhotoCount(0, 0)); // legacy photo-less edit (price only etc.)
+  assert.doesNotThrow(() => checkEditPhotoCount(1, 0)); // legacy adds one
+  assert.doesNotThrow(() => checkEditPhotoCount(2, 6));
+  assert.doesNotThrow(() => checkEditPhotoCount(3, 1));
 });

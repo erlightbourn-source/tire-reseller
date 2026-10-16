@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
 import { buildListingBody, dotYearInputAttrs } from "@/lib/listingBody";
-import { SPEED_RATINGS, isValidSpeedRating, DOT_YEAR_MIN } from "@/lib/listingProof";
+import { SPEED_RATINGS, isValidSpeedRating, DOT_YEAR_MIN, MIN_PROOF_PHOTOS, PROOF_PHOTOS_MESSAGE } from "@/lib/listingProof";
 
 // Alphabetical by name for the dropdown (STATES is grid-ordered for the map).
 const STATE_OPTIONS = [...STATES].sort((a, b) => a.name.localeCompare(b.name));
@@ -73,6 +73,13 @@ export default function ListingForm({ initial }) {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+    // Same rule as the API (requireProofPhotos / checkEditPhotoCount), checked here
+    // so the seller sees it before a round trip.
+    const initialCount = initial?.photos?.length || 0;
+    const publishingDraft = initial?.status === "draft" && e.currentTarget.elements.namedItem("status")?.value === "active";
+    if (photos.length < MIN_PROOF_PHOTOS && (!editing || publishingDraft || photos.length < initialCount)) {
+      return setErr(PROOF_PHOTOS_MESSAGE);
+    }
     setSaving(true);
     const form = new FormData(e.currentTarget);
     const body = buildListingBody(form, initial, editing, photos);
@@ -224,21 +231,34 @@ export default function ListingForm({ initial }) {
       </div>
 
       <div>
-        <label className="label" htmlFor="lf-photos">Photos</label>
-        <p className="mb-2 text-xs text-slate-400">
-          Tip: add a close-up of the DOT code and a photo of the tread with a coin or gauge.
+        <label className="label" htmlFor="lf-photos">
+          Photos{" "}
+          <span className="text-slate-400">
+            {editing && photos.length < MIN_PROOF_PHOTOS ? "(please add)" : `(at least ${MIN_PROOF_PHOTOS} required)`}
+          </span>
+        </label>
+        <p id="lf-photos-help" className="mb-2 text-xs text-slate-400">
+          Buyers decide from these two shots, so start with them:
         </p>
-        <input id="lf-photos" type="file" accept="image/*" multiple onChange={onUpload} className="block text-sm" />
+        <ol className="mb-2 list-decimal space-y-0.5 pl-5 text-xs text-slate-300">
+          <li>The tread, with a coin or tread gauge in a groove</li>
+          <li>A close-up of the DOT code on the sidewall</li>
+        </ol>
+        <input id="lf-photos" type="file" accept="image/*" multiple onChange={onUpload} aria-describedby="lf-photos-help" className="block text-sm" />
+        <p className="mt-1 text-xs text-slate-400" aria-live="polite">
+          {photos.length} of {MAX_PHOTOS} added
+        </p>
         {uploading && <p className="mt-1 text-sm text-slate-400">Uploading…</p>}
         {photos.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {photos.map((url) => (
+            {photos.map((url, i) => (
               <div key={url} className="relative h-20 w-20 overflow-hidden ring-1 ring-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
                 <button
                   type="button"
                   onClick={() => setPhotos((p) => p.filter((u) => u !== url))}
+                  aria-label={`Remove photo ${i + 1}`}
                   className="absolute right-0 top-0 grid h-5 w-5 place-items-center bg-black/60 text-xs text-white"
                 >
                   ✕
@@ -252,8 +272,10 @@ export default function ListingForm({ initial }) {
       {editing && (
         <div>
           <label className="label" htmlFor="lf-status">Status</label>
-          <select id="lf-status" name="status" defaultValue={initial?.status || "active"} className="input max-w-xs">
+          {/* A bulk-add draft defaults to Active so saving with its 2 photos publishes it. */}
+          <select id="lf-status" name="status" defaultValue={initial?.status === "draft" ? "active" : initial?.status || "active"} className="input max-w-xs">
             <option value="active">Active</option>
+            {initial?.status === "draft" && <option value="draft">Keep as draft (hidden from buyers)</option>}
             <option value="sold">Sold</option>
           </select>
         </div>

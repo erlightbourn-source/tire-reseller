@@ -8,7 +8,7 @@ import { isProSeller } from "@/lib/seller";
 import { enforceRateLimit, cleanStr, clampInt, ValidationError, LIMITS, isAllowedPhotoUrl } from "@/lib/security";
 import { priceFor, PLAN_COPY } from "@/lib/pricing";
 import { stripDataUriMetadata } from "@/lib/image";
-import { normalizeSpeedRating, parseDotYear, requireTreadDepth } from "@/lib/listingProof";
+import { normalizeSpeedRating, parseDotYear, requireTreadDepth, requireProofPhotos } from "@/lib/listingProof";
 
 const SEASONS = ["summer", "winter", "all-season", "all-weather"];
 // speedRating and dotYear are validated by the caller (a bad value is a 400, never silently dropped).
@@ -75,6 +75,12 @@ export async function POST(req) {
     .filter(isAllowedPhotoUrl)
     .slice(0, 6)
     .map(stripDataUriMetadata);
+  try {
+    requireProofPhotos(photos);
+  } catch (e) {
+    if (e instanceof ValidationError) return NextResponse.json({ error: e.message }, { status: 400 });
+    throw e;
+  }
 
   const quantity = clampInt(b.quantity, { min: 1, max: 100, fallback: 1 });
   const priceCents = Math.round(price * 100);

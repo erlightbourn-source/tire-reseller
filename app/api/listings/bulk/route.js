@@ -13,6 +13,8 @@ const MAX_LINES = 50;
 // Pro-only bulk add. One listing per line:
 //   Brand | Size | Price | Qty | new/used | City, ST | Tread depth | DOT year
 // Tread depth and DOT year are required, same as a single new listing (L1674).
+// Bulk text carries no photos, so rows land as drafts (not public) until the seller adds
+// the 2 proof photos on the edit page; PATCH refuses to publish a draft without them.
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Please log in." }, { status: 401 });
@@ -48,6 +50,7 @@ export async function POST(req) {
       const l = await prisma.listing.create({
         data: {
           sellerId: user.id,
+          status: "draft",
           brand,
           size,
           quantity,
@@ -71,5 +74,5 @@ export async function POST(req) {
     }
   }
   if (lines.length > MAX_LINES) errors.push(`Only the first ${MAX_LINES} lines were processed.`);
-  return NextResponse.json({ ok: true, count: created.length, errors });
+  return NextResponse.json({ ok: true, count: created.length, drafts: created.length, errors });
 }

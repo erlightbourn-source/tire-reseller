@@ -107,7 +107,7 @@ export default async function BrandPage({ params }) {
             <>
               {listings.length} {brand} set{listings.length !== 1 ? "s" : ""} listed by local resellers
               {low ? <> — from <span className="font-semibold text-white">{formatPrice(low)}</span></>: null}. New &amp; used,
-              with tread depth and DOT year on every listing.
+              with tread depth and DOT year required on every new listing.
             </>
           ) : (
             <>No active {brand} listings right now — check back soon or browse all tires.</>
