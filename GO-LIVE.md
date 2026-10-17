@@ -66,7 +66,7 @@ moves where they're configured. #1 and #5 are the new Cloudflare-specific work.
 ## Stripe prices — ONE seller plan, two prices (decided 2026-09-06)
 TireTrader has a single seller plan; the price depends only on
 `User.foundingSeller` (`lib/pricing.js`): the first 25 Founding Sellers pay
-**$10/month for life**, everyone after pays **$25/month**. Perks (priority
+**$10/month for as long as they stay subscribed**, everyone after pays **$25/month**. Perks (priority
 placement, verified badge, bulk add) are included — there is no separate "Pro"
 upgrade and no "first year free" tier.
 

@@ -24,7 +24,7 @@
 
 - **Buyers** browse & search listings and message sellers — **free**.
 - **Sellers** list free during launch, then pay for ONE seller plan — the first
-  25 Founding Sellers lock **$10/month** for life, everyone after pays
+  25 Founding Sellers lock **$10/month** while they stay subscribed, everyone after pays
   **$25/month** (`lib/pricing.js` is the single source of truth). Built-in
   messaging, an activity dashboard, and all perks are included.
 

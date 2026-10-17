@@ -48,7 +48,7 @@ export default async function SubscribePage() {
         </h1>
         <p className="mt-2 text-slate-400">
           {expired
-            ? `Your launch listing period has ended. Continue with the seller plan for ${plan.label}${plan.locked ? ", locked for life" : ""}.`
+            ? `Your launch listing period has ended. Continue with the seller plan for ${plan.label}${plan.locked ? ", locked while you stay subscribed" : ""}.`
             : `${PLAN_COPY.buyersFree} ${PLAN_COPY.launchFree} ${PLAN_COPY.foundingStory}`}
         </p>
       </div>
@@ -64,7 +64,7 @@ export default async function SubscribePage() {
                 <p className="mt-1 font-display text-5xl font-extrabold">
                   ${plan.monthly}<span className="text-lg font-medium text-slate-400">/month</span>
                 </p>
-                <p className="mt-1 text-sm text-slate-400">{plan.locked ? "Locked for life · cancel anytime" : "Cancel anytime"}</p>
+                <p className="mt-1 text-sm text-slate-400">{plan.locked ? "Locked while subscribed · cancel anytime" : "Cancel anytime"}</p>
               </>
             ) : (
               <>
@@ -72,7 +72,7 @@ export default async function SubscribePage() {
                   $0<span className="text-lg font-medium text-slate-400"> today</span>
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  then {plan.label}{plan.locked ? ", locked for life," : ""} once billing starts · cancel anytime
+                  then {plan.label}{plan.locked ? ", locked while you stay subscribed," : ""} once billing starts · cancel anytime
                 </p>
               </>
             )}

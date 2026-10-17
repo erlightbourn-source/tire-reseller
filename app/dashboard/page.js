@@ -73,7 +73,7 @@ export default async function DashboardPage() {
   // ONE plan, tier-aware price (lib/pricing.js): founders see their locked rate.
   const plan = priceFor(user);
   const perks = isProSeller(user); // paid plan OR founding seller
-  const rate = `${plan.label}${plan.locked ? " (locked for life)" : ""}`;
+  const rate = `${plan.label}${plan.locked ? " (locked while subscribed)" : ""}`;
 
   // Self-serve billing. A seller who cancels in the Stripe portal keeps the plan until the
   // period ends (status stays "active"), so ask Stripe whether it's set to cancel rather than

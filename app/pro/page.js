@@ -58,7 +58,7 @@ export default async function ProPage() {
               ${plan.monthly}<span className="text-lg font-medium text-slate-300">/month</span>
             </p>
             <p className="mt-1 text-sm text-slate-300">
-              {plan.locked ? "Your founding price — locked for life. Cancel anytime." : "Cancel anytime."}
+              {plan.locked ? "Your founding price stays locked while you're subscribed. Cancel anytime." : "Cancel anytime."}
             </p>
           </div>
         </div>
