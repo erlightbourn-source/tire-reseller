@@ -58,8 +58,10 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
 }
 
-/* Lo-fi, monochrome, grainy imagery. */
-main img { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
+/* Listing photos render in true colour: they are the buyer's evidence of condition (rust, dry rot,
+   sidewall cracks, tread wear), and grayscale + boosted contrast hid it (site review tk-photo-grayscale,
+   2026-10-17). The brand's lo-fi monochrome look is opt-in for decorative imagery only. */
+.img-mono { filter: grayscale(100%) contrast(1.3) brightness(0.92); }
 
 /* Respect reduced-motion: drop animations and the film-grain overlay. */
 @media (prefers-reduced-motion: reduce) {
