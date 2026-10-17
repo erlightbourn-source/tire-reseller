@@ -34,7 +34,7 @@ export default function ReportListing({ listingId, loggedIn }) {
 
   if (!open) {
     return (
-      <button onClick={() => (loggedIn ? setOpen(true) : (window.location.href = `/login?next=/listings/${listingId}`))} className="mx-auto block text-xs text-slate-400 hover:text-slate-300">
+      <button onClick={() => (loggedIn ? setOpen(true) : (window.location.href = `/login?next=/listings/${listingId}`))} className="mx-auto block py-2 text-xs text-slate-400 hover:text-slate-300">
         ⚐ Report this listing
       </button>
     );

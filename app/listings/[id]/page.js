@@ -370,7 +370,7 @@ export default async function ListingDetail({ params }) {
               <li>• Confirm the DOT date — avoid tires over ~6 years old.</li>
               <li>• Meet in a public place and pay only once satisfied.</li>
             </ul>
-            <Link href="/guide" className="mt-3 inline-block text-sm font-semibold text-amber-200 underline-offset-2 hover:underline">Read the full buying guide →</Link>
+            <Link href="/guide" className="mt-3 inline-block py-1 text-sm font-semibold text-amber-200 underline-offset-2 hover:underline">Read the full buying guide →</Link>
           </div>
         </div>
       </div>
