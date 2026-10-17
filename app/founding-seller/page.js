@@ -11,12 +11,12 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Founding Seller Program — TireKind",
   description:
-    `Be one of the first ${FOUNDING_SEATS} South Florida sellers on TireKind. Permanent Founding Seller badge, every seller-plan perk included, homepage spotlight, and ${FOUNDING_SHORT} locked for life.`,
+    `Be one of the first ${FOUNDING_SEATS} South Florida sellers on TireKind. Founding Seller badge, every seller-plan perk included, homepage spotlight, and ${FOUNDING_SHORT} locked in for as long as you stay subscribed.`,
   alternates: { canonical: "/founding-seller" },
   openGraph: {
     title: "TireKind Founding Seller Program — Be First, Stay Ahead",
     description:
-      `First ${FOUNDING_SEATS} South Florida sellers: permanent badge, every plan perk included, price locked at ${FOUNDING_SHORT} forever.`,
+      `First ${FOUNDING_SEATS} South Florida sellers: Founding Seller badge, every plan perk included, ${FOUNDING_SHORT} locked in while you stay subscribed.`,
     url: "/founding-seller",
     type: "website",
     images: ["/opengraph-image"],
@@ -24,9 +24,9 @@ export const metadata = {
 };
 
 const PERKS = [
-  ["Permanent Founding Seller badge", "On your profile, every listing, every card. It never goes away, even after the program closes."],
+  ["Your Founding Seller badge", "On your profile, every listing, every card. It stays after the program closes."],
   ["Every seller-plan perk, included", "Priority search placement, the Pro badge, and bulk listing — all part of the plan, at no extra cost for founders."],
-  [`Price locked at ${FOUNDING_LABEL} — forever`, "When standard pricing eventually changes, yours doesn't."],
+  [`${FOUNDING_LABEL}, locked while you stay subscribed`, "When standard pricing changes, yours doesn't, for as long as your subscription stays active."],
   ["Homepage spotlight", "Featured placement while we build out inventory."],
   ["White-glove onboarding", "We'll personally help you shoot and upload your first batch of listings in Broward. Zero extra work on your end."],
 ];

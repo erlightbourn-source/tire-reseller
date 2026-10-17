@@ -116,7 +116,7 @@ export default async function CityPage({ params }) {
           <p className="mt-2 text-sm text-slate-400">
             List free and get found by buyers searching your exact fitment — no per-listing fees, no
             cut of your sale. <Link href="/founding-seller" className="font-semibold text-brand-300 hover:text-brand-200">Founding Sellers</Link> get
-            a permanent badge and {FOUNDING_SHORT} locked for life.
+            a Founding Seller badge and {FOUNDING_SHORT} locked in while they stay subscribed.
           </p>
         </div>
       </section>

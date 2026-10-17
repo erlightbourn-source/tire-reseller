@@ -37,7 +37,7 @@ export default async function SellPage() {
           <div className="p-6">
             <p className="text-slate-400">
               {expired ? (
-                <>Continue listing, messaging buyers, and tracking activity for <strong className="text-white">{plan.label}</strong>{plan.locked ? ", locked for life" : ""}.</>
+                <>Continue listing, messaging buyers, and tracking activity for <strong className="text-white">{plan.label}</strong>{plan.locked ? ", locked while you stay subscribed" : ""}.</>
               ) : (
                 <>List unlimited tires, message buyers, and track your activity — <strong className="text-white">free to list during launch</strong>, then {plan.label}.</>
               )}

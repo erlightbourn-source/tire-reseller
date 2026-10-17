@@ -92,7 +92,7 @@ This repo swaps the Prisma provider for local builds, so follow this exactly:
 ## Hard rules (never violate)
 
 - **Do not change the monetization structure** (ONE seller plan: free to list during
-  launch; first 25 Founding Sellers lock $10/mo for life, everyone after $25/mo; perks
+  launch; first 25 Founding Sellers lock $10/mo while subscribed, everyone after $25/mo; perks
   included — `lib/pricing.js` is the only place a price lives). No pricing/plan/fee edits.
 - Do not push GitHub Actions workflow files — the token lacks the `workflow` scope.
 - Do not enter secrets/credentials, create accounts, or deploy to external services.

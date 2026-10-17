@@ -16,7 +16,7 @@ square edges, hard offset shadows). Handed to a Type-A tire shop in person / lef
 
 ## Pricing shown (Miles' 2026-07-23 lock — supersedes the stale script-#5 draft)
 - Free to list during launch, no card.
-- First 25 Founding Sellers lock **$10/mo for life** once billing turns on.
+- First 25 Founding Sellers lock **$10/mo for as long as they stay subscribed** once billing turns on (Terms: ends on cancellation or a 30+ day lapse).
 - Everyone after: **$25/mo**.
 > ⚠️ The old one-pager in `tiretrader-outreach-scripts.md` §5 still says "free for a year, then $10/mo" —
 > that is now stale; this asset uses the locked model. Update the script to match.
