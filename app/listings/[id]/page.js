@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { checkRateLimit, clientIp } from "@/lib/security";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { seasonLabel, treadLabel, treadLifePct, perTire, conditionMeta, tireAge } from "@/lib/tire";
-import { priceContext } from "@/lib/pricing";
+import { priceContext, buyerCostNote } from "@/lib/pricing";
 import { formatLoadSpeed } from "@/lib/listingProof";
 import { jsonLdHtml } from "@/lib/jsonld";
 import { sizeSlug } from "@/lib/site";
@@ -120,6 +120,7 @@ export default async function ListingDetail({ params }) {
     sizeComps.map((c) => perTire(c.priceCents, c.quantity))
   );
 
+  const costNote = buyerCostNote(listing);
   const location = publicLocation(listing.location);
   const cond = conditionMeta(listing.condition);
   const isUsed = listing.condition !== "new";
@@ -207,6 +208,11 @@ export default async function ListingDetail({ params }) {
             </p>
             {listing.quantity > 1 && (
               <p className="text-sm text-slate-400">{formatPrice(perTire(listing.priceCents, listing.quantity))} per tire</p>
+            )}
+            {listing.status !== "sold" && (
+              <p className="mt-1 text-xs text-slate-400">
+                <span className="font-semibold text-slate-200">{costNote.headline}</span> {costNote.detail}
+              </p>
             )}
 
             {fairPrice && listing.status !== "sold" && (

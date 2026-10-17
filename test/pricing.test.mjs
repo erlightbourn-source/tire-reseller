@@ -31,3 +31,26 @@ test("priceContext ignores invalid comp values", () => {
   const r = priceContext(9000, [10000, 0, NaN, 10000, 10000]);
   assert.equal(r.count, 3);
 });
+
+test("buyerCostNote: pickup listing says no fees, pay in person, mounting extra", async () => {
+  const { buyerCostNote } = await import("../lib/pricing.js");
+  const n = buyerCostNote({ shipping: false });
+  assert.equal(n.headline, "No buyer fees.");
+  assert.match(n.detail, /in person at pickup/);
+  assert.match(n.detail, /Mounting not included/);
+  assert.doesNotMatch(n.detail, /[Ss]hipping/);
+});
+
+test("buyerCostNote: shipping listing never implies shipping is in the price", async () => {
+  const { buyerCostNote } = await import("../lib/pricing.js");
+  const n = buyerCostNote({ shipping: true });
+  assert.match(n.detail, /Shipping is extra/);
+  assert.match(n.detail, /ask the seller/);
+  assert.doesNotMatch(n.detail, /at pickup/);
+});
+
+test("buyerCostNote: missing listing falls back to the pickup wording", async () => {
+  const { buyerCostNote } = await import("../lib/pricing.js");
+  assert.equal(buyerCostNote(undefined).detail, buyerCostNote({}).detail);
+  assert.equal(buyerCostNote({}).detail, buyerCostNote({ shipping: false }).detail);
+});
