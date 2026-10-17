@@ -186,7 +186,7 @@ export default function AuthForm({ mode }) {
             <div>
               <div className="flex items-center justify-between">
                 <label className="label" htmlFor="auth-password">Password</label>
-                {!isSignup && <Link href="/forgot" className="mb-1.5 text-xs font-medium text-brand-300 hover:underline">Forgot password?</Link>}
+                {!isSignup && <Link href="/forgot" className="mb-1.5 py-1.5 text-xs font-medium text-brand-300 hover:underline">Forgot password?</Link>}
               </div>
               <input id="auth-password" name="password" type="password" required minLength={6} className="input" placeholder="••••••••" />
             </div>

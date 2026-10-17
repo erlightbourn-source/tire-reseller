@@ -190,11 +190,11 @@ export default async function Home() {
                 )}
               </span>
             )}
-            <Link href={homeState ? `/browse?state=${homeState}` : "/browse"} className="font-semibold text-white underline-offset-4 hover:underline">
+            <Link href={homeState ? `/browse?state=${homeState}` : "/browse"} className="py-1 font-semibold text-white underline-offset-4 hover:underline">
               {homeState ? `Browse ${stateName(homeState)} tires →` : "Browse all listings →"}
             </Link>
-            <Link href="/states" className="hover:text-white">Open the map</Link>
-            <Link href="/guide" className="hover:text-white">Used-tire buying guide</Link>
+            <Link href="/states" className="py-1 hover:text-white">Open the map</Link>
+            <Link href="/guide" className="py-1 hover:text-white">Used-tire buying guide</Link>
           </div>
         </div>
       </section>
